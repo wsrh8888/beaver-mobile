@@ -1,0 +1,166 @@
+{
+	"pages": [
+		{
+			"path": "pages/home/home",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/guide/guide",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/searchFriend/searchFriend",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/detail/detail",
+			"style": {
+				"navigationBarTitleText": "",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/chat/chat",
+			"style": {
+				"navigationBarTitleText": "",
+				"enablePullDownRefresh": false,
+				"backgroundColorBottom": "f5f5f5"
+			}
+		},
+		{
+			"path": "pages/apply/apply",
+			"style": {
+				"navigationBarTitleText": "apply",
+				"enablePullDownRefresh": false,
+				"disableScroll": false
+			}
+		},
+		{
+			"path": "pages/register/register",
+			"style": {
+				"navigationBarTitleText": "register",
+				"enablePullDownRefresh": false,
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "login",
+				"enablePullDownRefresh": false,
+				"disableScroll": true
+			}
+		},{
+			"path": "pages/about/about",
+			"style": {
+				"navigationBarTitleText": "login",
+				"enablePullDownRefresh": false,
+				"disableScroll": true
+			}
+		},
+		{
+			"path": "pages/friend/friend",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/setting/setting",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/discover/discover",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/mine/mine",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/mineInfo/mineInfo",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/qrcode/qrcode",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/userConfig/userConfig",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		}
+
+
+		
+		
+	],
+	"globalStyle": {
+		"navigationStyle": "custom",
+		"navigationBarTextStyle": "black",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"tabBar": {
+		"color": "#7A7E83",
+		"selectedColor": "#2680EB",
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		"list": [
+			{
+				"pagePath": "pages/home/home",
+				"iconPath": "static/tarBar/chat.png",
+				"selectedIconPath": "static/tarBar/chat_active.png",
+				"text": "消息"
+			},
+			{
+				"pagePath": "pages/friend/friend",
+				"iconPath": "static/tarBar/friend.png",
+				"selectedIconPath": "static/tarBar/friend_active.png",
+				"text": "好友"
+			},
+			{
+				"pagePath": "pages/mine/mine",
+				"iconPath": "static/tarBar/mine.png",
+				"selectedIconPath": "static/tarBar/mine_active.png",
+				"text": "我的"
+			}
+		]
+	}
+}
