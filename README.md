@@ -2,7 +2,7 @@
 
 ### 项目介绍
 + 本项目是利用工作之余做的一个聊天IM。
-+ 这是项目的第一个版本历时2个月， 前端使用uniapp， 后端使用go-zero
++ 这是项目的第一个版本历时2个月， 前端使用uniapp， 后端使用go-zero， 桌面端使用electron
 + 如果喜欢可以点一个star
 + 加入QQ群：[![加入QQ群](https://img.shields.io/badge/加入QQ群-1013328597-blue.svg)](https://qm.qq.com/q/82rbf7QBzO)（1013328597）
 
@@ -30,10 +30,11 @@ npm run build_test
 ```
 
 ### 项目列表
-| [GitHub仓库]    |  说明                                                                                      
-| ------------------------------------------------------------ | --------------------------------------------------------------------------
-| [beaver-server](https://github.com/wsrh8888/beaver-server)               | 后端服务  |
-| [beaver-mobile](https://github.com/wsrh8888/beaver-mobile)        | uniapp客户端 |
+| [GitHub仓库]    |   [Gitee仓库]    |说明                                                                                      
+| ------------------------------------------------------------ | --------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| [beaver-server](https://github.com/wsrh8888/beaver-server)               |[beaver-server](https://gitee.com/dawwdadfrf/beaver-server)               | 后端服务  |
+| [beaver-mobile](https://github.com/wsrh8888/beaver-mobile)        | [beaver-mobile](https://gitee.com/dawwdadfrf/beaver-mobile)               |手机端 |
+| [beaver-desktop](https://github.com/wsrh8888/beaver-desktop)        | [beaver-desktop](https://gitee.com/dawwdadfrf/beaver-desktop)               |桌面端 |
 
 
 ### 应用截图
