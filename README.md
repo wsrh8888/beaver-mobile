@@ -2,7 +2,7 @@
 
 ### 项目介绍
 + 本项目是利用工作之余做的一个聊天IM。
-+ 这是项目的第一个版本历时2个月， 前端使用uniapp， 后端使用go-zero， 桌面端使用electron
++  前端使用uniapp， 后端使用go-zero， 桌面端使用electron
 + 如果喜欢可以点一个star
 + 加入QQ群：[![加入QQ群](https://img.shields.io/badge/加入QQ群-1013328597-blue.svg)](https://qm.qq.com/q/82rbf7QBzO)（1013328597）
 
