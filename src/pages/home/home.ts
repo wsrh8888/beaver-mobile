@@ -1,4 +1,5 @@
 import applySvg from '@/static/img/friend/apply.svg'
+import groupSvg from '@/static/img/friend/group.svg'
 import scanSvg from '@/static/img/common/scan.svg'
 
 
@@ -11,4 +12,9 @@ export const homeMenusList = [{
   id: 3,
   title: '扫一扫',
   icon: scanSvg,
+}, {
+
+  id: 2,
+  title: '创建群聊',
+  icon: groupSvg,
 }]

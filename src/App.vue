@@ -6,7 +6,7 @@ import WsManager from '@/ws-manager/ws'
 import { useInitStore } from '@/pinia/init/init'
 
 export default defineComponent({
-	setup() {
+	setup() {		
 		onLaunch( async () => {
 			console.log("App Launch");
 			const initStore = useInitStore();

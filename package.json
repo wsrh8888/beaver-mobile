@@ -54,6 +54,7 @@
     "@dcloudio/uni-quickapp-webview": "3.0.0-4030620241128001",
     "dayjs": "^1.11.13",
     "mitt": "^3.0.1",
+    "moment": "^2.30.1",
     "pinia": "^2.2.8",
     "sass": "^1.82.0",
     "uuid": "^11.0.3",

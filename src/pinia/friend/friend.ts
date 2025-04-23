@@ -2,12 +2,22 @@ import { defineStore } from 'pinia';
 import { getFriendInfoApi, getFriendListApi } from '@/api/friend';
 import type { IFriendInfo } from '@/types/ajax/friend';
 
-export const useFriendStore = defineStore('friendList', {
-  state: (): { friendList: IFriendInfo[] } => ({
+/**
+ * @description: 用户信息管理
+ */
+export const useFriendStore = defineStore('friendStore', {
+  state: (): {
+    friendList: IFriendInfo[],
+    allUserMapInfo: Map<string, IFriendInfo>,
+  } => ({
     /**
-     * @description: 最新聊天列表
+     * @description: 好友列表
      */
-    friendList: []
+    friendList: [],
+    /**
+     * @description: 用户信息映射（包含好友和非好友）
+     */
+    allUserMapInfo: new Map<string, IFriendInfo>(),
   }),
   getters: {
     /**
@@ -16,40 +26,57 @@ export const useFriendStore = defineStore('friendList', {
      * @returns {IFriendInfo} 返回好友信息
      */
     getFriendInfoById: (state) => {
-      return (id: string): IFriendInfo => {
-        return state.friendList.find(friend => friend.conversationId === id) || {} as IFriendInfo;
+      return (id: string): IFriendInfo | undefined => {
+        return state.allUserMapInfo.get(id);
       };
     },
   },
   actions: {
     reset() {
       this.friendList = [];
+      this.allUserMapInfo.clear();
     },
     async updateFriendInfo(friendId: string) {
-      const friendInfo =  await getFriendInfoApi({
-        friendId: friendId,
-      })
-      if (friendInfo.code === 0) {
-        var tempFriendInfo = friendInfo.result;
-        const index = this.friendList?.findIndex(item => item.userId === friendId) || -1;
-        if (index !== -1) {
-          this.friendList[index] = tempFriendInfo;
-        } else {
-          this.friendList.push(tempFriendInfo);
+      try {
+        const res = await getFriendInfoApi({ friendId });
+        if (res.code === 0) {
+          const tempFriendInfo = res.result;
+          const index = this.friendList.findIndex(
+            item => item.userId === friendId
+          );
+          
+          if (index !== -1) {
+            this.friendList[index] = tempFriendInfo;
+          } else {
+            this.friendList.push(tempFriendInfo);
+          }
+          // 更新用户信息映射
+          this.allUserMapInfo.set(friendId, tempFriendInfo);
+          console.log('Updated friend info:', tempFriendInfo);
+          return tempFriendInfo;
         }
-        return tempFriendInfo;
+      } catch (error) {
+        console.error('Failed to update friend info:', error);
+        throw error;
       }
-       
     },
     async initFriendApi() {
-      const getFriendApi = await getFriendListApi({
-        page: 1,
-        limit: 1000,
-      });
-      if (getFriendApi.code === 0) {
-        this.friendList = getFriendApi.result.list || [];
+      try {
+        const res = await getFriendListApi({
+          page: 1,
+          limit: 1000,
+        });
+        if (res.code === 0) {
+          this.friendList = res.result.list || [];
+          // 初始化用户信息映射
+          this.friendList.forEach(friend => {
+            this.allUserMapInfo.set(friend.userId, friend);
+          });
+        }
+      } catch (error) {
+        console.error('Failed to initialize friend list:', error);
+        throw error;
       }
     },
-    
   },
 });

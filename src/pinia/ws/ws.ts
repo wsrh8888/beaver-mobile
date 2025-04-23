@@ -1,61 +1,161 @@
-import type { IWsContent, IWsStore } from '@/types/ws/ws';
+import type { IWsContent } from '@/types/ws/ws';
+import type { IWsMessage } from '@/types/ws/command';
+import { WsCommand } from '@/types/ws/command';
+import { MessageType } from '@/types/ajax/chat';
 import { defineStore } from 'pinia';
-import { useChatStore } from '../chat/chat';
+import { useMessageStore } from '../message/message';
 import { useFriendStore } from '../friend/friend';
+import { useConversationStore } from '../conversation/conversation';
+import { useGroupStore } from '../group/group';
+import { useUserStore } from '../user/user';
 
+/**
+ * @description: WebSocket消息管理
+ */
 export const useWsStore = defineStore('useWsStore', {
-  state: () => ({
-    
+  /**
+   * @description: WebSocket状态
+   */
+  state: (): IWsMessage => ({
+    code: 0,
+    command: WsCommand.CHAT_MESSAGE,
+    content: {
+      timestamp: 0,
+      data: {
+        type: '',
+        body: {
+          messageId: 0,
+          conversationId: '',
+          msg: {
+            type: MessageType.TEXT,
+            textMsg: {
+              content: ''
+            },
+            imageMsg: null
+          },
+          sender: {
+            userId: '',
+            avatar: '',
+            nickname: ''
+          },
+          create_at: '',
+          msgPreview: ''
+        }
+      }
+    }
   }),
   getters: {
   },
   actions: {
-    parseWsMessage(data: IWsStore) {
+    /**
+     * @description: 解析WebSocket消息
+     * @param {IWsMessage} data - WebSocket消息数据
+     */
+    parseWsMessage(data: IWsMessage) {
       switch (data.command) {
-        case 'COMMON_CHAT_MESSAGE':
-        this.parseCommonChatMessage(data.content);
-        case 'COMMON_UPDATE_MESSAGE':
-          this.parseCommonUpdateMessage(data.content);
+        case WsCommand.USER_PROFILE:
+          this.parseUserProfile(data.content);
           break;
+        case WsCommand.GROUP_OPERATION:
+          this.parseGroupProfile(data.content);
+          break
+        case WsCommand.CHAT_MESSAGE:
+          this.parseCommonChatMessage(data.content);
+          break;
+        // case WsCommand.HEARTBEAT:
+        // case WsCommand.UPDATE_MESSAGE:
+        //   this.parseCommonUpdateMessage(data.content);
+        //   break;
         default:
-          console.log('default', data);
+          console.debug('Unhandled ws command:', data.command);
           break;
       }
     },
-    async parseCommonUpdateMessage(content: IWsContent) {
-      const friendStore = useFriendStore();
-      const chatStore = useChatStore();
+    async parseGroupProfile(content: IWsContent) {
+      const conversationStore = useConversationStore();
+      const groupStore = useGroupStore()
+      const userStore = useUserStore()
 
       switch (content.data.type) {
-        case "user_update_info":
-           const userInfo = await friendStore.updateFriendInfo(content.data.body.userId);
-           chatStore.updateBaseInfo({
-              conversationId: userInfo.conversationId,
-              avatar: userInfo.avatar,
-              nickname: userInfo.nickname,
-           })
+        case "message_group_create": {
+          // 更新最近会话列表
+          conversationStore.updateBaseInfo({
+            ...content.data.body
+          } as any)
           break;
-        case "user_valid_type_update":
-          friendStore.updateFriendInfo(content.data.body.userId);
-          // 更新最近聊天列表
-          chatStore.initRecentChatApi();
+        }
+        case "group_update": {
+          groupStore.updateGroupInfo(content.data.body.groupId)
           break;
+        }
+        case "group_member_update": {
+          // 判断移除的是不是自己，如果不是自己则更新这个群的成员信息
+          if (userStore.userInfo.userId === content.data.body.memberId) {
+            
+          } else {
+            // 更新这个群的成员信息
+          }
+          break
+        }
+      }
+
+    },
+    /**
+     * @description: 解析用户信息更新消息
+     * @param {IWsContent} content - 消息内容
+     */
+    async parseUserProfile(content: IWsContent) {
+      const friendStore = useFriendStore();
+      const conversationStore = useConversationStore();
+
+      switch (content.data.type) {
+        case "profile_change_notify": {
+          // 更新好友信息
+          await friendStore.updateFriendInfo(content.data.body.userId);
+
+          break;
+        }
+        case "user_valid_type_update": {
+          // 更新好友状态后刷新会话列表
+          await friendStore.updateFriendInfo(content.data.body.sender.userId);
+          await conversationStore.initRecentChatApi();
+          break;
+        }
       }
     },
+    /**
+     * @description: 解析聊天消息
+     * @param {IWsContent} content - 消息内容
+     */
     parseCommonChatMessage(content: IWsContent) {
-      const chatStore = useChatStore();
+      const chatStore = useMessageStore();
+      const conversationStore = useConversationStore();
+
       switch (content.data.type) {
         case "private_message_send":
-          chatStore.updateRecentChatList(
-            {
-              conversationId: content.data.body.conversationId,
-              avatar: content.data.body.sender.avatar,
-              create_at: content.data.body.create_at,
-              is_top: false,
-              msg_preview: content.data.body.msgPreview,
-              nickname: content.data.body.sender.nickname,
-            }
-          );
+          // 添加新消息到聊天记录
+          // conversationStore.updateLastMessage(content.data.body.conversationId, {
+          //   content: content.data.body.msgPreview,
+          //   timestamp:  content.data.body.create_at
+          // });
+          chatStore.addMessage(content.data.body.conversationId, {
+            messageId: content.data.body.messageId,
+            conversationId: content.data.body.conversationId, // 添加缺失的必要字段
+            msg: content.data.body.msg,
+            sender: content.data.body.sender,
+            create_at: content.data.body.create_at
+          });
+          break;
+        case "group_message_send":
+          // 判断是否会最近会话列表， 如果没有则创建
+          // 添加新消息到聊天记录
+          chatStore.addMessage(content.data.body.conversationId, {
+            messageId: content.data.body.messageId,
+            conversationId: content.data.body.conversationId, // 添加缺失的必要字段
+            msg: content.data.body.msg,
+            sender: content.data.body.sender,
+            create_at: content.data.body.create_at
+          });
           break;
       }
     }

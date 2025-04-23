@@ -1,27 +1,34 @@
 <template>
-  <view class="option-popup" :style="{height:keyboardHeight+'rpx'}">
-			<swiper class="swiper" circular :indicator-dots="sw.indicatorDots" :autoplay="sw.autoplay" :interval="sw.interval"
-				:duration="duration">
-
-				<swiper-item v-for="(item, index) in options" :key="index">
-					<view class="list">
-					<view class="item" v-for="(item,i) in item" :key="i" @click="handleClick(item.type)">
-						<view class="icon">
-							<image :src="item.icon"/>
-						</view>
-						
-						<text>{{ item.value }}</text>
-					</view>
-				</view>
-				</swiper-item>
-			</swiper>
+  <view class="option-popup">
+    <view class="menu-grid">
+      <view 
+        v-for="(item, index) in menuItems" 
+        :key="index"
+        class="menu-item"
+        @tap="handleAction(item.action)"
+      >
+        <view class="menu-icon">
+          <image 
+            :src="item.icon" 
+            mode="aspectFit"
+          />
+        </view>
+        <text class="menu-label">{{ item.label }}</text>
+      </view>
+    </view>
   </view>
 </template>
 
-<script>
-import { defineComponent, reactive, ref } from 'vue';
-import  {options}  from '../component/data'
-import { openAlbum } from '@/utils/upload';
+<script lang="ts">
+import { defineComponent } from 'vue';
+import { openAlbum } from './func';
+
+interface MenuItem {
+  icon: string;
+  label: string;
+  action: string;
+}
+
 export default defineComponent({
   props: {
     keyboardHeight: {
@@ -30,81 +37,126 @@ export default defineComponent({
     }
   },
   setup(props, { emit }) {
-	const obj = {
-		album: openAlbum,
-		camera: openAlbum,
-	}
-	const sw = reactive({
-            indicatorDots: true,
-            autoplay: false,
-            interval: 2000,
-            duration: 500
-	})
-    const addEmoji = (index) => {
-      // emit('addEmoji', emoji[index])
-    }
-	const handleClick = (type) => {
-		console.log(type);
-		Object.keys(obj).forEach(key => {
-			if (key === type) {
-				obj[key](key).then(res => {
-					console.log('option',res);
-					emit('getFilePath', res)
-				})
-			}
-		})
-	}
+    const menuItems: MenuItem[] = [
+      {
+        icon: '/static/img/chat/photo.svg',
+        label: '图片',
+        action: 'image'
+      },
+      {
+        icon: '/static/img/chat/camera.svg',
+        label: '拍照',
+        action: 'camera'
+      },
+      {
+        icon: '/static/img/chat/vedio.svg',
+        label: '视频通话',
+        action: 'video'
+      },
+      {
+        icon: '/static/img/chat/phone.svg',
+        label: '语音通话',
+        action: 'voice'
+      }
+    ];
+
+    const handleAction = async (action: string) => {
+      switch (action) {
+        case 'image':
+          try {
+            const imageUrl = await openAlbum('album');
+            console.error('234234', imageUrl)
+            emit('getFilePath', imageUrl);
+          } catch (err) {
+            console.error('Failed to upload image:', err);
+            uni.showToast({
+              title: '上传图片失败',
+              icon: 'none'
+            });
+          }
+          break;
+        case 'camera':
+          try {
+            const imageUrl = await openAlbum('camera');
+            emit('getFilePath', imageUrl);
+          } catch (err) {
+            console.error('Failed to upload image:', err);
+            uni.showToast({
+              title: '上传图片失败',
+              icon: 'none'
+            });
+          }
+          break;
+        case 'video':
+          uni.showToast({
+            title: '发起视频通话',
+            icon: 'none'
+          });
+          break;
+        case 'voice':
+          uni.showToast({
+            title: '发起语音通话',
+            icon: 'none'
+          });
+          break;
+      }
+    };
+
     return {
-      keyboardHeight: props.keyboardHeight,
-      addEmoji,
-      options,
-	  sw,
-	  handleClick
-    }
+      menuItems,
+      handleAction
+    };
   }
 });
 </script>
 
-<style lang="scss" scoped >
+<style lang="scss" scoped>
 .option-popup {
-  border-top: 1rpx solid #d3d3d3;
-  
-  // overflow-y: scroll;
-  background-color: #f1f1f1;
-.swiper{
-	height: 240rpx;
+  background: #FFFFFF;
+  border-top-left-radius: 32rpx;
+  border-top-right-radius: 32rpx;
+  padding: 32rpx 24rpx;
 }
-  .list {
-    width: 100%;
-	padding: 16rpx 20rpx;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    .item {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      width: 25%;
-      height: 180rpx;
-      font-size: 28rpx;
-      .icon {
-        width: 100rpx;
-        height: 100rpx;
-        background-color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12rpx;
-        margin-bottom: 20rpx;
-      }
-      image {
-        width: 50rpx;
-        height: 50rpx;
-      }
-    }
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24rpx;
+  padding: 4rpx;
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.menu-icon {
+  width: 100rpx;
+  height: 100rpx;
+  background: #F5F5F5;
+  border-radius: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  
+  &:active {
+    background: #EEEEEE;
+    transform: scale(0.95);
   }
+  
+  image {
+    width: 48rpx;
+    height: 48rpx;
+    opacity: 0.85;
+  }
+}
+
+.menu-label {
+  font-size: 24rpx;
+  color: #666666;
 }
 </style>
 

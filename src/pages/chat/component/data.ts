@@ -1,6 +1,8 @@
 
 import photo from '@/static/img/chat/photo.svg'
 import camera from '@/static/img/chat/camera.svg'
+import phone from '@/static/img/chat/phone.svg'
+import vedio from '@/static/img/chat/vedio.svg'
 const option1 = [
     {
         value: '照片',
@@ -12,6 +14,17 @@ const option1 = [
         icon: camera,
         type: 'camera'
     },
+    {
+        value: '音频',
+        icon: phone,
+        type: 'call'
+    },
+    {
+        value: '视频',
+        icon: vedio,
+        type: 'call'
+    },
+
    
 ]
 const option2 = [
@@ -24,6 +37,16 @@ const option2 = [
         value: '相机',
         icon: camera,
         type: 'camera'
+    },
+    {
+        value: '音频',
+        icon: phone,
+        type: 'audio'
+    },
+    {
+        value: '视频',
+        icon: vedio,
+        type: 'vedio'
     },
    
 ]

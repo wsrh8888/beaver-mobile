@@ -34,7 +34,7 @@ export const getChatHistoryApi = (data) => {
 /**
  * @description: 上传文件到七牛云  file
  */
-export const getuploadQiniuApi = (filePath:string) => {
+export const getuploadQiniuApi = (filePath:string): Promise<{fileId: string, name: string}> => {
   return new Promise((resolve, reject) => {
     uni.uploadFile({
       url: `${baseUrl}/api/file/uploadQiniu`, 
@@ -46,7 +46,7 @@ export const getuploadQiniuApi = (filePath:string) => {
       success: (res) => {
         const data = JSON.parse(res.data);
         if (data.code === 0) {
-          resolve(data.result.src); 
+          resolve(data.result); 
         }
       },
       fail: (err) => {

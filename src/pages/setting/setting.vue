@@ -1,132 +1,235 @@
 <template>
-  <view class="setting_content">
-    <HeaderComponent title="设置" @goBack="goBack" />
-    <view v-for="item in dataList" :key="item.id" class="setting_item" @click="handleClickItem(item)">
-      <view class="left">
-        <text>{{ item.title }}</text>
+  <view class="container">
+    <!-- 顶部渐变背景 -->
+    <view class="top-gradient"></view>
+    
+    <!-- 导航栏 -->
+    <view class="navbar">
+      <view class="back-button" @click="goBack">
+        <image src="@/static/img/setting/back.svg" mode="aspectFit" />
       </view>
-      <view class="right">
-        <text v-if="item.type === 'text'" class="text"></text>
-      </view>
-      <image src="@/static/img/mine/jump_right.svg" class="details-arrow" />
+      <text class="page-title">通用设置</text>
     </view>
-    <view class="exitBtn" @click="showExitDialog">退出登录</view>
+
+    <!-- 账号与安全设置 -->
+    <view class="settings-card">
+      <view class="setting-item" @click="handleClickItem(1)">
+        <text class="setting-title">账号与安全</text>
+        <image src="@/static/img/setting/arrow-right.svg" class="arrow-icon" mode="aspectFit" />
+      </view>
+    </view>
+
+    <!-- 关于与支持 -->
+    <view class="settings-card">
+      <view class="setting-item" @click="handleClickItem(2)">
+        <text class="setting-title">隐私政策</text>
+        <image src="@/static/img/setting/arrow-right.svg" class="arrow-icon" mode="aspectFit" />
+      </view>
+      <view class="setting-item" @click="handleClickItem(3)">
+        <text class="setting-title">用户协议</text>
+        <image src="@/static/img/setting/arrow-right.svg" class="arrow-icon" mode="aspectFit" />
+      </view>
+    </view>
+
+    <!-- 退出登录按钮 -->
+    <view class="logout-container">
+      <view class="logout-button" @click="showExitDialog">退出登录</view>
+    </view>
+
+    <!-- 版本信息 -->
+    <view class="version-info">
+      Beaver App v1.0.0
+    </view>
+
+    <!-- 退出确认弹窗 -->
     <uni-popup ref="exitDialog" type="dialog" :maskClick="false">
       <uni-popup-dialog
-        title="确认退出吗？"
-        :content="''"
-        :before-close="['confirm', 'cancel']"
+        title="确认退出登录"
+        content="退出后需要重新登录才能使用Beaver，确定要退出吗？"
+        :before-close="true"
         @confirm="handleLogout"
         @close="handleCancel"
-      >
-      </uni-popup-dialog>
+      />
     </uni-popup>
   </view>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from 'vue';
+import { defineComponent, ref } from 'vue';
 import { useUserStore } from '@/pinia/user/user';
-import HeaderComponent from "@/component/header/header.vue";
-import { dataList } from './setting';
+import { useInitStore } from '@/pinia/init/init';
+import WsManager from '@/ws-manager/ws';
 import { removeLocal } from '@/utils/local';
-import { useCommonStore } from '@/pinia/common/common';
+
+interface SettingItem {
+  id: number;
+  title: string;
+  type: string;
+}
 
 export default defineComponent({
-  components: {
-    HeaderComponent
-  },
+  name: 'Setting',
   setup() {
-    const useStore = useUserStore();
-    const commonStore = useCommonStore();
-    const userInfo = computed(() => useStore.userInfo);
-    
-    onMounted(() => {
-      console.error(userInfo);
-    });
+    const userStore = useUserStore();
+    const initStore = useInitStore();
+    const exitDialog = ref<any>(null);
 
     const goBack = () => {
       uni.navigateBack();
     };
 
-    const handleClickItem = (item) => {
-      if (item.id === 2) {
-        uni.navigateTo({
-          url: '/pages/about/about'
-        });
+    const handleClickItem = (id: number) => {
+      switch (id) {
+        case 1:
+          uni.navigateTo({ url: '/pages/account-security/account-security' });
+          break;
+        case 2:
+          uni.navigateTo({ url: '/pages/privacy/privacy' });
+          break;
+        case 3:
+          uni.navigateTo({ url: '/pages/agreement/agreement' });
+          break;
       }
     };
 
-    const exitDialog = ref(null);
-
     const showExitDialog = () => {
-      (exitDialog.value as any).open();
+      exitDialog.value?.open();
     };
-    
+
     const handleLogout = () => {
-      uni.navigateTo({
-        url: '/pages/login/login'
-      });
-      commonStore.resetApp()
-      handleCancel()
+      removeLocal('token');
+      initStore.resetApp();
+      WsManager.disconnect();
+      uni.reLaunch({ url: '/pages/login/login' });
     };
+
     const handleCancel = () => {
-      (exitDialog.value as any).close();
+      exitDialog.value?.close();
     };
+
     return {
-      handleCancel,
-      handleClickItem,
-      goBack,
-      dataList,
-      userInfo,
       exitDialog,
+      goBack,
+      handleClickItem,
       showExitDialog,
       handleLogout,
+      handleCancel,
     };
-  }
+  },
 });
 </script>
 
 <style lang="scss" scoped>
-page {
-  background: #f5f5f5;
+.container {
+  min-height: 100vh;
+  background-color: #F9FAFB;
+  padding: 16px;
 }
-.setting_content {
-  .setting_item {
-    display: flex;
-    align-items: center;
-    padding: 30rpx;
-    background: #fff;
-    border-bottom: 1px solid #e4e7ed;
-    .left {
-      flex: 1;
-    }
-    .right {
-      .text {
-        color: #aaa;
-      }
-      .image {
-        width: 100rpx;
-        height: 100rpx;
-      }
-    }
-    .details-arrow {
-      width: 30rpx;
-      height: 30rpx;
-      margin-left: 10rpx;
-    }
+
+.top-gradient {
+  height: 120px;
+  background: linear-gradient(180deg, rgba(255,125,69,0.1) 0%, rgba(255,255,255,0) 100%);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+}
+
+/* 导航栏 */
+.navbar {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.back-button {
+  width: 24px;
+  height: 24px;
+  margin-right: 16px;
+  
+  image {
+    width: 100%;
+    height: 100%;
   }
-  .exitBtn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 90%;
-    height: 80rpx;
-    border-radius: 30rpx;
-    margin: 0 auto;
-    background: #d8807f;
-    color: #fff;
-    margin-top: 50rpx;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #2D3436;
+}
+
+/* 设置卡片 */
+.settings-card {
+  background-color: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  height: 56px;
+  border-bottom: 1px solid #EBEEF5;
+
+  &:last-child {
+    border-bottom: none;
   }
+}
+
+.setting-title {
+  color: #2D3436;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.arrow-icon {
+  width: 16px;
+  height: 16px;
+  color: #B2BEC3;
+}
+
+/* 退出按钮区域 */
+.logout-container {
+  margin-top: 40px;
+}
+
+.logout-button {
+  width: 100%;
+  height: 48px;
+  background: #FFFFFF;
+  color: #FF5252;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    opacity: 0.9;
+  }
+}
+
+/* 版本信息 */
+.version-info {
+  margin-top: 24px;
+  text-align: center;
+  color: #B2BEC3;
+  font-size: 12px;
 }
 </style>

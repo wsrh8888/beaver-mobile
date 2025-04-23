@@ -26,7 +26,7 @@ export interface IWsContent {
 }
 export interface IWsStore {
   code: number;
-  command: "COMMON_CHAT_MESSAGE" | 'COMMON_UPDATE_MESSAGE';
+  command: "CHAT_MESSAGE" | 'COMMON_UPDATE_MESSAGE';
   content: IWsContent
 
 }

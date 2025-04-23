@@ -21,4 +21,8 @@ export function openAlbum(sourceType:string) {
       });
     });
   }
+
+export function openCall(){
+
+}
   

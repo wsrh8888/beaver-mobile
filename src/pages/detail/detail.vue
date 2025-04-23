@@ -1,60 +1,121 @@
 <template>
-	<view class="detail__content">
-		<HeaderComponent title="个人信息" background-color="#f5f5f5" @go-back="handleClickGoBack">
-			<template #left-content>
-				<!-- 可以根据需要添加返回按钮或其他内容 -->
-			</template>
-			<template #right-content>
-				<!-- 可以根据需要添加右侧按钮或内容 -->
-			</template>
-		</HeaderComponent>
-
-		<view class="detail__body">
-			<image :src="friendInfo.avatar" class="avatar"></image>
-			<text class="nickname">{{ friendInfo.nickname }}</text>
+	<view class="container">
+		<view class="top-gradient"></view>
+		
+		<!-- 导航栏 -->
+		<view class="navbar">
+			<view class="back-button" @click="handleClickGoBack">
+				<image src="@/static/img/detail/back-icon.svg" mode="aspectFit" class="back-icon" />
+			</view>
+			<view class="more-button" @click="showMoreMenu">
+				<image src="@/static/img/detail/more-icon.svg" mode="aspectFit" class="more-icon" />
+			</view>
 		</view>
-		<view class="detail__contenet">
-			<template v-if="friendInfo.isFriend">
-				<view class="info">
-					<view class="remark info__item"><label class="label">备注名:</label>
-						<text class="">{{ friendInfo.remarkName }}</text>
-					</view>
 
-					<view class="nickname info__item"><label class="label">昵称:</label>
-						<text>{{ friendInfo.nickname }}</text>
-					</view>
-					<view class="signature info__item"><label class="label">手机号: </label>{{ friendInfo.phone }}</view>
+		<!-- 好友资料卡片 -->
+		<view class="profile-card">
+			<!-- 用户基本信息头部 -->
+			<view class="profile-header">
+				<view class="user-avatar">
+					<image :src="friendInfo.avatar" mode="aspectFill" class="avatar-img" />
+				</view>
+				<view class="user-name">
+					{{ friendInfo.nickname }}
+					<image v-if="friendInfo.gender === 'male'" src="@/static/img/detail/gender-male-icon.svg" mode="aspectFit" class="gender-icon" />
+				</view>
+				<view v-if="friendInfo.remarkName" class="user-alias">备注: {{ friendInfo.remarkName }}</view>
+				<view class="user-id">ID: {{ friendInfo.userId }}</view>
+				<view class="user-signature">{{ friendInfo.signature || '这个人很懒，什么都没写~' }}</view>
+			</view>
 
-					<view class="signature info__item"><label class="label">个性签名:</label>
-						<text>{{ friendInfo.signature }}</text>
+			<!-- 基本资料卡片 -->
+			<view class="info-card">
+				<view class="card-header">
+					<view class="card-title">基本资料</view>
+				</view>
+				<view class="info-grid">
+					<view class="info-item">
+						<view class="info-label">地区</view>
+						<view class="info-value">{{ friendInfo.location || '未设置' }}</view>
+					</view>
+					<view class="info-item">
+						<view class="info-label">年龄</view>
+						<view class="info-value">{{ friendInfo.age || '未设置' }}</view>
+					</view>
+					<view class="info-item">
+						<view class="info-label">星座</view>
+						<view class="info-value">{{ friendInfo.constellation || '未设置' }}</view>
+					</view>
+					<view class="info-item">
+						<view class="info-label">职业</view>
+						<view class="info-value">{{ friendInfo.occupation || '未设置' }}</view>
+					</view>
+					<view class="info-item">
+						<view class="info-label">学历</view>
+						<view class="info-value">{{ friendInfo.education || '未设置' }}</view>
+					</view>
+					<view class="info-item">
+						<view class="info-label">兴趣爱好</view>
+						<view class="info-value">{{ friendInfo.hobbies || '未设置' }}</view>
 					</view>
 				</view>
-				<view class="actions">
-					<button @click="sendMessage"><label>发消息</label></button>
-					<button @click="audioCall"><label>音频通话</label></button>
+			</view>
+
+			<!-- 相册预览卡片 -->
+			<view class="info-card" v-if="friendInfo.photos && friendInfo.photos.length">
+				<view class="card-header">
+					<view class="card-title">相册动态</view>
 				</view>
-			</template>
-			<template v-else>
-				<view class="info">
-					<view class="nickname info__item"><label class="label">昵称:</label> {{ friendInfo.nickname }}</view>
-					<view class="signature info__item"><label class="label">手机号: </label>{{ friendInfo.phone }}</view>
-					<view class="signature info__item"><label class="label">个性签名: </label>{{ friendInfo.signature }}
+				<view class="photo-grid">
+					<view class="photo-item" v-for="(photo, index) in displayPhotos" :key="index">
+						<image :src="photo" mode="aspectFill" />
+					</view>
+					<view v-if="friendInfo.photos.length > 3" class="photo-item more-photos" @click="viewAllPhotos">
+						查看更多
 					</view>
 				</view>
-				<view class="actions ">
-					<button @click="showPopup">添加好友</button>
-				</view>
-			</template>
+			</view>
 		</view>
-		<uni-popup ref="applyRef" type="center" border-radius="10px 10px 0 0">
-			<view class="popup-content">
-				<view class="popup-header">添加好友</view>
-				<view class="popup__content">
-					<textarea class="popup-input" type="text" v-model="applyReason" placeholder="请输入申请理由"></textarea>
+
+		<!-- 底部操作栏 -->
+		<view class="bottom-bar">
+			<view class="actions-container">
+				<view class="action-button primary-button" @click="sendMessage">
+					<image src="@/static/img/detail/chat-icon.svg" mode="aspectFit" class="button-icon" />
+					<text>发起聊天</text>
 				</view>
-				<view class="popup-actions">
-					<view class="button" @click="closePopup">取消</view>
-					<view class="button apply" @click="applyFriend">申请</view>
+				<view class="action-button secondary-button" @click="audioCall">
+					<image src="@/static/img/detail/voice-call-icon.svg" mode="aspectFit" class="button-icon" />
+				</view>
+				<view class="action-button secondary-button" @click="videoCall">
+					<image src="@/static/img/detail/video-call-icon.svg" mode="aspectFit" class="button-icon" />
+				</view>
+			</view>
+		</view>
+
+		<!-- 编辑备注弹窗 -->
+		<uni-popup ref="editNotePopup" type="center">
+			<view class="modal-content">
+				<view class="modal-title">编辑备注</view>
+				<view class="input-group">
+					<input type="text" class="input-field" v-model="newRemarkName" placeholder="请输入备注名称" />
+				</view>
+				<view class="modal-actions">
+					<view class="modal-button cancel-button" @click="closeEditNote">取消</view>
+					<view class="modal-button confirm-button" @click="saveRemarkName">保存</view>
+				</view>
+			</view>
+		</uni-popup>
+
+		<!-- 更多菜单弹窗 -->
+		<uni-popup ref="moreMenuPopup" type="top">
+			<view class="menu-container">
+				<view class="menu-item" @click="showEditNote">
+					<text class="menu-text">编辑备注</text>
+				</view>
+				<view class="menu-divider"></view>
+				<view class="menu-item" @click="confirmDelete">
+					<text class="menu-text danger">删除好友</text>
 				</view>
 			</view>
 		</uni-popup>
@@ -62,229 +123,550 @@
 </template>
 
 <script lang="ts">
-import { applyAddFriendApi, getFriendInfoApi } from '@/api/friend';
+import { defineComponent, ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
-import { defineComponent, ref } from 'vue';
-import HeaderComponent from '@/component/header/header.vue';
-import { useFriendStore } from '@/pinia/friend/friend';
+import { getFriendInfoApi, updateRemarkNameApi, deleteFriendApi } from '@/api/friend';
+
 export default defineComponent({
-	components: {
-		HeaderComponent
-	},
 	setup() {
-		const friendId = ref<string>("");
-		const friendInfoStore = useFriendStore();
 		const friendInfo = ref({
-			avatar: '',
+			userId: '',
 			nickname: '',
-			signature: '',
+			avatar: '',
 			remarkName: '',
-			isFriend: false,
-			phone: '',
-		});
-		const applyReason = ref<string>('');
-		const applyRef = ref<any>();
-		onLoad((option: any) => {
-			friendId.value = option.id;
-		});
-		onShow(() => {
-			getFriendInfoApi({
-				friendId: friendId.value,
-			}).then((res) => {
-				if (res.code === 0) {
-					friendInfo.value = res.result;
-				}
-			});
+			signature: '',
+			gender: '',
+			location: '',
+			age: '',
+			constellation: '',
+			occupation: '',
+			education: '',
+			hobbies: '',
+			photos: [] as string[],
+			conversationId: ''
 		});
 
+		const newRemarkName = ref('');
+		const editNotePopup = ref();
+		const moreMenuPopup = ref();
+
+		const displayPhotos = computed(() => {
+			return friendInfo.value.photos.slice(0, 3);
+		});
+
+		onLoad((option: any) => {
+			if (option.id) {
+				loadFriendInfo(option.id);
+			}
+		});
+
+		const loadFriendInfo = async (friendId: string) => {
+			try {
+				const res = await getFriendInfoApi({ friendId });
+				if (res.code === 0) {
+					friendInfo.value = { ...friendInfo.value, ...res.result };
+				}
+			} catch (error) {
+				uni.showToast({ title: '获取好友信息失败', icon: 'none' });
+			}
+		};
+
+		const handleClickGoBack = () => {
+			uni.navigateBack();
+		};
+
+		const showMoreMenu = () => {
+			moreMenuPopup.value.open();
+		};
+
+		const showEditNote = () => {
+			moreMenuPopup.value.close();
+			newRemarkName.value = friendInfo.value.remarkName;
+			editNotePopup.value.open();
+		};
+
+		const closeEditNote = () => {
+			editNotePopup.value.close();
+		};
+
+		const saveRemarkName = async () => {
+			try {
+				const res = await updateRemarkNameApi({
+					friendId: friendInfo.value.userId,
+					remarkName: newRemarkName.value
+				});
+				if (res.code === 0) {
+					friendInfo.value.remarkName = newRemarkName.value;
+					uni.showToast({ title: '备注更新成功', icon: 'success' });
+					closeEditNote();
+				}
+			} catch (error) {
+				uni.showToast({ title: '更新备注失败', icon: 'none' });
+			}
+		};
+
+		const confirmDelete = () => {
+			moreMenuPopup.value.close();
+			uni.showModal({
+				title: '删除好友',
+				content: '确定要删除该好友吗？',
+				success: async (res) => {
+					if (res.confirm) {
+						try {
+							const result = await deleteFriendApi({ friendId: friendInfo.value.userId });
+							if (result.code === 0) {
+								uni.showToast({ title: '删除成功', icon: 'success' });
+								setTimeout(() => {
+									uni.navigateBack();
+								}, 1500);
+							}
+						} catch (error) {
+							uni.showToast({ title: '删除失败', icon: 'none' });
+						}
+					}
+				}
+			});
+		};
+
 		const sendMessage = () => {
-			// 跳转到聊天详情页面
 			uni.navigateTo({
 				url: `/pages/chat/chat?id=${friendInfo.value.conversationId}`,
 				animationType: 'slide-in-right',
 				animationDuration: 200
 			});
-
 		};
 
 		const audioCall = () => {
-			// 写音频通话的逻辑
-			console.log('音频通话');
+			uni.showToast({ title: '发起语音通话', icon: 'none' });
 		};
 
-		const showPopup = () => {
-			applyRef.value.open();
+		const videoCall = () => {
+			uni.showToast({ title: '发起视频通话', icon: 'none' });
 		};
 
-		const closePopup = () => {
-			applyRef.value.close();
+		const viewAllPhotos = () => {
+			// 实现查看所有照片的逻辑
+			uni.showToast({ title: '查看更多照片', icon: 'none' });
 		};
 
-		const applyFriend = () => {
-			applyAddFriendApi({
-				friendId: friendId.value,
-				verify: applyReason.value,
-			}).then((res) => {
-				if (res.code === 0) {
-					uni.showToast({
-						title: '好友申请成功',
-						icon: 'success',
-					});
-					closePopup();
-				}
-			});
-		};
-		const handleClickGoBack = () => {
-			uni.navigateBack({
-				delta: 1,
-			});
-		};
 		return {
-			handleClickGoBack,
-			applyRef,
 			friendInfo,
+			displayPhotos,
+			newRemarkName,
+			editNotePopup,
+			moreMenuPopup,
+			handleClickGoBack,
+			showMoreMenu,
+			showEditNote,
+			closeEditNote,
+			saveRemarkName,
+			confirmDelete,
 			sendMessage,
 			audioCall,
-			showPopup,
-			closePopup,
-			applyFriend,
-			applyReason,
+			videoCall,
+			viewAllPhotos
 		};
 	}
 });
 </script>
+
 <style lang="scss" scoped>
-.detail__content {
-	height: 100vh;
+/* 基础样式 */
+.container {
+	min-height: 100vh;
+	background-color: #F9FAFB;
+	color: #636E72;
+	font-size: 28rpx;
+	line-height: 1.5;
+	padding-bottom: 180rpx;
+	position: relative;
+}
+
+/* 顶部渐变区域 */
+.top-gradient {
+	height: 440rpx;
+	background: linear-gradient(180deg, rgba(255,125,69,0.15) 0%, rgba(255,255,255,0) 100%);
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 1;
+}
+
+/* 导航栏 */
+.navbar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	height: 96rpx;
+	padding: 0 32rpx;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 10;
+	background: transparent;
+}
+
+.back-button,
+.more-button {
+	width: 64rpx;
+	height: 64rpx;
+	border-radius: 50%;
+	background-color: white;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.08);
+}
+
+.back-icon,
+.more-icon {
+	width: 40rpx;
+	height: 40rpx;
+}
+
+/* 用户资料卡片 */
+.profile-card {
+	padding: 0 32rpx;
+	position: relative;
+	z-index: 2;
+	padding-top: 144rpx;
+}
+
+.profile-header {
+	background-color: white;
+	border-radius: 48rpx;
+	padding: 48rpx;
+	box-shadow: 0 8rpx 40rpx rgba(0,0,0,0.06);
 	display: flex;
 	flex-direction: column;
-	background-color: #f5f5f5;
+	align-items: center;
+	margin-bottom: 40rpx;
+}
 
+.user-avatar {
+	width: 176rpx;
+	height: 176rpx;
+	border-radius: 56rpx;
+	overflow: hidden;
+	position: relative;
+	margin-bottom: 32rpx;
 
-	.detail__body {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-direction: column;
-		padding: 20px;
-		padding-bottom: 0;
-
-		.avatar {
-			width: 140rpx;
-			height: 140rpx;
-			border-radius: 20rpx;
-			margin-bottom: 10px;
-			overflow: hidden;
-		}
-
-		.nickname {
-			font-size: 34rpx;
-		}
-	}
-
-	.detail__contenet {
-		flex: 1;
-		background-color: #fff;
-		border-top-left-radius: 375px 50px;
-		border-top-right-radius: 375px 50px;
-		margin-top: 25px;
-		padding: 50px 15px 40px;
-		display: flex;
-		flex-direction: column;
-		position: relative;
-
-		.info {
-			margin-bottom: 20px;
-
-			.remark,
-			.nickname,
-			.signature {
-				margin-bottom: 10px;
-				font-size: 16px;
-			}
-
-			.info__item {
-				display: flex;
-				align-items: center;
-				margin-top: 40rpx;
-
-				.label {
-					flex: 0 0 75px;
-					color: #666;
-				}
-			}
-		}
-
-		.actions {
-			display: flex;
-			justify-content: space-around;
-			gap: 20rpx;
-			position: absolute;
-			bottom: 80rpx;
-			width: 80%;
-			left: 50%;
-			transform: translate(-50%, -50%);
-			overflow: hidden;
-
-			button {
-				width: 450rpx;
-				background-color: #0081ff;
-				color: #fff;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				font-size: 16px;
-				border-radius: 50px;
-
-			}
-		}
+	&::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 30%;
+		background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%);
 	}
 }
 
-.popup-content {
-	width: 540rpx;
-	background: #fff;
-	border-radius: 16rpx;
+.avatar-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
 
-	.popup-header {
-		font-size: 26rpx;
-		padding-top: 45rpx;
-		margin-bottom: 10px;
-		text-align: center;
+.user-name {
+	font-size: 40rpx;
+	font-weight: 600;
+	color: #2D3436;
+	margin-bottom: 12rpx;
+	display: flex;
+	align-items: center;
+}
+
+.gender-icon {
+	width: 36rpx;
+	height: 36rpx;
+	margin-left: 12rpx;
+}
+
+.user-alias {
+	font-size: 28rpx;
+	color: #636E72;
+	margin-bottom: 16rpx;
+}
+
+.user-id {
+	font-size: 26rpx;
+	color: #B2BEC3;
+	margin-bottom: 28rpx;
+}
+
+.user-signature {
+	font-size: 30rpx;
+	color: #636E72;
+	text-align: center;
+	max-width: 600rpx;
+	line-height: 1.5;
+}
+
+/* 资料卡片样式 */
+.info-card {
+	background-color: white;
+	border-radius: 48rpx;
+	padding: 48rpx;
+	box-shadow: 0 8rpx 40rpx rgba(0,0,0,0.06);
+	margin-bottom: 40rpx;
+}
+
+.card-header {
+	margin-bottom: 40rpx;
+}
+
+.card-title {
+	font-size: 34rpx;
+	font-weight: 600;
+	color: #2D3436;
+}
+
+/* 信息网格布局 */
+.info-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 32rpx;
+}
+
+.info-item {
+	padding: 24rpx 32rpx;
+	background-color: #F9FAFB;
+	border-radius: 24rpx;
+	transition: all 0.2s;
+
+	&:hover {
+		transform: translateY(-4rpx);
+		box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.05);
+	}
+}
+
+.info-label {
+	color: #B2BEC3;
+	margin-bottom: 8rpx;
+	font-size: 24rpx;
+}
+
+.info-value {
+	color: #2D3436;
+	font-weight: 500;
+	font-size: 30rpx;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* 相册预览卡片 */
+.photo-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 24rpx;
+	padding: 16rpx 0;
+}
+
+.photo-item {
+	aspect-ratio: 1/1;
+	border-radius: 32rpx;
+	overflow: hidden;
+	background-color: #F0F3F4;
+	transition: transform 0.2s;
+
+	image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 
-	.popup__content {
-		box-sizing: border-box;
+	&:hover {
+		transform: scale(1.02);
+	}
+}
 
-		.popup-input {
-			margin: 0 auto;
-			border-radius: 30rpx;
-			width: 440rpx;
-			padding: 20rpx 30rpx;
-			background: rgb(245, 245, 245);
-			height: 160rpx;
-			font-size: 25rpx;
-		}
+.more-photos {
+	background-color: rgba(0,0,0,0.5);
+	color: white;
+	font-weight: 500;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 28rpx;
+}
+
+/* 底部固定按钮 */
+.bottom-bar {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: white;
+	padding: 32rpx 48rpx;
+	box-shadow: 0 -8rpx 32rpx rgba(0,0,0,0.08);
+	z-index: 10;
+}
+
+.actions-container {
+	display: flex;
+	gap: 24rpx;
+}
+
+.action-button {
+	height: 112rpx;
+	border-radius: 32rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s;
+	cursor: pointer;
+}
+
+.primary-button {
+	background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
+	color: white;
+	box-shadow: 0 8rpx 24rpx rgba(255, 125, 69, 0.2);
+	font-size: 32rpx;
+	font-weight: 600;
+	flex: 3;
+	gap: 16rpx;
+
+	&:active {
+		transform: translateY(2rpx);
+		box-shadow: 0 4rpx 16rpx rgba(255, 125, 69, 0.15);
 	}
 
-	.popup-actions {
-		display: flex;
-		justify-content: space-between;
-
-		.button {
-			text-align: center;
-			flex: 1;
-			border: none;
-			border-radius: 4rpx;
-			font-size: 30rpx;
-			height: 100rpx;
-			line-height: 100rpx;
-		}
-
-		.apply {
-			color: rgb(41, 121, 255);
-		}
-
+	text {
+		color: white;
 	}
+}
+
+.secondary-button {
+	background-color: #F0F3F4;
+	flex: 1;
+
+	&:active {
+		background-color: #E8EBED;
+		transform: translateY(2rpx);
+	}
+}
+
+.button-icon {
+	width: 44rpx;
+	height: 44rpx;
+}
+
+/* 编辑备注弹窗 */
+.modal-content {
+	width: 636rpx;
+	background-color: white;
+	border-radius: 40rpx;
+	padding: 48rpx;
+	box-sizing: border-box;
+	position: relative;
+	z-index: 999;
+}
+
+.modal-title {
+	font-size: 36rpx;
+	font-weight: 600;
+	color: #2D3436;
+	margin-bottom: 32rpx;
+	text-align: center;
+}
+
+.input-group {
+	margin-bottom: 40rpx;
+}
+
+.input-field {
+	width: 100%;
+	height: 96rpx;
+	border-radius: 24rpx;
+	border: 2rpx solid #E8EBED;
+	padding: 0 32rpx;
+	font-size: 30rpx;
+	margin-bottom: 40rpx;
+	transition: all 0.2s;
+	background-color: #F9FAFB;
+	box-sizing: border-box;
+
+	&:focus {
+		outline: none;
+		border-color: #FF7D45;
+		box-shadow: 0 0 0 6rpx rgba(255, 125, 69, 0.1);
+	}
+}
+
+.modal-actions {
+	display: flex;
+	gap: 24rpx;
+}
+
+.modal-button {
+	flex: 1;
+	height: 96rpx;
+	border-radius: 24rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 30rpx;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.cancel-button {
+	background-color: #F0F3F4;
+	color: #636E72;
+
+	&:active {
+		background-color: #E8EBED;
+	}
+}
+
+.confirm-button {
+	background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
+	color: white;
+
+	&:active {
+		opacity: 0.9;
+	}
+}
+
+/* 更多菜单 */
+.menu-container {
+	background-color: white;
+	border-radius: 32rpx;
+	overflow: hidden;
+	width: 280rpx;
+	position: absolute;
+	right: 32rpx;
+	top: 128rpx;
+	box-shadow: 0 20rpx 60rpx rgba(0,0,0,0.15);
+	z-index: 998;
+}
+
+.menu-item {
+	padding: 32rpx;
+	display: flex;
+	align-items: center;
+	transition: background-color 0.15s;
+
+	&:active {
+		background-color: #F0F3F4;
+	}
+}
+
+.menu-text {
+	font-size: 30rpx;
+	color: #2D3436;
+
+	&.danger {
+		color: #FF5252;
+	}
+}
+
+.menu-divider {
+	height: 2rpx;
+	background-color: #F0F3F4;
 }
 </style>

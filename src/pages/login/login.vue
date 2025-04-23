@@ -1,32 +1,62 @@
 <template>
   <view class="container">
-    <view class="title">
-      <text class="title-text">手机号密码登录</text>
-    </view>
-    <view class="userInfo">
-      <view class="input__item">
-        <view class="input__field">
-          <input type="text" class="input" v-model="userInfo.phone" placeholder="请输入手机号" @input="inputPhone">
+    <view class="top-gradient"></view>
+    
+    <view class="content">
+      <view class="logo-container">
+        <view class="logo">
+          <!-- 这里可以放置品牌logo -->
         </view>
-        <view v-if="phoneTouched && !isPhoneValid" class="error__message">请输入有效手机号</view>
       </view>
-      <view class="input__item">
-        <view class="input__field">
-          
-          <input class="input" :type="passwordType" v-model="userInfo.password" placeholder="请输入密码">
-          <uni-icons class="icon__password" :type="passwordType === 'password' ? 'eye' : 'eye-slash'"
-            @click="togglePasswordVisibility"></uni-icons>
+      
+      <view class="title">欢迎回来</view>
+      <view class="title-decoration"></view>
+      
+      <view class="welcome-text">
+        登录您的Beaver账号，开启社交新体验
+      </view>
+      
+      <view class="form-container">
+        <view class="form-group">
+          <input 
+            type="tel" 
+            class="form-input" 
+            v-model="userInfo.phone" 
+            placeholder="手机号码"
+            @input="inputPhone"
+          >
+          <view v-if="phoneTouched && !isPhoneValid" class="error__message">请输入有效手机号</view>
         </view>
-        <view v-if="passwordTouched && !isPasswordValid" class="error__message">密码长度不少于13位，且必须包含中英文</view>
+        
+        <view class="form-group">
+          <input 
+            :type="passwordType" 
+            class="form-input" 
+            v-model="userInfo.password" 
+            placeholder="登录密码"
+          >
+          <uni-icons 
+            class="icon__password" 
+            :type="passwordType === 'password' ? 'eye' : 'eye-slash'"
+            @click="togglePasswordVisibility"
+          ></uni-icons>
+          <view v-if="passwordTouched && !isPasswordValid" class="error__message">密码长度不少于13位，且必须包含中英文</view>
+        </view>
+        
+        <view class="forgot-password">
+          <text class="jump__text" @click="navigateToPage('/pages/forget/forget')">忘记密码?</text>
+        </view>
+        
+        <button 
+          class="btn btn-primary" 
+          :disabled="!isFormValid" 
+          @click="goHome"
+        >登录</button>
+        
+        <view class="register-link">
+          还没有账号? <text class="jump__text" @click="navigateToPage('/pages/register/register')">立即注册</text>
+        </view>
       </view>
-    </view>
-    <view class="btn__jump">
-      <text class="register jump__text" @click="navigateToPage('/pages/register/register')">注册</text>
-      <text class="placeholader"></text>
-      <text class="forget jump__text" @click="navigateToPage('pages/forget/forget')">忘记密码？</text>
-    </view>
-    <view class="footer">
-      <view class="login__button" :disabled="!isFormValid" @click="goHome">登录</view>
     </view>
   </view>
 </template>
@@ -43,13 +73,13 @@ import { useInitStore } from '@/pinia/init/init';
 
 export default defineComponent({
   setup() {
-    interface UserInfo {
+    interface userInfo {
       phone: string;
       password: string;
     }
     const sUserInfo = useUserStore();
     const initStore = useInitStore();
-    const userInfo = reactive<UserInfo>({
+    const userInfo = reactive<userInfo>({
       phone: '',
       password: ''
     });
@@ -163,122 +193,192 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .container {
-  padding: 40rpx;
+  min-height: 100vh;
+  background-color: #FFFFFF;
+  position: relative;
+}
+
+.top-gradient {
+  height: 240rpx;
+  background: linear-gradient(180deg, rgba(255,125,69,0.1) 0%, rgba(255,255,255,0) 100%);
+}
+
+.content {
+  padding: 0 32rpx;
+  max-width: 750rpx;
+  margin: 0 auto;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 48rpx;
+}
+
+.logo {
+  width: 112rpx;
+  height: 112rpx;
+  background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
+  border-radius: 32rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  box-shadow: 0 8rpx 24rpx rgba(255, 125, 69, 0.2);
+  
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+    border-radius: 32rpx 32rpx 0 0;
+  }
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #2D3436;
+  text-align: center;
+  margin-bottom: 16rpx;
+  line-height: 1.3;
+}
+
+.title-decoration {
+  width: 40rpx;
+  height: 4rpx;
+  background-color: #FF7D45;
+  margin: 0 auto 48rpx;
+}
+
+.welcome-text {
+  text-align: center;
+  margin-bottom: 64rpx;
+  color: #636E72;
+  font-size: 28rpx;
+}
+
+.form-container {
+  margin-top: 20rpx;
+}
+
+.form-group {
+  position: relative;
+  margin-bottom: 34rpx;
+  background-color: #F9FAFB;
+  border-radius: 28rpx;
+  padding: 0 32rpx;
+  display: flex;
+  align-items: center;
+  height: 96rpx;
+  box-shadow: inset 0 2rpx 6rpx rgba(0,0,0,0.05);
+}
+
+.form-input {
+  width: 100%;
   height: 100%;
+  border: none;
+  background: transparent;
+  font-size: 30rpx;
+  color: #2D3436;
+  padding: 0;
+  
+  &:focus {
+    outline: none;
+  }
+  
+  &::placeholder {
+    color: #B2BEC3;
+  }
+}
 
-  .title {
-    display: flex;
-    margin-top: 220rpx;
+.icon__password {
+  color: #B2BEC3;
+  font-size: 40rpx;
+  padding: 0 16rpx;
+}
 
-    .title-text {
-      font-family: FangSong;
-      font-size: 43rpx;
-      font-weight: normal;
-      color: #707070;
+.error__message {
+  color: #FF7D45;
+  font-size: 24rpx;
+  margin-top: 8rpx;
+  padding-left: 32rpx;
+  position: absolute;
+  bottom: -32rpx;
+  left: 0;
+}
+
+.forgot-password {
+  text-align: right;
+  margin-bottom: 48rpx;
+  
+  .jump__text {
+    color: #FF7D45;
+    font-weight: 500;
+    font-size: 24rpx;
+  }
+}
+
+.btn {
+  width: 100%;
+  height: 96rpx;
+  border-radius: 28rpx;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  font-size: 32rpx;
+  
+  &.btn-primary {
+    background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
+    color: white;
+    box-shadow: 0 8rpx 24rpx rgba(255, 125, 69, 0.15);
+    
+    &:after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+      border-radius: 28rpx 28rpx 0 0;
+    }
+    
+    &:hover {
+      transform: translateY(-4rpx);
+      box-shadow: 0 12rpx 32rpx rgba(255, 125, 69, 0.2);
+    }
+    
+    &:active {
+      transform: translateY(2rpx);
+      box-shadow: 0 4rpx 16rpx rgba(255, 125, 69, 0.1);
+    }
+    
+    &.disabled {
+      background: #ccc;
+      box-shadow: none;
+      pointer-events: none;
     }
   }
+}
 
-  .userInfo {
-    margin-top: 80rpx;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    .input__item {
-      padding-bottom: 40rpx;
-      width: 100%;
-      position: relative;
-      box-sizing: border-box;
-
-      .input__field {
-        display: flex;
-        align-items: center;
-        border-radius: 25px;
-        background-color: #f7f7f7;
-
-        position: relative;
-        .icon__password {
-          position: absolute;
-          right: 20rpx;
-          color: #707070;
-        }
-
-        .input {
-          flex: 1;
-          border: none;
-          outline: none;
-          padding: 10px;
-          font-size: 16px;
-          color: #333;
-          margin-left: 30rpx;
-        }
-
-        uni-icons {
-          position: absolute;
-          right: 10rpx;
-          color: #707070;
-        }
-      }
-
-      .error__message {
-        color: red;
-        font-size: 12px;
-        margin-left: 20px;
-        position: absolute;
-        bottom: 10rpx;
-      }
-    }
-  }
-  .btn__jump {
-    display: flex;
-    justify-content: space-between;
-    font-size: 25rpx;
-    margin-top: 10rpx;
-    color: #757575;
-    .jump__text {
-      cursor: pointer;
-    }
-
-
-    .placeholader {
-      flex: 1;
-    }
-
-  }
-
-  .footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    margin-top: 30rpx;
-
-    .forget {
-      color: #707070;
-      font-family: FangSong;
-      margin-bottom: 20rpx;
-      cursor: pointer;
-    }
-
-    .login__button {
-      margin-top: 55rpx;
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 20px;
-      width: 80%;
-      height: 92rpx;
-      cursor: pointer;
-      font-size: 16px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      &.disabled {
-        background-color: #ccc;
-        pointer-events: none;
-      }
-    }
+.register-link {
+  text-align: center;
+  margin-top: 48rpx;
+  color: #636E72;
+  font-size: 28rpx;
+  
+  .jump__text {
+    color: #FF7D45;
+    font-weight: 500;
   }
 }
 </style>

@@ -40,9 +40,23 @@
 			}
 		},
 		{
-			"path": "pages/apply/apply",
+			"path": "pages/agreement/agreement",
 			"style": {
-				"navigationBarTitleText": "apply",
+				"navigationBarTitleText": "agreement",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/privacy/privacy",
+			"style": {
+				"navigationBarTitleText": "privacy",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/new-friends/new-friends",
+			"style": {
+				"navigationBarTitleText": "new-friends",
 				"enablePullDownRefresh": false,
 				"disableScroll": false
 			}
@@ -79,6 +93,30 @@
 			}
 		},
 		{
+			"path": "pages/feedback/feedback",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/groupMember/groupMember",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/groupConfig/groupConfig",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
 			"path": "pages/setting/setting",
 			"style": {
 				"enablePullDownRefresh": false,
@@ -103,7 +141,15 @@
 			}
 		},
 		{
-			"path": "pages/mineInfo/mineInfo",
+			"path": "pages/createGroup/createGroup",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/profile/profile",
 			"style": {
 				"enablePullDownRefresh": false,
 				"backgroundTextStyle": "dark",
@@ -119,6 +165,14 @@
 			}
 		},
 		{
+			"path": "pages/groupList/groupList",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
 			"path": "pages/userConfig/userConfig",
 			"style": {
 				"enablePullDownRefresh": false,
@@ -126,10 +180,6 @@
 				"onReachBottomDistance": 0
 			}
 		}
-
-
-		
-		
 	],
 	"globalStyle": {
 		"navigationStyle": "custom",
@@ -138,27 +188,28 @@
 		"backgroundColor": "#F8F8F8"
 	},
 	"tabBar": {
-		"color": "#7A7E83",
-		"selectedColor": "#2680EB",
+		"color": "#B2BEC3",
+		"selectedColor": "#FF7D45",
 		"borderStyle": "black",
 		"backgroundColor": "#ffffff",
+		"iconWidth": "22px",
 		"list": [
 			{
 				"pagePath": "pages/home/home",
-				"iconPath": "static/tarBar/chat.png",
-				"selectedIconPath": "static/tarBar/chat_active.png",
+				"iconPath": "static/tarBar/new-chat.png",
+				"selectedIconPath": "static/tarBar/new-chat-active.png",
 				"text": "消息"
 			},
 			{
 				"pagePath": "pages/friend/friend",
-				"iconPath": "static/tarBar/friend.png",
-				"selectedIconPath": "static/tarBar/friend_active.png",
+				"iconPath": "static/tarBar/new-friend.png",
+				"selectedIconPath": "static/tarBar/new-friend-active.png",
 				"text": "好友"
 			},
 			{
 				"pagePath": "pages/mine/mine",
-				"iconPath": "static/tarBar/mine.png",
-				"selectedIconPath": "static/tarBar/mine_active.png",
+				"iconPath": "static/tarBar/new-mine.png",
+				"selectedIconPath": "static/tarBar/new-mine-active.png",
 				"text": "我的"
 			}
 		]
