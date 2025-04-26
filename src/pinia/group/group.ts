@@ -60,7 +60,7 @@ export const useGroupStore = defineStore('useGroupStore', {
       // 从用户map中更新基础信息
       const friendStore = useFriendStore()
       return cache.memberList.map(mumber =>{
-        const updateUserInfo = friendStore.allUserMapInfo.get(mumber.userId)
+        const updateUserInfo = friendStore.friendMap.get(mumber.userId)
         let userInfo = {}
         if (updateUserInfo) {
           userInfo = {
@@ -68,7 +68,6 @@ export const useGroupStore = defineStore('useGroupStore', {
             nicknam: updateUserInfo.nickname
           }
         }
-
         return {
           ...mumber,
           ...userInfo
@@ -93,7 +92,11 @@ export const useGroupStore = defineStore('useGroupStore', {
       });
       if (getGroupApi.code === 0) {
         this.groupList = getGroupApi.result.list;
-        this.convertGroupListToMap();
+        const groupMap = new Map();
+        this.groupList?.forEach((group: IGroupInfo) => {
+          groupMap.set(group.conversationId, group);
+        });
+        this.groupMap = groupMap;
       }
     },
 
@@ -109,16 +112,7 @@ export const useGroupStore = defineStore('useGroupStore', {
         }
       });
     },
-    /**
-     * @description: 将groupList转换为Map形式
-     */
-    convertGroupListToMap() {
-      const groupMap = new Map();
-      this.groupList?.forEach((group: IGroupInfo) => {
-        groupMap.set(group.conversationId, group);
-      });
-      this.groupMap = groupMap;
-    },
+   
 
     /**
      * @description: 获取群成员列表

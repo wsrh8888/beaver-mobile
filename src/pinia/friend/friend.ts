@@ -8,7 +8,7 @@ import type { IFriendInfo } from '@/types/ajax/friend';
 export const useFriendStore = defineStore('friendStore', {
   state: (): {
     friendList: IFriendInfo[],
-    allUserMapInfo: Map<string, IFriendInfo>,
+    friendMap: Map<string, IFriendInfo>,
   } => ({
     /**
      * @description: 好友列表
@@ -17,7 +17,7 @@ export const useFriendStore = defineStore('friendStore', {
     /**
      * @description: 用户信息映射（包含好友和非好友）
      */
-    allUserMapInfo: new Map<string, IFriendInfo>(),
+    friendMap: new Map<string, IFriendInfo>(),
   }),
   getters: {
     /**
@@ -27,14 +27,14 @@ export const useFriendStore = defineStore('friendStore', {
      */
     getFriendInfoById: (state) => {
       return (id: string): IFriendInfo | undefined => {
-        return state.allUserMapInfo.get(id);
+        return state.friendMap.get(id);
       };
     },
   },
   actions: {
     reset() {
       this.friendList = [];
-      this.allUserMapInfo.clear();
+      this.friendMap.clear();
     },
     
     async updateFriendInfo(friendId: string) {
@@ -52,8 +52,7 @@ export const useFriendStore = defineStore('friendStore', {
             this.friendList.push(tempFriendInfo);
           }
           // 更新用户信息映射
-          this.allUserMapInfo.set(friendId, tempFriendInfo);
-          console.log('Updated friend info:', tempFriendInfo);
+          this.friendMap.set(friendId, tempFriendInfo);
           return tempFriendInfo;
         }
       } catch (error) {
@@ -62,6 +61,9 @@ export const useFriendStore = defineStore('friendStore', {
       }
     },
 
+    /**
+     * @description: 初始化好友列表
+     */    
     async initFriendApi() {
       try {
         const res = await getFriendListApi({
@@ -72,7 +74,7 @@ export const useFriendStore = defineStore('friendStore', {
           this.friendList = res.result.list || [];
           // 初始化用户信息映射
           this.friendList.forEach(friend => {
-            this.allUserMapInfo.set(friend.userId, friend);
+            this.friendMap.set(friend.userId, friend);
           });
         }
       } catch (error) {

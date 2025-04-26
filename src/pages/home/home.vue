@@ -53,10 +53,12 @@
           <view v-for="chat in pinnedChats" :key="chat.conversationId" class="pinned-item"
             @click="handleChatClick(chat)">
             <view class="pinned-avatar">
-              <image :src="previewOnlineFileApi( (allUserMapInfo.get(parseConversationGetFriendId(chat.conversationId) || '')?.avatar || chat.avatar))" mode="aspectFill" class="avatar-img" />
+              <image :src="getAvatarByConversationInfo(chat.conversationId, chat.chatType).avatar 
+                
+                " mode="aspectFill" class="avatar-img" />
             </view>
             <view class="pinned-info">
-              <view class="pinned-name">{{ (allUserMapInfo.get(parseConversationGetFriendId(chat.conversationId) || '')?.nickname || chat.nickname) }}</view>
+              <view class="pinned-name">{{getAvatarByConversationInfo(chat.conversationId, chat.chatType).nickname}}</view>
               <view class="pinned-message">{{ chat.msg_preview }}</view>
             </view>
           </view>
@@ -74,7 +76,7 @@
               <view class="message-item" @click="handleChatClick(chat)">
                 <view class="avatar-wrapper">
                   <view class="avatar">
-                    <image :src="previewOnlineFileApi( allUserMapInfo.get(parseConversationGetFriendId(chat.conversationId) || '')?.avatar || chat.avatar)" mode="aspectFill" class="avatar-img" />
+                    <image :src="getAvatarByConversationInfo(chat.conversationId, chat.chatType).avatar" mode="aspectFill" class="avatar-img" />
                     <view v-if="chat.unread_count" class="badge" :class="chat.unread_count > 99 ? 'yellow' : 'red'">
                       {{ chat.unread_count > 99 ? '99+' : chat.unread_count }}
                     </view>
@@ -82,7 +84,7 @@
                 </view>
                 <view class="message-content">
                   <view class="message-header">
-                    <view class="message-name">{{ (allUserMapInfo.get(parseConversationGetFriendId(chat.conversationId) || '')?.nickname || chat.nickname) }}</view>
+                    <view class="message-name">{{  getAvatarByConversationInfo(chat.conversationId, chat.chatType).nickname}}</view>
                     <view class="message-time">{{ formatTime(chat.update_at) }}</view>
                   </view>
                   <view class="message-preview">{{ chat.msg_preview }}</view>
@@ -106,16 +108,22 @@ import { previewOnlineFileApi } from "@/api/file";
 import type { IChatInfo } from '@/types/ajax/chat';
 import {parseConversation} from '@/utils/conversation'
 import { useUserStore } from '@/pinia/user/user';
+import { useGroupStore } from '@/pinia/group/group';
 export default defineComponent({
   setup() {
     const showDropdown = ref(false);
     const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 0);
     const conversationStore = useConversationStore();
     const friendStore = useFriendStore();
+    const groupStore = useGroupStore();
+
     const userStore = useUserStore();
-    const allUserMapInfo = computed(() => {
-			return friendStore.allUserMapInfo
+    const friendMap = computed(() => {
+			return friendStore.friendMap
 		})
+    const groupMap = computed(() => {
+      return groupStore.groupMap
+    })
 
     // 获取聊天列表
     const chatList = computed(() => conversationStore.getRecentChatList());
@@ -233,10 +241,32 @@ export default defineComponent({
     const parseConversationGetFriendId = (conversationId: string) =>{
       return parseConversation(conversationId, userStore.userInfo.userId)
     }
+    const getAvatarByConversationInfo = computed(() => {
+      return (conversationId: string, chatType: number) => {
+        if (chatType === 1) {
+          const friendInid = parseConversationGetFriendId(conversationId) || "";
+          const friendInfo = friendMap.value.get(friendInid)
+          return {
+            avatar: previewOnlineFileApi(friendInfo?.avatar || ''),
+            nickname:friendInfo?.nickname || ''
+          };
+        } else if (chatType === 2) {
+          const groupInfo = groupMap.value.get(conversationId)
+
+          return {
+            avatar: previewOnlineFileApi(groupInfo?.avatar || ''),
+            nickname:groupInfo?.title || ''
+          };
+        }
+        return '';
+      };
+    });
+  
 
     return {
+      getAvatarByConversationInfo,
       parseConversationGetFriendId,
-      allUserMapInfo,
+      friendMap,
       statusBarHeight,
       showDropdown,
       previewOnlineFileApi,
