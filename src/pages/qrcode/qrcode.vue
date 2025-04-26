@@ -69,7 +69,7 @@ import { useUserStore } from '@/pinia/user/user';
 export default defineComponent({
   setup() {
     const store = useUserStore();
-    const userInfo = computed(() => store.gUserInfo);
+    const userInfo = computed(() => store.userInfo);
     const qrCanvasId = ref("qrcode-canvas");
     const instance = getCurrentInstance();
     const isH5 = ref(false);
@@ -121,7 +121,7 @@ export default defineComponent({
       logoBorderWidth: 6,
       logoBorderColor: '#ffffff'
     });
-    
+    console.error('二维码设置:', userInfo.value);
     // 将对象转换为JSON字符串作为二维码值
     const qrValue = ref(JSON.stringify({
       type: "addFriend",
