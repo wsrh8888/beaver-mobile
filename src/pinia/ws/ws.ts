@@ -62,13 +62,35 @@ export const useWsStore = defineStore('useWsStore', {
         case WsCommand.CHAT_MESSAGE:
           this.parseCommonChatMessage(data.content);
           break;
+        case WsCommand.FRIEND_OPERATION:
+          this.parseUserProfile(data.content);
         // case WsCommand.HEARTBEAT:
         // case WsCommand.UPDATE_MESSAGE:
         //   this.parseCommonUpdateMessage(data.content);
-        //   break;
+          break;
         default:
           console.debug('Unhandled ws command:', data.command);
           break;
+      }
+    },
+    async parseFriendProfile(content: IWsContent) {
+      const friendStore = useFriendStore();
+      const conversationStore = useConversationStore();
+
+      switch (content.data.type) {
+        case "friend_request_receive": {
+          const userId = content.data.body.userId;
+          // 更新会话列表
+          conversationStore.updateBaseInfo({
+            ...content.data.body
+          } as any)
+          
+          // 好友列表增加该好友
+          friendStore.updateFriendInfo(userId);
+        }
+        case "friend_update": {
+          break;
+        }
       }
     },
     async parseGroupProfile(content: IWsContent) {
@@ -79,9 +101,13 @@ export const useWsStore = defineStore('useWsStore', {
       switch (content.data.type) {
         case "message_group_create": {
           // 更新最近会话列表
-          conversationStore.updateBaseInfo({
-            ...content.data.body
-          } as any)
+          // conversationStore.updateBaseInfo({
+          //   ...content.data.body
+          // } as any)
+          // 通过群id获取群信息，并且追加到群列表中
+          groupStore.updateGroupInfo(content.data.body.conversationId)
+          // 通过会话id获取会话信息，并且追加到会话列表中
+          conversationStore.updateConversationListByFriendId(content.data.conversationId)
           break;
         }
         case "group_update": {
@@ -109,10 +135,10 @@ export const useWsStore = defineStore('useWsStore', {
       const conversationStore = useConversationStore();
 
       switch (content.data.type) {
-        case "profile_change_notify": {
+        case "friend_request_receive": {
           // 更新好友信息
           await friendStore.updateFriendInfo(content.data.body.userId);
-
+          await conversationStore.updateConversationListByFriendId(content.data.conversationId);
           break;
         }
         case "user_valid_type_update": {

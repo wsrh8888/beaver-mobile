@@ -5,7 +5,9 @@
 		<view class="contents">
 			<!-- 文本 -->
 			<view class="content" v-if="message.type == 1">
-				<view v-html="convertedContent" class="text"> </view>
+				<!-- <view v-html="convertedContent" class="text"> </view> -->
+				<rich-text :nodes="convertedContent" class="text"></rich-text>
+
 			</view>
 			<!-- 图片 -->
 			<view class="contentImg" v-if="message.type == 2">
@@ -84,6 +86,7 @@ export default defineComponent({
 			if (matches) {
 				matches.forEach(match => {
 					if (emojiMap(match)) {
+						console.error('emojiMap', emojiMap(match));
 						// 替换成对应的图片标签
 						const imgTag = `<img src="${emojiMap(match)}" style="width:30px;height:30px;display:block;"></img>`;
 						content = content.replace(match, imgTag);
@@ -143,7 +146,8 @@ export default defineComponent({
 			display: flex;
 			flex-direction: column;
 			color: #000;
-			margin-bottom: 25rpx;
+
+
 
 			.time {
 				margin: 10rpx 0;
@@ -363,7 +367,6 @@ export default defineComponent({
 .info {
 	display: flex;
 	align-items: flex-start;
-	margin-bottom: 32rpx;
 
 	.img {
 		width: 64rpx;

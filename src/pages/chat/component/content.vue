@@ -148,5 +148,6 @@ export default defineComponent({
 .messageList {
 	display: flex;
 	flex-direction: column;
+	padding: 18rpx 0
 }
 </style>

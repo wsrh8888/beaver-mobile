@@ -142,5 +142,5 @@ export const emojiList = [{
 
 export const emojiMap = (name: string) =>{
   const emoji = emojiList.find(item => item.name === name)
-  return emoji
+  return emoji?.icon
 }

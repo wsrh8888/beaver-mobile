@@ -32,6 +32,9 @@ export interface IChatInfo {
   unread_count?: number;
 }
 
+export interface IConversationInfoRes extends IChatInfo {
+
+}
 export interface IRecentChatRes {
   count: number;
   list: IChatInfo[];

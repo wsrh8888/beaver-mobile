@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { getRecentChatListApi } from '@/api/chat';
+import { getRecentChatInfoApi, getRecentChatListApi } from '@/api/chat';
 import type { IChatInfo } from '@/types/ajax/chat';
 import { useFriendStore } from '../friend/friend';
 import { useGroupStore } from '../group/group';
@@ -34,7 +34,7 @@ export const useConversationStore = defineStore('useConversationStore', {
         // 如果是群组则到group中更新信息， 否则去user表更新基础西悉尼
         let info = {}
         if (recentChatInfo.chatType === 1) {
-
+          // Handle private chat
         } else {
           const groupInfo = groupStore.getGroupById(recentChatInfo.conversationId)
           if (groupInfo) {
@@ -78,6 +78,7 @@ export const useConversationStore = defineStore('useConversationStore', {
           avatar: friendInfo.avatar,
           nickname: friendInfo.nickname,
           create_at: new Date().toISOString(),
+          update_at: new Date().toISOString(),
           is_top: false,
           msg_preview: '',
           unread_count: 0
@@ -92,6 +93,7 @@ export const useConversationStore = defineStore('useConversationStore', {
           avatar: groupInfo.avatar,
           nickname: groupInfo.name || groupInfo.title,
           create_at: new Date().toISOString(),
+          update_at: new Date().toISOString(),
           is_top: false,
           msg_preview: '',
           unread_count: 0
@@ -122,6 +124,34 @@ export const useConversationStore = defineStore('useConversationStore', {
         console.error('Failed to fetch recent chats:', error);
         throw error;
       }
+    },
+
+    updateConversationListByFriendId(conversationId: string) {
+      getRecentChatInfoApi({conversationId})
+        .then(res => {
+          if (res.code === 0 && res.result) {
+            // Check if the conversation already exists in the list
+            const existingIndex = this._recentChatList.findIndex(
+              chat => chat.conversationId === res.result.conversationId
+            );
+            
+            if (existingIndex !== -1) {
+              // Update existing conversation
+              this._recentChatList[existingIndex] = {
+                ...this._recentChatList[existingIndex],
+                ...res.result
+              };
+            } else {
+              // Add new conversation to the top of the list
+              this._recentChatList.unshift(res.result);
+            }
+          } else {
+            console.error('Failed to get conversation info:', res.msg);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching conversation info:', error);
+        });
     },
 
     /**

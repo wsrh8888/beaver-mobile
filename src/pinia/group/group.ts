@@ -105,6 +105,7 @@ export const useGroupStore = defineStore('useGroupStore', {
             ...this.groupMap.get(groupId),
             ...groupInfo
           } as any);
+          this.groupList.push(groupInfo as any);
         }
       });
     },

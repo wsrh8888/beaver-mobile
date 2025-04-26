@@ -1,6 +1,6 @@
 import { request } from '@/utils/request'
 import { baseUrl } from '@/env.json'
-import type { IChatHistoryRes, IRecentChatRes } from '@/types/ajax/chat'
+import type { IChatHistoryRes, IConversationInfoRes, IRecentChatRes } from '@/types/ajax/chat'
 import { getLocal } from '@/utils/local';
 /**
  * @description: 获取最新的聊天列表
@@ -19,6 +19,17 @@ export const getcreateConversationApi = (data:object) => {
     method: 'POST',
     data:data,
     url: `${baseUrl}/api/chat/createConversation`
+  })
+}
+
+/**
+ * @description: 通过会话id获取最新的会话信息
+ */
+export const getRecentChatInfoApi = (data) => {
+  return request<IConversationInfoRes>({
+    method: 'POST',
+    data: data,
+    url: `${baseUrl}/api/chat/getConversationInfo`
   })
 }
 /**

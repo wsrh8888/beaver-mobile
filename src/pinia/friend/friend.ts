@@ -36,6 +36,7 @@ export const useFriendStore = defineStore('friendStore', {
       this.friendList = [];
       this.allUserMapInfo.clear();
     },
+    
     async updateFriendInfo(friendId: string) {
       try {
         const res = await getFriendInfoApi({ friendId });
@@ -60,6 +61,7 @@ export const useFriendStore = defineStore('friendStore', {
         throw error;
       }
     },
+
     async initFriendApi() {
       try {
         const res = await getFriendListApi({
