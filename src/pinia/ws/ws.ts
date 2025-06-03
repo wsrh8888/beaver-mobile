@@ -24,7 +24,7 @@ export const useWsStore = defineStore('useWsStore', {
       data: {
         type: '',
         body: {
-          messageId: 0,
+          id: 0,
           conversationId: '',
           msg: {
             type: MessageType.TEXT,
@@ -52,6 +52,8 @@ export const useWsStore = defineStore('useWsStore', {
      * @param {IWsMessage} data - WebSocket消息数据
      */
     parseWsMessage(data: IWsMessage) {
+      console.log('收到WebSocket消息:', data);
+      
       switch (data.command) {
         case WsCommand.USER_PROFILE:
           this.parseUserProfile(data.content);
@@ -60,7 +62,10 @@ export const useWsStore = defineStore('useWsStore', {
           this.parseGroupProfile(data.content);
           break
         case WsCommand.CHAT_MESSAGE:
-          this.parseCommonChatMessage(data.content);
+          // messageId 应该在 content.messageId 中
+          const messageId = (data.content as any).messageId || '';
+          console.log('解析聊天消息, messageId:', messageId);
+          this.parseCommonChatMessage(data.content, messageId);
           break;
         case WsCommand.FRIEND_OPERATION:
           this.parseUserProfile(data.content);
@@ -153,37 +158,27 @@ export const useWsStore = defineStore('useWsStore', {
      * @description: 解析聊天消息
      * @param {IWsContent} content - 消息内容
      */
-    parseCommonChatMessage(content: IWsContent) {
-      const chatStore = useMessageStore();
-      const conversationStore = useConversationStore();
-
-      switch (content.data.type) {
-        case "private_message_send":
-          // 添加新消息到聊天记录
-          // conversationStore.updateLastMessage(content.data.body.conversationId, {
-          //   content: content.data.body.msgPreview,
-          //   timestamp:  content.data.body.create_at
-          // });
-          chatStore.addMessage(content.data.body.conversationId, {
-            messageId: content.data.body.messageId,
-            conversationId: content.data.body.conversationId, // 添加缺失的必要字段
-            msg: content.data.body.msg,
-            sender: content.data.body.sender,
-            create_at: content.data.body.create_at
-          });
-          break;
-        case "group_message_send":
-          // 判断是否会最近会话列表， 如果没有则创建
-          // 添加新消息到聊天记录
-          chatStore.addMessage(content.data.body.conversationId, {
-            messageId: content.data.body.messageId,
-            conversationId: content.data.body.conversationId, // 添加缺失的必要字段
-            msg: content.data.body.msg,
-            sender: content.data.body.sender,
-            create_at: content.data.body.create_at
-          });
-          break;
-      }
+    parseCommonChatMessage(content: IWsContent, messageId: string) {
+      import('@/message-manager').then(({ messageManager }) => {
+        switch (content.data.type) {
+          case "private_message_send":
+          case "group_message_send":
+          case "private_message_sync":
+          case "group_message_sync":
+          case "private_message_receive":
+          case "group_message_receive":
+            // 使用消息管理器处理服务端消息（自动去重）
+            messageManager.handleServerMessage({
+              messageId,
+              conversationId: content.data.body.conversationId,
+              id: content.data.body.id,
+              msg: content.data.body.msg,
+              sender: content.data.body.sender,
+              create_at: content.data.body.create_at
+            });
+            break;
+        }
+      });
     }
   },
 });

@@ -1,7 +1,7 @@
 import type { IUserInfo } from '@/types/store/userInfo';
 import { defineStore } from 'pinia';
 import { getUserInfoApi, updateInfoApi } from '@/api/user';
-import { previewOnlineFileApi } from '@/api/file';
+import { processAvatarUrl } from '@/utils/avatar';
 
 /**
  * @description: 用户状态管理
@@ -40,7 +40,7 @@ export const useUserStore = defineStore('useUserStore', {
           const userInfo = {
             userId: res.result.userId,
             nickName: res.result.nickName,
-            avatar: previewOnlineFileApi(res.result.avatar),
+            avatar: processAvatarUrl(res.result.avatar),
           };
           this.userInfo = userInfo;
         }
@@ -62,6 +62,8 @@ export const useUserStore = defineStore('useUserStore', {
           const updatedUser = {
             ...this.userInfo,
             ...updates,
+            // 如果更新了头像，需要处理头像路径
+            avatar: updates.avatar ? processAvatarUrl(updates.avatar) : this.userInfo.avatar,
           };
           this.userInfo = updatedUser;
           return true;
@@ -72,8 +74,6 @@ export const useUserStore = defineStore('useUserStore', {
         return false;
       }
     },
-
-  
 
     /**
      * @description: 重置用户状态

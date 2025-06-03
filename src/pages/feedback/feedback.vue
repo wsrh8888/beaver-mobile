@@ -60,7 +60,7 @@
             :key="index"
             class="image-preview"
           >
-            <image :src="previewOnlineFileApi(item.fileId)" mode="aspectFill" />
+            <image :src="item.fileId" mode="aspectFill" />
             <view class="remove-image" @click="removeImage(index)">×</view>
           </view>
           
@@ -97,13 +97,11 @@
 import { submitFeedbackApi } from '@/api/feedback';
 import { defineComponent, ref, computed } from 'vue';
 import { uploadFiles } from '@/utils/upload/upload';
-import { previewOnlineFileApi } from '@/api/file';
+import { openAlbum } from '@/utils/upload';
 
 interface UploadedImage {
   fileId: string;
   name: string;
-
-
 }
 
 interface ImageFile {
@@ -194,7 +192,6 @@ export default defineComponent({
     };
 
     return {
-      previewOnlineFileApi,
       feedbackTypes,
       selectedType,
       content,

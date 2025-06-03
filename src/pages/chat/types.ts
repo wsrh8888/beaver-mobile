@@ -69,7 +69,7 @@ export type MessageContent = TextMessage | ImageMessage | VoiceMessage | VideoMe
 
 // 完整的消息结构
 export interface ChatMessage {
-  messageId: number | string;
+  id: number | string;
   conversationId: string;
   msg: MessageContent;
   sender: MessageSender;

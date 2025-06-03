@@ -2,6 +2,7 @@ import { getLocal } from "@/utils/local";
 import { baseUrl } from '@/env.json'
 import { useWsStore } from '@/pinia/ws/ws';
 import type { IWsStore } from "@/types/ws/ws";
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * @description: WebSocket消息类型
@@ -10,6 +11,7 @@ interface WsMessage {
   command: 'CHAT_MESSAGE' | 'COMMON_UPDATE_MESSAGE' | 'HEARTBEAT';
   content: {
     timestamp: number;
+    messageId: string;
     data: any;
   };
 }
@@ -36,6 +38,9 @@ class WsManager {
   private heartbeatTimer: number | null = null;
   private reconnectAttempts = 0;
   private messageHandlers: Map<string, (data: any) => void> = new Map();
+  private lastHeartbeatTime: number = 0; // 最后一次心跳时间
+  private heartbeatTimeoutTimer: number | null = null; // 心跳超时定时器
+  private isManualClose = false; // 是否手动关闭
   
   public isConnected = false;
   public isClose = false;
@@ -47,6 +52,7 @@ class WsManager {
     this.heartbeatInterval = config.heartbeatInterval || 30000;
 
     this.initEventListeners();
+    this.initAppStateListeners();
   }
 
   /**
@@ -60,12 +66,42 @@ class WsManager {
   }
 
   /**
+   * @description: 初始化应用状态监听
+   */
+  private initAppStateListeners(): void {
+    // 监听网络状态变化
+    uni.onNetworkStatusChange((res) => {
+      console.log('网络状态变化:', res);
+      if (res.isConnected && !this.isConnected && !this.isManualClose) {
+        console.log('网络恢复，尝试重连');
+        setTimeout(() => {
+          this.initSocket();
+        }, 1000);
+      }
+    });
+
+    // 监听应用状态变化
+    uni.onAppShow(() => {
+      console.log('应用进入前台');
+      if (!this.isConnected && !this.isManualClose) {
+        setTimeout(() => {
+          this.initSocket();
+        }, 500);
+      }
+    });
+
+    uni.onAppHide(() => {
+      console.log('应用进入后台');
+      this.clearHeartbeatTimeout();
+    });
+  }
+
+  /**
    * @description: 初始化WebSocket连接
    * @return {Promise<void>}
    */
   public async initSocket(): Promise<void> {
-    if (this.isConnected) {
-      this.clearTimers();
+    if (this.isConnected || this.status === 'connecting') {
       return;
     }
 
@@ -77,14 +113,28 @@ class WsManager {
 
     this.status = 'connecting';
     this.isClose = false;
+    this.isManualClose = false;
 
     return new Promise((resolve, reject) => {
-      uni.connectSocket({
-        url: `${baseUrl}/api/ws/ws?token=${token}`,
-        method: 'GET',
-        success: () => resolve(),
-        fail: (error) => reject(error)
-      });
+      try {
+        uni.connectSocket({
+          url: `${baseUrl}/api/ws/ws?token=${token}`,
+          method: 'GET',
+          success: () => {
+            console.log('WebSocket 连接请求成功');
+            resolve();
+          },
+          fail: (error) => {
+            console.error('WebSocket 连接请求失败:', error);
+            this.status = 'error';
+            reject(error);
+          }
+        });
+      } catch (error) {
+        console.error('WebSocket 连接异常:', error);
+        this.status = 'error';
+        reject(error);
+      }
     });
   }
 
@@ -103,14 +153,27 @@ class WsManager {
   /**
    * @description: WebSocket连接关闭回调
    */
-  private onClose(): void {
-    console.log('WebSocket 连接关闭');
+  private onClose(data: any): void {
+    console.log('WebSocket 连接关闭', data);
     this.isConnected = false;
     this.status = 'closed';
     this.clearTimers();
 
-    if (!this.isClose) {
-      this.reconnect();
+    // 分析关闭原因
+    if (data.code === 1006) {
+      console.warn('WebSocket 异常关闭 (1006)，可能是网络问题或服务器问题');
+    } else if (data.code === 1000) {
+      console.log('WebSocket 正常关闭');
+    } else if (data.code === 1001) {
+      console.log('WebSocket 端点离线或服务器重启');
+    }
+
+    if (!this.isManualClose) {
+      // 如果是 1006 错误，稍微延长重连间隔
+      const delay = data.code === 1006 ? this.reconnectInterval * 2 : this.reconnectInterval;
+      setTimeout(() => {
+        this.reconnect();
+      }, Math.min(delay, 30000)); // 最大延迟 30 秒
     }
   }
 
@@ -123,8 +186,10 @@ class WsManager {
     this.status = 'error';
     this.clearTimers();
     
-    if (!this.isClose) {
-      this.reconnect();
+    if (!this.isManualClose) {
+      setTimeout(() => {
+        this.reconnect();
+      }, this.reconnectInterval);
     }
   }
 
@@ -134,6 +199,14 @@ class WsManager {
   private onMessage(event: any): void {
     try {
       const message: IWsStore = JSON.parse(event.data || '{}');
+      
+      // 如果是心跳响应，更新最后心跳时间
+      if (message.command === 'HEARTBEAT') {
+        this.lastHeartbeatTime = Date.now();
+        this.clearHeartbeatTimeout();
+        return;
+      }
+
       const wsStore = useWsStore();
       wsStore.parseWsMessage(message);
 
@@ -172,33 +245,67 @@ class WsManager {
     }
 
     this.reconnectAttempts++;
-    console.log(`尝试第 ${this.reconnectAttempts} 次重连，将在 ${this.reconnectInterval / 1000} 秒后重试`);
+    const delay = Math.min(this.reconnectInterval * this.reconnectAttempts, 30000); // 指数退避，最大 30 秒
+    console.log(`尝试第 ${this.reconnectAttempts} 次重连，将在 ${delay / 1000} 秒后重试`);
 
     this.clearTimers();
     this.reconnectTimer = setTimeout(() => {
       this.initSocket().catch(error => {
         console.error('重连失败:', error);
       });
-    }, this.reconnectInterval) as unknown as number;
+    }, delay) as unknown as number;
   }
 
   /**
    * @description: 开始心跳检测
    */
   private startHeartbeat(): void {
+    this.lastHeartbeatTime = Date.now();
     this.heartbeatTimer = setInterval(() => {
       this.sendHeartbeat();
+      this.startHeartbeatTimeout();
     }, this.heartbeatInterval) as unknown as number;
+  }
+
+  /**
+   * @description: 开始心跳超时检测
+   */
+  private startHeartbeatTimeout(): void {
+    this.clearHeartbeatTimeout();
+    this.heartbeatTimeoutTimer = setTimeout(() => {
+      console.warn('心跳超时，主动断开连接');
+      this.disconnect();
+      if (!this.isManualClose) {
+        setTimeout(() => {
+          this.initSocket();
+        }, 1000);
+      }
+    }, this.heartbeatInterval + 10000) as unknown as number; // 心跳间隔 + 10 秒容错时间
+  }
+
+  /**
+   * @description: 清除心跳超时定时器
+   */
+  private clearHeartbeatTimeout(): void {
+    if (this.heartbeatTimeoutTimer) {
+      clearTimeout(this.heartbeatTimeoutTimer);
+      this.heartbeatTimeoutTimer = null;
+    }
   }
 
   /**
    * @description: 发送心跳包
    */
   private sendHeartbeat(): void {
+    if (!this.isConnected) {
+      return;
+    }
+
     this._sendMessage({
       command: 'HEARTBEAT',
       content: {
         timestamp: Date.now(),
+        messageId: uuidv4(),
         data: null
       }
     });
@@ -207,11 +314,12 @@ class WsManager {
   /**
    * @description: 发送聊天消息
    */
-  public sendChatMessage(data: any): void {
+  public sendChatMessage(data: any, customMessageId?: string): void {
     this._sendMessage({
       command: 'CHAT_MESSAGE',
       content: {
         timestamp: Date.now(),
+        messageId: customMessageId || uuidv4(),
         data: data,
       },
     });
@@ -249,12 +357,14 @@ class WsManager {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
     }
+    this.clearHeartbeatTimeout();
   }
 
   /**
    * @description: 主动断开连接
    */
   public disconnect(): void {
+    this.isManualClose = true;
     this.isClose = true;
     this.clearTimers();
     
@@ -278,10 +388,23 @@ class WsManager {
   public getStatus(): WsStatus {
     return this.status;
   }
+
+  /**
+   * @description: 获取连接信息
+   */
+  public getConnectionInfo(): object {
+    return {
+      isConnected: this.isConnected,
+      status: this.status,
+      reconnectAttempts: this.reconnectAttempts,
+      lastHeartbeatTime: this.lastHeartbeatTime,
+      isManualClose: this.isManualClose
+    };
+  }
 }
 
 export default new WsManager({
   reconnectInterval: 5000,
   maxReconnectAttempts: 100,
-  heartbeatInterval: 30000
+  heartbeatInterval: 25000 // 调整为 25 秒，避免某些代理服务器的 30 秒超时
 });

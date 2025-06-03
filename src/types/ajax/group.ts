@@ -421,7 +421,7 @@ export interface IGroupInfoRes {
   /**
    * @description: 会话ID
    */
-  conversationId: IGroupInfo;
+  conversationId: string;
   
   /**
    * @description: 群组头像URL

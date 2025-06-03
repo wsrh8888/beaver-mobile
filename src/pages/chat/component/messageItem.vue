@@ -13,7 +13,7 @@
 			<view class="contentImg" v-if="message.type == 2">
 				<image @click="preview(message.imageMsg.fileId)" @load="onImageLoad"
 					:style="{ width: imageWidth + 'rpx', height: imageHeight + 'rpx' }" :lazy-load="true" class="imgMsg"
-					:src="previewOnlineFileApi(message.imageMsg.fileId)" mode="">
+					:src="message.imageMsg.fileId" mode="">
 				</image>
 			</view>
 		</view>
@@ -22,7 +22,6 @@
 </template>
 
 <script lang="ts">
-import { previewOnlineFileApi } from '@/api/file';
 import { emojiMap } from '@/utils/emoji';
 import { defineComponent, ref, toRefs, computed, onMounted } from 'vue';
 export default defineComponent({
@@ -59,7 +58,7 @@ export default defineComponent({
 		const preview = (fileId) => {
 			uni.previewImage({
 				current: 0,
-				urls: [previewOnlineFileApi(fileId)]
+				urls: [fileId]
 			})
 		}
 		const onImageLoad = (event) => {
@@ -103,7 +102,6 @@ export default defineComponent({
 			onImageLoad,
 			imageWidth,
 			imageHeight,
-			previewOnlineFileApi
 		};
 	}
 });

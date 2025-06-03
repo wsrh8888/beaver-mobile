@@ -20,6 +20,16 @@ export interface IRequestConfig {
   header?: object
 }
 
+// 获取设备ID
+const getDeviceId = (): string => {
+  let deviceId = uni.getStorageSync('uni_device_id');
+  if (!deviceId) {
+    deviceId = uuidv4(); // 使用 uuid 库生成 v4 UUID
+    uni.setStorageSync('uni_device_id', deviceId);
+  }
+  return deviceId;
+};
+
 export const request = <T>(config: IRequestConfig): Promise<IResponseSuccessData<T>> => {
   return new Promise((resolve, reject) => {
     const token = getLocal('token');
@@ -36,6 +46,7 @@ export const request = <T>(config: IRequestConfig): Promise<IResponseSuccessData
       header: {
         // 'content-type': 'application/json',
         'token': token || '',
+        'DeviceId': getDeviceId(),
         // 'Request-Id': requestId,
         ...config.header
       },

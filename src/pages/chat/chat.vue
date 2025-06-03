@@ -30,9 +30,8 @@
 		<!-- 底部输入区域 -->
 		<BottomComponent 
 			:conversationId="conversationId" 
-			:type="chatType" 
-			:disabled="loading"
-			@send-message="handleSendMessage"
+			:chatType="chatType" 
+			@messageSent="handleMessageSent"
 		/>
 	</view>
 </template>
@@ -99,22 +98,19 @@
 			// 发送消息
 			const handleSendMessage = async (message: IChatHistory) => {
 				try {
-					// 添加消息到 Store
-					await chatStore.addMessage(conversationId.value, message);
-					
-					// 更新消息状态
-					chatStore.updateMessageStatus(message.messageId, MessageStatus.SENDING);
-					
+					// 消息发送已在 messageManager 中处理，这里只需要滚动到底部
 					await nextTick();
 					scrollToBottom();
 				} catch (err) {
-					console.error('发送消息失败:', err);
-					chatStore.updateMessageStatus(message.messageId, MessageStatus.FAILED);
-					uni.showToast({
-						title: '发送失败，请重试',
-						icon: 'none'
-					});
+					console.error('处理消息失败:', err);
 				}
+			};
+
+			// 消息发送成功回调
+			const handleMessageSent = () => {
+				nextTick(() => {
+					scrollToBottom();
+				});
 			};
 
 			// 加载更多消息
@@ -186,6 +182,7 @@
 				hasMore,
 				contentRef,
 				handleSendMessage,
+				handleMessageSent,
 				loadMoreMessages,
 				goBack,
 				handleClickMore

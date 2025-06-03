@@ -1,289 +1,262 @@
 <template>
-  <view>
+  <view class="chat-input-container">
     <!-- 输入区域 -->
-    <view class="input-area" :style="{ bottom: popupType === 'emoji' ? emojiHeight + 'rpx' :  popupType === 'option' ?  morePanelHeight + 'rpx' : '0rpx'}">
-      <view class="input-container">
+    <view class="input-area" :style="inputAreaStyle">
+      <view class="input-wrapper">
         <!-- 语音/键盘切换按钮 -->
-        <view class="action-button" @click="transForm">
-          <image class="action-icon" :src="isVoice ? '/static/img/chat/keyboard.svg' : '/static/img/chat/audio.svg'" mode="aspectFit" />
+        <view class="action-btn" @click="toggleInputMode">
+          <image 
+            class="action-icon" 
+            :src="inputMode === 'voice' ? '/static/img/chat/keyboard.svg' : '/static/img/chat/audio.svg'" 
+            mode="aspectFit" 
+          />
         </view>
 
-        <!-- 输入区域 -->
-        <view class="input-wrapper">
+        <!-- 文本输入框 -->
+        <view v-if="inputMode === 'text'" class="text-input-wrapper">
           <textarea 
-            v-if="!isVoice" 
-            class="input-field"
-            :value="newMessage"
+            class="text-input"
+            :value="inputText"
             :adjust-position="false"
             placeholder="请输入内容"
             auto-height
-            @input="handleInput"
-            @keyboardheightchange="closeKeyBorder"
-            @focus="getInputHeight"
+            @input="handleTextInput"
+            @keyboardheightchange="handleKeyboardChange"
+            @focus="handleInputFocus"
           />
-          <view 
-            v-else 
-            class="voice-button"
-            @touchstart.stop="startRecord"
-            @touchend.prevent="touchEnd"
-            @touchmove.prevent="touchMove"
-          >
-            <text>按住说话</text>
-          </view>
+        </view>
+
+        <!-- 语音按钮 -->
+        <view 
+          v-else 
+          class="voice-btn"
+          :class="{ 'voice-btn-active': isRecording }"
+          @touchstart.stop="startVoiceRecord"
+          @touchend.prevent="endVoiceRecord"
+          @touchmove.prevent="moveVoiceRecord"
+        >
+          <text>{{ voiceButtonText }}</text>
         </view>
 
         <!-- 表情按钮 -->
-        <view class="action-button" @click="openPopup(emojiFlag ? 'keyboard' : 'emoji')" v-if="!isVoice">
-          <image class="action-icon" :src="emojiFlag ? '/static/img/chat/keyboard.svg' : '/static/img/chat/emo.svg'" mode="aspectFit" />
+        <view 
+          v-if="inputMode === 'text'" 
+          class="action-btn" 
+          @click="toggleEmojiPanel"
+        >
+          <image 
+            class="action-icon" 
+            :src="showEmoji ? '/static/img/chat/keyboard.svg' : '/static/img/chat/emo.svg'" 
+            mode="aspectFit" 
+          />
         </view>
 
-        <!-- 更多/发送按钮 -->
-        <view v-if="sendFlag && !isVoice" class="action-button" @click="openPopup('option')">
-          <image class="action-icon" src="/static/img/chat/option.svg" mode="aspectFit" />
-        </view>
-        <view v-else-if="!isVoice" class="send-button" @click="sendMessage">
+        <!-- 发送/更多按钮 -->
+        <view v-if="canSend" class="send-btn" @click="sendTextMessage">
           发送
+        </view>
+        <view v-else-if="inputMode === 'text'" class="action-btn" @click="toggleMorePanel">
+          <image class="action-icon" src="/static/img/chat/option.svg" mode="aspectFit" />
         </view>
       </view>
     </view>
 
-    <!-- 弹出层 -->
-    <uv-popup 
-      ref="popup" 
-      :overlay="false" 
-      :z-index="104" 
-      mode="bottom" 
-      :safeAreaInsetBottom="true"
-      :show="!!popupType"
-      @close="closePopup"
-    >
-      <view class="popup-content">
-        <emojiPopup 
-          v-if="popupType === 'emoji'" 
-          :emojiHeight="emojiHeight" 
-          @addEmoji="addEmoji"
-        />
-        <optionPopup 
-          v-if="popupType === 'option'" 
-          :keyboardHeight="keyboardHeight" 
-          @getFilePath="getFilePath"
-        />
-      </view>
-    </uv-popup>
+    <!-- 表情面板 -->
+    <view v-if="showEmoji" class="emoji-panel">
+      <emojiPopup @addEmoji="addEmoji" />
+    </view>
 
-    <!-- 语音录制弹窗 -->
-    <view 
-      class="voice-popup" 
-      :class="{ 'voice-popup-show': isRecording }"
-    >
-      <view class="voice-popup-content">
+    <!-- 更多功能面板 -->
+    <view v-if="showMore" class="more-panel">
+      <optionPopup @sendImage="sendImageMessage" />
+    </view>
+
+    <!-- 语音录制提示 -->
+    <view v-if="isRecording" class="voice-recording-modal">
+      <view class="voice-recording-content">
         <image 
           class="voice-icon" 
-          :src="isMovingOut ? '/static/img/chat/voice-cancel.svg' : '/static/img/chat/voice-record.svg'" 
+          :src="isCancelVoice ? '/static/img/chat/voice-cancel.svg' : '/static/img/chat/voice-record.svg'" 
           mode="aspectFit" 
         />
-        <view v-if="!isMovingOut" class="voice-waves">
-          <view class="wave"></view>
-          <view class="wave"></view>
-          <view class="wave"></view>
+        <view v-if="!isCancelVoice" class="voice-waves">
+          <view class="wave" v-for="i in 3" :key="i"></view>
         </view>
-        <text class="voice-tip">{{ isMovingOut ? '松开手指，取消发送' : '松开发送，上滑取消' }}</text>
+        <text class="voice-tip">
+          {{ isCancelVoice ? '松开手指，取消发送' : '松开发送，上滑取消' }}
+        </text>
       </view>
     </view>
   </view>
 </template>
 
 <script lang="ts">
-import {
-  defineComponent,
-  ref,
-  computed,
-  inject,
-  onMounted
-} from "vue";
-import type { PropType } from "vue";
-import { debounce } from "@/utils/ablilty";
-import wsManager from "@/ws-manager/ws";
-import { useUserStore } from "@/pinia/user/user";
-import emojiPopup from "../popup/emoji.vue";
-import optionPopup from "../popup/option.vue";
+import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import type { PropType } from 'vue';
+import { MessageType } from '@/types/ajax/chat';
+import { messageManager } from '@/message-manager';
 import { usePageChatStore } from '@/pinia/page/pageChat/pageChat';
-
+import { debounce } from '@/utils/ablilty';
+import emojiPopup from '../popup/emoji.vue';
+import optionPopup from '../popup/option.vue';
 
 export default defineComponent({
-  props: {
-    conversationId: {
-      type: String,
-      default: "",
-    },
-    type: {
-      type: String as PropType<'single' | 'group'>,
-      default: "single"
-    }
-  },
-  emits: ["sendMessage"],
+  name: 'ChatBottom',
   components: {
     emojiPopup,
     optionPopup,
   },
+  props: {
+    conversationId: {
+      type: String,
+      required: true,
+    },
+    chatType: {
+      type: String as PropType<'single' | 'group'>,
+      default: 'single'
+    }
+  },
+  emits: ['messageSent'],
   setup(props, { emit }) {
-    const userStore = useUserStore();
-    const pageChatStore = usePageChatStore()
-    const newMessage = ref("");
-    const popupType = ref("");
-    const popup = ref();
-    const recorderManager = ref<any>(null);
-    const isMovingOut = ref(false);
+    const pageChatStore = usePageChatStore();
+    
+    // 基础状态
+    const inputText = ref('');
+    const inputMode = ref<'text' | 'voice'>('text');
+    const showEmoji = ref(false);
+    const showMore = ref(false);
+    
+    // 语音录制状态
     const isRecording = ref(false);
-
-    // 判断是否显示发送按钮
-    const sendFlag = computed(() => {
-      return newMessage.value === "";
+    const isCancelVoice = ref(false);
+    const recorderManager = ref<any>(null);
+    
+    // 计算属性
+    const canSend = computed(() => inputText.value.trim().length > 0);
+    
+    const voiceButtonText = computed(() => {
+      if (isRecording.value) {
+        return isCancelVoice.value ? '松开取消' : '松开发送';
+      }
+      return '按住说话';
+    });
+    
+    const inputAreaStyle = computed(() => {
+      let bottom = 0;
+      if (showEmoji.value) bottom += pageChatStore.emojiHeight * 2;
+      if (showMore.value) bottom += pageChatStore.morePanelHeight * 2;
+      return { bottom: `${bottom}rpx` };
     });
 
-    // 获取键盘高度
-    const getInputHeight = (e: { detail: { height: number } }) => {
+    // 输入处理
+    const handleTextInput = debounce((e: { detail: { value: string } }) => {
+      inputText.value = e.detail.value;
+    }, 100);
+
+    const handleInputFocus = (e: { detail: { height: number } }) => {
       if (e.detail.height !== 0) {
-        pageChatStore.updateKeyboardHeight(parseInt(String(e.detail.height)) * 2 - 25);
+        pageChatStore.updateKeyboardHeight(e.detail.height * 2 - 25);
       }
     };
 
-    // 判断键盘的状态
-    const closeKeyBorder = (e: { detail: { height: number } }) => {
-      pageChatStore.updateKeyboardHeight(e.detail.height === 0 ? 0 : parseInt(String(e.detail.height)) * 2 - 25);
+    const handleKeyboardChange = (e: { detail: { height: number } }) => {
+      const height = e.detail.height === 0 ? 0 : e.detail.height * 2 - 25;
+      pageChatStore.updateKeyboardHeight(height);
     };
 
-    // 切换输入模式（文本/语音）
-    const transForm = () => {
-      // 如果当前有面板打开，先关闭
-      if (popupType.value) {
-        popup.value?.close();
-        if (popupType.value === 'emoji') {
-          pageChatStore.toggleEmojiPanel();
-        } else if (popupType.value === 'option') {
-          pageChatStore.toggleMorePanel();
-        }
-        popupType.value = "";
-      }
-
-      // 切换输入模式
+    // 模式切换
+    const toggleInputMode = () => {
+      closeAllPanels();
+      inputMode.value = inputMode.value === 'text' ? 'voice' : 'text';
       pageChatStore.toggleInputMode();
     };
 
-    // 打开表情/更多面板
-    const openPopup = (type: string) => {
-      // 如果点击的是键盘按钮，关闭所有面板
-      if (type === 'keyboard') {
-        popup.value?.close();
-        popupType.value = "";
-        if (pageChatStore.showEmoji) {
-          pageChatStore.toggleEmojiPanel();
-        }
-        return;
+    const toggleEmojiPanel = () => {
+      if (showMore.value) {
+        showMore.value = false;
+        pageChatStore.toggleMorePanel();
       }
+      showEmoji.value = !showEmoji.value;
+      pageChatStore.toggleEmojiPanel();
+    };
 
-      // 如果点击的是当前打开的面板，则关闭
-      if (popupType.value === type) {
-        popup.value?.close();
-        popupType.value = "";
-        if (type === 'emoji') {
-          pageChatStore.toggleEmojiPanel();
-        } else if (type === 'option') {
-          pageChatStore.toggleMorePanel();
-        }
-        return;
-      }
-
-      // 如果之前有其他面板打开，先关闭
-      if (popupType.value) {
-        if (popupType.value === 'emoji') {
-          pageChatStore.toggleEmojiPanel();
-        } else if (popupType.value === 'option') {
-          pageChatStore.toggleMorePanel();
-        }
-      }
-
-      // 打开新的面板
-      popupType.value = type;
-      popup.value?.open();
-
-      // 更新状态
-      if (type === 'emoji') {
+    const toggleMorePanel = () => {
+      if (showEmoji.value) {
+        showEmoji.value = false;
         pageChatStore.toggleEmojiPanel();
-      } else if (type === 'option') {
+      }
+      showMore.value = !showMore.value;
+      pageChatStore.toggleMorePanel();
+    };
+
+    const closeAllPanels = () => {
+      if (showEmoji.value) {
+        showEmoji.value = false;
+        pageChatStore.toggleEmojiPanel();
+      }
+      if (showMore.value) {
+        showMore.value = false;
         pageChatStore.toggleMorePanel();
       }
     };
 
-    // 添加表情
+    // 表情处理
     const addEmoji = (emoji: string) => {
-      newMessage.value += emoji;
+      inputText.value += emoji;
     };
 
-    // 获取文件路径
-    const getFilePath = (data: string) => {
-      const msgInfo = {
-        type: 2,
-        imageMsg: {
-          fileId: data.fileId,
-          name: data.name
-        },
-      };
-      emitSendMessage(msgInfo);
-      wsSendMessage(msgInfo);
-    };
-
-    // 发送消息
-    const sendMessage = () => {
-      if (!newMessage.value.trim()) return;
+    // 消息发送
+    const sendTextMessage = async () => {
+      if (!canSend.value) return;
       
-      const msgInfo = {
-        type: 1,
-        textMsg: {
-          content: newMessage.value,
-        },
-      };
-      emitSendMessage(msgInfo);
-      wsSendMessage(msgInfo);
-      newMessage.value = "";
+      const content = inputText.value.trim();
+      inputText.value = '';
+      
+      try {
+        await messageManager.sendMessage(
+          props.conversationId,
+          content,
+          MessageType.TEXT
+        );
+        emit('messageSent');
+      } catch (error) {
+        console.error('发送文本消息失败:', error);
+        uni.showToast({
+          title: '发送失败',
+          icon: 'error'
+        });
+      }
     };
 
-    // 发送消息到WS
-    const wsSendMessage = (msg: any) => {
-      wsManager.sendChatMessage({
-        type: "chat_message_send",
-        body: {
-          conversationId: props.conversationId,
-          msg: msg,
-        }
-      });
+    const sendImageMessage = async (imageData: any) => {
+      try {
+        await messageManager.sendMessage(
+          props.conversationId,
+          {
+            fileId: imageData.fileId,
+            name: imageData.name
+          },
+          MessageType.IMAGE
+        );
+        emit('messageSent');
+        closeAllPanels();
+      } catch (error) {
+        console.error('发送图片消息失败:', error);
+        uni.showToast({
+          title: '发送失败',
+          icon: 'error'
+        });
+      }
     };
 
-    // 发送消息到父组件
-    const emitSendMessage = (msg: any) => {
-      emit("sendMessage", {
-        conversationId: props.conversationId,
-        msg: msg,
-        create_at: Date().toString(),
-        messageId: Date.now(),
-        sender: {
-          userId: userStore.userInfo.userId,
-          avatar: userStore.userInfo.avatar,
-        },
-      });
-    };
-
-    // 处理输入
-    const handleInput = debounce((e: { detail: { value: string } }) => {
-      newMessage.value = e.detail.value;
-    }, 20);
-
-    // 语音录制相关
-    const startRecord = () => {
+    // 语音录制
+    const startVoiceRecord = () => {
+      if (!recorderManager.value) return;
+      
       try {
         isRecording.value = true;
-        isMovingOut.value = false;
-        recorderManager.value?.start({
+        isCancelVoice.value = false;
+        recorderManager.value.start({
           duration: 60000,
           sampleRate: 44100,
           numberOfChannels: 1,
@@ -291,104 +264,114 @@ export default defineComponent({
           format: 'mp3'
         });
       } catch (error) {
-        console.error('录音启动失败:', error);
-      }
-    };
-
-    const touchEnd = () => {
-      try {
+        console.error('开始录音失败:', error);
         isRecording.value = false;
-        recorderManager.value?.stop();
-      } catch (error) {
-        console.error('录音停止失败:', error);
       }
     };
 
-    const touchMove = (event: any) => {
+    const endVoiceRecord = () => {
+      if (!recorderManager.value || !isRecording.value) return;
+      
+      try {
+        recorderManager.value.stop();
+      } catch (error) {
+        console.error('停止录音失败:', error);
+      }
+    };
+
+    const moveVoiceRecord = (event: any) => {
       if (!isRecording.value) return;
       
-      // 获取手指位置
       const touch = event.touches[0];
-      // 获取按钮位置
       const button = event.target.getBoundingClientRect();
       const buttonCenterY = button.top + button.height / 2;
       
-      // 如果手指移动到按钮上方超过100px，标记为取消发送
-      isMovingOut.value = touch.clientY < buttonCenterY - 100;
+      isCancelVoice.value = touch.clientY < buttonCenterY - 100;
     };
 
     // 初始化录音管理器
-    onMounted(() => {
+    const initRecorderManager = () => {
       try {
         recorderManager.value = uni.getRecorderManager();
         
-        // 监听录音开始事件
         recorderManager.value.onStart(() => {
           console.log('录音开始');
-          isRecording.value = true;
         });
 
-        // 监听录音结束事件
-        recorderManager.value.onStop((res: any) => {
+        recorderManager.value.onStop(async (res: any) => {
           console.log('录音结束');
           isRecording.value = false;
-          const { tempFilePath, duration } = res;
-          // 如果是移动到外部取消录音，则不发送
-          if (isMovingOut.value) {
-            isMovingOut.value = false;
+          
+          if (isCancelVoice.value) {
+            isCancelVoice.value = false;
             return;
           }
-          // 处理录音文件
-          const msgInfo = {
-            type: 3, // 语音消息类型
-            voiceMsg: {
-              src: tempFilePath,
-              duration: duration
-            }
-          };
-          emitSendMessage(msgInfo);
-          wsSendMessage(msgInfo);
+          
+          // TODO: 处理语音消息发送
+          // const { tempFilePath, duration } = res;
+          // await messageManager.sendMessage(
+          //   props.conversationId,
+          //   { src: tempFilePath, duration },
+          //   MessageType.VOICE
+          // );
         });
 
-        // 监听录音错误事件
         recorderManager.value.onError((error: any) => {
           console.error('录音错误:', error);
           isRecording.value = false;
+          isCancelVoice.value = false;
         });
       } catch (error) {
-        console.error('录音管理器初始化失败:', error);
+        console.error('初始化录音管理器失败:', error);
       }
+    };
+
+    // 生命周期
+    onMounted(() => {
+      initRecorderManager();
+    });
+
+    onBeforeUnmount(() => {
+      messageManager.cleanup();
     });
 
     return {
-      sendMessage,
-      transForm,
-      keyboardHeight: 0,
-      isVoice: computed(() => pageChatStore.inputMode === 'voice'),
-      sendFlag,
-      newMessage,
-      handleInput,
-      openPopup,
-      popup,
-      popupType,
-      emojiFlag: computed(() => pageChatStore.showEmoji),
-      emojiHeight: computed(() => pageChatStore.emojiHeight *2 ),
-      morePanelHeight: computed(() => pageChatStore.morePanelHeight *2 ),
-      addEmoji,
-      getInputHeight,
-      closeKeyBorder,
-      startRecord,
-      touchEnd,
-      touchMove,
-      isMovingOut,
+      // 状态
+      inputText,
+      inputMode,
+      showEmoji,
+      showMore,
       isRecording,
-      getFilePath
+      isCancelVoice,
+      
+      // 计算属性
+      canSend,
+      voiceButtonText,
+      inputAreaStyle,
+      
+      // 方法
+      handleTextInput,
+      handleInputFocus,
+      handleKeyboardChange,
+      toggleInputMode,
+      toggleEmojiPanel,
+      toggleMorePanel,
+      addEmoji,
+      sendTextMessage,
+      sendImageMessage,
+      startVoiceRecord,
+      endVoiceRecord,
+      moveVoiceRecord,
     };
   },
 });
 </script>
 
 <style lang="scss" scoped>
+.chat-input-container {
+  position: relative;
+}
+
 .input-area {
   position: fixed;
   left: 0;
@@ -397,193 +380,175 @@ export default defineComponent({
   padding: 12rpx 24rpx;
   border-top: 2rpx solid rgba(0,0,0,0.04);
   z-index: 105;
-  padding-bottom: calc(env(safe-area-inset-bottom) + 12rpx);
-  box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.04);
   transition: bottom 0.3s ease;
 }
 
-.input-container {
+.input-wrapper {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 16rpx;
-  position: relative;
-  z-index: 106;
+  min-height: 72rpx;
 }
 
-.action-button {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 32rpx;
+.action-btn {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 36rpx;
+  background: #F9FAFB;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F5F5F5;
-  transition: all 0.2s;
-  position: relative;
-  z-index: 107;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 
   &:active {
-    background: #EEEEEE;
+    background: #EBEEF5;
     transform: scale(0.95);
   }
 }
 
 .action-icon {
-  width: 40rpx;
-  height: 40rpx;
-  opacity: 0.85;
+  width: 48rpx;
+  height: 48rpx;
 }
 
-.input-wrapper {
+.text-input-wrapper {
   flex: 1;
-  min-height: 64rpx;
-  background: #F5F5F5;
-  border-radius: 32rpx;
+  min-height: 72rpx;
+  max-height: 200rpx;
+  background: #F9FAFB;
+  border-radius: 36rpx;
   padding: 0 24rpx;
   display: flex;
   align-items: center;
-  position: relative;
-  z-index: 106;
 }
 
-.input-field {
+.text-input {
   width: 100%;
-  min-height: 64rpx;
-  line-height: 64rpx;
+  min-height: 72rpx;
+  max-height: 200rpx;
   font-size: 28rpx;
-  color: #333333;
-  padding: 0;
-  display: flex;
-  align-items: center;
-
-  &::placeholder {
-    color: #999999;
-  }
+  line-height: 1.4;
+  color: #2D3436;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
 }
 
-.voice-button {
-  width: 100%;
+.voice-btn {
+  flex: 1;
   height: 72rpx;
+  background: #F9FAFB;
+  border-radius: 36rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  
-  text {
-    color: #666666;
-    font-size: 28rpx;
-  }
+  font-size: 28rpx;
+  color: #636E72;
+  transition: all 0.2s ease;
+  user-select: none;
 
-  &:active {
-    opacity: 0.7;
+  &.voice-btn-active {
+    background: #FF7D45;
+    color: white;
     transform: scale(0.98);
   }
 }
 
-.send-button {
-  min-width: 100rpx;
-  height: 64rpx;
-  background: #FF7D45;
-  border-radius: 32rpx;
+.send-btn {
+  height: 72rpx;
+  padding: 0 32rpx;
+  background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
+  color: white;
+  border-radius: 36rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
   font-size: 28rpx;
   font-weight: 500;
-  transition: all 0.2s;
-  padding: 0 32rpx;
-  position: relative;
-  z-index: 107;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 
   &:active {
-    opacity: 0.9;
-    transform: scale(0.96);
+    transform: scale(0.95);
   }
 }
 
-/* 语音录制弹窗 */
-.voice-popup {
+.emoji-panel,
+.more-panel {
   position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%) scale(0.8);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-  z-index: 999;
-  
-  &.voice-popup-show {
-    opacity: 1;
-    visibility: visible;
-    transform: translate(-50%, -50%) scale(1);
-  }
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #FFFFFF;
+  z-index: 104;
 }
 
-.voice-popup-content {
-  width: 240rpx;
-  height: 240rpx;
-  background: rgba(0,0,0,0.6);
-  border-radius: 24rpx;
-  padding: 32rpx;
+.voice-recording-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.voice-recording-content {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 32rpx;
+  padding: 48rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 24rpx;
+  min-width: 240rpx;
 }
 
 .voice-icon {
-  width: 64rpx;
-  height: 64rpx;
-  margin-bottom: 16rpx;
+  width: 96rpx;
+  height: 96rpx;
+  margin-bottom: 24rpx;
 }
 
 .voice-waves {
   display: flex;
-  align-items: center;
-  gap: 12rpx;
-  height: 48rpx;
+  gap: 8rpx;
+  margin-bottom: 24rpx;
 }
 
 .wave {
   width: 8rpx;
-  height: 24rpx;
-  background: #FFFFFF;
+  height: 32rpx;
+  background: #FF7D45;
   border-radius: 4rpx;
-  animation: wave 1.2s ease-in-out infinite;
-  opacity: 0.9;
-  
-  &:nth-child(1) { animation-delay: -1.2s; }
-  &:nth-child(2) { animation-delay: -1.0s; }
-  &:nth-child(3) { animation-delay: -0.8s; }
-}
+  animation: wave 1s ease-in-out infinite;
 
-.voice-tip {
-  color: #FFFFFF;
-  font-size: 28rpx;
-  font-weight: 500;
-  opacity: 0.9;
+  &:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  &:nth-child(3) {
+    animation-delay: 0.4s;
+  }
 }
 
 @keyframes wave {
   0%, 100% {
-    height: 24rpx;
-    opacity: 0.3;
+    transform: scaleY(1);
   }
   50% {
-    height: 64rpx;
-    opacity: 0.9;
+    transform: scaleY(1.5);
   }
 }
 
-/* 弹出层样式 */
-.popup-content {
-  background: #FFFFFF;
-  border-radius: 24rpx 24rpx 0 0;
-  overflow: hidden;
-  position: relative;
-  z-index: 104;
-  box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.04);
-  transition: transform 0.3s ease;
+.voice-tip {
+  color: white;
+  font-size: 24rpx;
+  text-align: center;
 }
 </style>
+

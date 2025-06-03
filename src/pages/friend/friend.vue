@@ -111,7 +111,7 @@
               >
                 <image 
                   v-if="friend.avatar" 
-                  :src="previewOnlineFileApi(friend.avatar)" 
+                  :src="friend.avatar" 
                   mode="aspectFill" 
                   class="avatar-img" 
                 />
@@ -134,7 +134,6 @@
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from 'vue';
 import { useFriendStore } from '@/pinia/friend/friend';
-import { previewOnlineFileApi } from "@/api/file";
 
 export default defineComponent({
   setup() {
@@ -251,7 +250,6 @@ export default defineComponent({
     });
 
     return {
-      previewOnlineFileApi,
       statusBarHeight,
       showDropdown,
       currentIndex,

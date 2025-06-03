@@ -1,10 +1,22 @@
 <template>
 	<view class="infoList">
-		<scroll-view refresher-background="#f5f5f5" :scroll-top="scrollTop" :refresher-threshold="40" class="scroll"
-			scroll-y="true" :style="{ height: contentHeight + 'rpx' }">
+		<scroll-view 
+      refresher-background="#f5f5f5"  
+      :scroll-top="scrollTop"  
+      :refresher-threshold="40" 
+      class="scroll" 
+      scroll-y="true"
+      :style="{ height: contentHeight + 'rpx' }"
+    >
 			<view v-for="(item) in messages" class="messageList" :key="item">
-				<MessageItem :message='item.msg' :avatar="getChatAvatar(item.sender.userId, item.sender.avatar)" :user-id="item.sender.userId"
-					:position="item.sender.userId === userInfo.userId ? 'right' : 'left'" @scroll-bottom="scrollToBottom" />
+				<MessageItem 
+          :message='item.msg' 
+          :avatar="(allUserMapInfo.get(item.sender.userId)?.avatar|| item.sender.avatar)"
+          :user-id="item.sender.userId"
+          :position="item.sender.userId === userInfo.userId ? 'right' : 'left'"
+					@scroll-bottom="scrollToBottom"
+
+        />
 			</view>
 		</scroll-view>
 	</view>
@@ -18,7 +30,6 @@ import { useUserStore } from "@/pinia/user/user";
 import emitter from '@/utils/mitt';
 import { useMessageStore } from '@/pinia/message/message';
 import { usePageChatStore } from '@/pinia/page/pageChat/pageChat';
-import { previewOnlineFileApi } from "@/api/file";
 import { useFriendStore } from "@/pinia/friend/friend";
 
 export default defineComponent({
@@ -36,7 +47,7 @@ export default defineComponent({
 		},
 	},
 	setup(props) {
-		const { messages } = toRefs(props);
+		const { messages} = toRefs(props);
 		const pageChatStore = usePageChatStore();
 		const chatType = ref(0);
 		const userStore = useUserStore();
@@ -44,8 +55,8 @@ export default defineComponent({
 		const userInfo = computed(() => {
 			return userStore.userInfo
 		})
-		const friendMap = computed(() => {
-			return friendStore.friendMap
+		const allUserMapInfo = computed(() => {
+			return friendStore.allUserMapInfo
 		})
 
 		const scrollTop = ref(0);
@@ -60,7 +71,7 @@ export default defineComponent({
 			const morePanelHeight = pageChatStore.showMore ? pageChatStore.morePanelHeight : 0; // 表情面板高度
 
 			const keyboardHeight = pageChatStore.keyboardHeight; // 键盘高度
-
+			
 			// 计算可用高度
 			const availableHeight = val.windowHeight - headerHeight - inputHeight - safeArea - emojiHeight - keyboardHeight - morePanelHeight;
 			console.error('4234234', availableHeight, emojiHeight)
@@ -70,12 +81,12 @@ export default defineComponent({
 
 		const scrollToBottom = () => {
 			setTimeout(() => {
-				nextTick(() => {
-					console.error('234234234')
-					scrollTop.value += 9999999999;
+					nextTick(() => {
+						console.error('234234234')
+						scrollTop.value += 9999999999;
 				});
 			}, 300);
-
+			
 		};
 
 		// 监听键盘高度变化
@@ -100,22 +111,9 @@ export default defineComponent({
 		watch([messages], (newVal, oldVal) => {
 			scrollToBottom();
 		}, { deep: true, immediate: true });
-		// const friendMap = computed(() => {
-		// 	return friendStore.friendMap
-		// })
-		const getChatAvatar = computed(() => {
-			return (userId: string, avatar) => {
-				// 判断是不是自己
-				if (userId === userInfo.value.userId) {
-					return userInfo.value.avatar
-				} 
-				return previewOnlineFileApi(avatar)
-			}
-		})
+
 		return {
-			getChatAvatar,
-			friendMap,
-			previewOnlineFileApi,
+			allUserMapInfo,
 			messages,
 			contentHeight,
 			scrollTop,

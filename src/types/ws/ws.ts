@@ -1,11 +1,10 @@
-
-
 export interface IWsContent {
   timestamp: number;
+  messageId?: string;
   data: {
     type: string;
     body: {
-      messageId: number;
+      id: number;
       conversationId: string;
       msg: {
         type: number;
@@ -24,9 +23,10 @@ export interface IWsContent {
     };
   };
 }
+
 export interface IWsStore {
   code: number;
   command: "CHAT_MESSAGE" | 'COMMON_UPDATE_MESSAGE';
-  content: IWsContent
-
+  content: IWsContent;
+  messageId?: string;
 }

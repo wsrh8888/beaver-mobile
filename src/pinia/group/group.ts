@@ -2,18 +2,13 @@ import { defineStore } from 'pinia';
 import {
   getGroupListApi,
   getGroupMembersApi,
-  getGroupFileListApi,
-  getGroupMuteListApi,
   getGroupInfoApi
 } from '@/api/group';
 import type {
   IGroupInfo,
   IGroupMember,
-  IGroupFileInfo,
-  IGroupMemberListRes,
-  IGroupFileListRes,
-  IGroupMuteListRes
 } from '@/types/ajax/group';
+import { processAvatarUrl, processArrayAvatars } from '@/utils/avatar';
 import { useFriendStore } from '../friend/friend';
 
 interface IMemberCache {
@@ -38,8 +33,9 @@ export const useGroupStore = defineStore('useGroupStore', {
     /**
      * @description: 群成员Map，key为群组ID
      */
-    _memberMap:  new Map(),
+    _memberMap: new Map(),
   }),
+  
   getters: {
     /**
      * @description: 根据群组ID获取群组信息
@@ -47,8 +43,16 @@ export const useGroupStore = defineStore('useGroupStore', {
      * @returns {IGroupInfo | undefined} 群组信息
      */
     getGroupById: (state) => (groupId: string): IGroupInfo | undefined => {
-      return state.groupMap.get(groupId);
+      const groupInfo = state.groupMap.get(groupId);
+      if (groupInfo) {
+        return {
+          ...groupInfo,
+          avatar: processAvatarUrl(groupInfo.avatar)
+        };
+      }
+      return undefined;
     },
+    
     /**
      * @description: 根据群组ID获取群成员列表
      * @param {string} groupId - 群组ID
@@ -57,62 +61,104 @@ export const useGroupStore = defineStore('useGroupStore', {
     getMembersByGroupId: (state) => (groupId: string): IGroupMember[] => {
       const cache = state._memberMap.get(groupId);
       if (!cache) return [];
+      
       // 从用户map中更新基础信息
-      const friendStore = useFriendStore()
-      return cache.memberList.map(mumber =>{
-        const updateUserInfo = friendStore.friendMap.get(mumber.userId)
-        let userInfo = {}
+      const friendStore = useFriendStore();
+      return cache.memberList.map(member => {
+        const updateUserInfo = friendStore.allUserMapInfo.get(member.userId);
+        let userInfo = {};
+        
         if (updateUserInfo) {
           userInfo = {
-            avatar: updateUserInfo.avatar,
-            nicknam: updateUserInfo.nickname
-          }
-        }
-        return {
-          ...mumber,
-          ...userInfo
+            avatar: processAvatarUrl(updateUserInfo.avatar),
+            nickname: updateUserInfo.nickname
+          };
         }
 
+        return {
+          ...member,
+          ...userInfo,
+          avatar: processAvatarUrl(member.avatar || '')
+        };
       });
     },
   },
+  
   actions: {
     reset() {
       this.groupList = [];
       this.groupMap = new Map();
       this._memberMap = new Map();
     },
+    
     /**
      * @description: 获取群组列表
      */
     async initGroupListApi() {
-      const getGroupApi = await getGroupListApi({
-        page: 1,
-        limit: 100
-      });
-      if (getGroupApi.code === 0) {
-        this.groupList = getGroupApi.result.list;
-        const groupMap = new Map();
-        this.groupList?.forEach((group: IGroupInfo) => {
-          groupMap.set(group.conversationId, group);
+      try {
+        const getGroupApi = await getGroupListApi({
+          page: 1,
+          limit: 100
         });
-        this.groupMap = groupMap;
+        if (getGroupApi.code === 0) {
+          // 处理头像路径
+          this.groupList = processArrayAvatars(getGroupApi.result.list);
+          this.convertGroupListToMap();
+        }
+      } catch (error) {
+        console.error('Failed to initialize group list:', error);
+        throw error;
       }
     },
 
     updateGroupInfo(groupId: string) {
       getGroupInfoApi({ groupId }).then(res => {
         if (res.code === 0) {
-          const groupInfo = res.result;
-          this.groupMap.set(groupId, {
-            ...this.groupMap.get(groupId),
-            ...groupInfo
-          } as any);
-          this.groupList.push(groupInfo as any);
+          const groupInfo = {
+            ...res.result,
+            avatar: processAvatarUrl(res.result.avatar)
+          };
+          
+          // 获取现有的群组信息或创建新的
+          const existingGroup = this.groupMap.get(groupId);
+          const updatedGroup: IGroupInfo = {
+            title: groupInfo.title,
+            name: groupInfo.title, // 使用 title 作为 name
+            avatar: groupInfo.avatar,
+            memberCount: existingGroup?.memberCount || 0,
+            conversationId: groupInfo.conversationId,
+            groupId: groupId,
+            ownerId: existingGroup?.ownerId || '',
+            members: existingGroup?.members || [],
+            notice: existingGroup?.notice,
+            desc: existingGroup?.desc
+          };
+          
+          this.groupMap.set(groupId, updatedGroup);
+          
+          // 更新 groupList 中的对应项
+          const index = this.groupList.findIndex(group => group.conversationId === groupId);
+          if (index !== -1) {
+            this.groupList[index] = updatedGroup;
+          } else {
+            this.groupList.push(updatedGroup);
+          }
         }
+      }).catch(error => {
+        console.error('Failed to update group info:', error);
       });
     },
-   
+    
+    /**
+     * @description: 将groupList转换为Map形式
+     */
+    convertGroupListToMap() {
+      const groupMap = new Map();
+      this.groupList?.forEach((group: IGroupInfo) => {
+        groupMap.set(group.conversationId, group);
+      });
+      this.groupMap = groupMap;
+    },
 
     /**
      * @description: 获取群成员列表
@@ -129,14 +175,21 @@ export const useGroupStore = defineStore('useGroupStore', {
         return { code: 0, result: { list: this.getMembersByGroupId(groupId) } };
       }
 
-      const res = await getGroupMembersApi({ groupId, page, limit });
-      if (res.code === 0) {
-        this._memberMap.set(groupId, {
-          memberList: res.result.list,
-          lastUpdateTime: now
-        });
+      try {
+        const res = await getGroupMembersApi({ groupId, page, limit });
+        if (res.code === 0) {
+          // 处理成员头像
+          const processedMembers = processArrayAvatars(res.result.list);
+          this._memberMap.set(groupId, {
+            memberList: processedMembers,
+            lastUpdateTime: now
+          });
+        }
+        return res;
+      } catch (error) {
+        console.error('Failed to get group members:', error);
+        throw error;
       }
-      return res;
     },
 
     /**
@@ -147,7 +200,8 @@ export const useGroupStore = defineStore('useGroupStore', {
     addMembers(groupId: string, members: IGroupMember[]) {
       const cache = this._memberMap.get(groupId);
       if (cache) {
-        cache.memberList = [...cache.memberList, ...members];
+        const processedMembers = processArrayAvatars(members);
+        cache.memberList = [...cache.memberList, ...processedMembers];
         this._memberMap.set(groupId, cache);
       }
     },

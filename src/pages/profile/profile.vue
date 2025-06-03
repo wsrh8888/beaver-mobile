@@ -16,7 +16,6 @@
       <!-- 头像上传 -->
       <view class="avatar-upload" @click="chooseAvatar">
         <view class="avatar-container" >
-          <!-- {{ previewOnlineFileApi(userAvatar) }} -->
           <image 
             :src="userAvatar " 
             id="avatar-preview" 
@@ -200,7 +199,6 @@ import { computed, defineComponent, onMounted, ref, reactive, watch } from 'vue'
 import { useUserStore } from '@/pinia/user/user';
 import { updateInfoApi } from '@/api/user';
 import { openAlbum } from '@/utils/upload';
-import { previewOnlineFileApi } from '@/api/file';
 
 export default defineComponent({
   setup() {
@@ -453,7 +451,6 @@ export default defineComponent({
     };
     
     return {
-      previewOnlineFileApi,
       userInfo,
       userAvatar,
       formData,

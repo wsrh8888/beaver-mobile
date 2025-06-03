@@ -14,7 +14,7 @@
     <view class="header">
       <view class="group-info">
         <view class="group-avatar" @click="chooseAvatar">
-          <image class="avatar-img" :src="groupInfo?.avatar ? previewOnlineFileApi(groupInfo.avatar) : ''" mode="aspectFill" />
+          <image class="avatar-img" :src="groupInfo?.avatar || ''" mode="aspectFill" />
           <view v-if="isAdmin" class="edit-icon">更换</view>
         </view>
         <view class="group-text">
@@ -38,7 +38,7 @@
           <!-- {{ groupMembers }} -->
           <view class="member-item" v-for="(member, index) in groupMembers" :key="index">
             <view class="member-avatar">
-              <image :src="previewOnlineFileApi(member.avatar)" mode="aspectFill" />
+              <image :src="member.avatar" mode="aspectFill" />
             </view>
             <text class="member-name">{{ member.nickname }}</text>
           </view>
@@ -188,7 +188,6 @@ import { useGroupStore } from '@/pinia/group/group';
 import { useUserStore } from '@/pinia/user/user';
 import { openAlbum } from '@/utils/upload';
 import type { IGroupInfo, IGroupMember } from '@/types/ajax/group';
-import { previewOnlineFileApi } from "@/api/file";
 import { updateGroupInfoApi, quitGroupApi } from '@/api/group';
 
 export default defineComponent({
@@ -359,7 +358,6 @@ export default defineComponent({
     };
 
     return {
-      previewOnlineFileApi,
       groupMembers,
       statusBarHeight,
       isMuted,

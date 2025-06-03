@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { getRecentChatInfoApi, getRecentChatListApi } from '@/api/chat';
 import type { IChatInfo } from '@/types/ajax/chat';
+import { processAvatarUrl } from '@/utils/avatar';
 import { useFriendStore } from '../friend/friend';
 import { useGroupStore } from '../group/group';
 
@@ -20,35 +21,38 @@ export const useConversationStore = defineStore('useConversationStore', {
   }),
 
   getters: {
-
     getRecentChatList: (state) => () => {
-      console.error('111111111', state._recentChatList)
-      return  state._recentChatList.sort((a, b) => {
+      return state._recentChatList.sort((a, b) => {
         // 置顶的排在前面
-        // if (a.is_top !== b.is_top) return b.is_top ? 1 : -1;
+        if (a.is_top !== b.is_top) return b.is_top ? 1 : -1;
         // 按最后消息时间排序
         return new Date(b.update_at).getTime() - new Date(a.update_at).getTime();
-      }).map(recentChatInfo =>{
+      }).map(recentChatInfo => {
         // 判断是不是群组
         const groupStore = useGroupStore();
-        // 如果是群组则到group中更新信息， 否则去user表更新基础西悉尼
-        let info = {}
+        let info = {};
+        
         if (recentChatInfo.chatType === 1) {
-          // Handle private chat
+          // 私聊，头像已经在 API 返回时处理
+          info = {
+            avatar: processAvatarUrl(recentChatInfo.avatar)
+          };
         } else {
-          const groupInfo = groupStore.getGroupById(recentChatInfo.conversationId)
+          // 群聊
+          const groupInfo = groupStore.getGroupById(recentChatInfo.conversationId);
           if (groupInfo) {
             info = {
               nickname: groupInfo.title,
-              avatar: groupInfo.avatar
-            }
+              avatar: processAvatarUrl(groupInfo.avatar)
+            };
           }
         }
+        
         return {
           ...recentChatInfo,
           ...info
-        }
-      })
+        };
+      });
     },
       
     /**
@@ -63,7 +67,10 @@ export const useConversationStore = defineStore('useConversationStore', {
       );
       
       if (conversation) {
-        return conversation;
+        return {
+          ...conversation,
+          avatar: processAvatarUrl(conversation.avatar)
+        };
       }
       
       // 如果在最近会话列表中找不到，则从好友列表或群组列表中获取基本信息
@@ -75,7 +82,7 @@ export const useConversationStore = defineStore('useConversationStore', {
       if (friendInfo) {
         return {
           conversationId: friendInfo.conversationId,
-          avatar: friendInfo.avatar,
+          avatar: processAvatarUrl(friendInfo.avatar),
           nickname: friendInfo.nickname,
           create_at: new Date().toISOString(),
           update_at: new Date().toISOString(),
@@ -90,7 +97,7 @@ export const useConversationStore = defineStore('useConversationStore', {
       if (groupInfo) {
         return {
           conversationId: groupInfo.conversationId,
-          avatar: groupInfo.avatar,
+          avatar: processAvatarUrl(groupInfo.avatar),
           nickname: groupInfo.name || groupInfo.title,
           create_at: new Date().toISOString(),
           update_at: new Date().toISOString(),
@@ -117,8 +124,11 @@ export const useConversationStore = defineStore('useConversationStore', {
       try {
         const res = await getRecentChatListApi();
         if (res.code === 0) {
-          this._recentChatList = res.result.list || [];
-        
+          // 处理头像路径
+          this._recentChatList = (res.result.list || []).map(chat => ({
+            ...chat,
+            avatar: processAvatarUrl(chat.avatar)
+          }));
         }
       } catch (error) {
         console.error('Failed to fetch recent chats:', error);
@@ -127,23 +137,29 @@ export const useConversationStore = defineStore('useConversationStore', {
     },
 
     updateConversationListByFriendId(conversationId: string) {
-      getRecentChatInfoApi({conversationId})
+      getRecentChatInfoApi({ conversationId })
         .then(res => {
           if (res.code === 0 && res.result) {
+            // 处理头像路径
+            const processedResult = {
+              ...res.result,
+              avatar: processAvatarUrl(res.result.avatar)
+            };
+            
             // Check if the conversation already exists in the list
             const existingIndex = this._recentChatList.findIndex(
-              chat => chat.conversationId === res.result.conversationId
+              chat => chat.conversationId === processedResult.conversationId
             );
             
             if (existingIndex !== -1) {
               // Update existing conversation
               this._recentChatList[existingIndex] = {
                 ...this._recentChatList[existingIndex],
-                ...res.result
+                ...processedResult
               };
             } else {
               // Add new conversation to the top of the list
-              this._recentChatList.unshift(res.result);
+              this._recentChatList.unshift(processedResult);
             }
           } else {
             console.error('Failed to get conversation info:', res.msg);
@@ -158,19 +174,23 @@ export const useConversationStore = defineStore('useConversationStore', {
      * @description: 更新会话基本信息
      */
     updateBaseInfo(data: IChatInfo) {
+      const processedData = {
+        ...data,
+        avatar: processAvatarUrl(data.avatar)
+      };
+      
       const index = this._recentChatList.findIndex(
-        item => item.conversationId === data.conversationId
+        item => item.conversationId === processedData.conversationId
       );
       
       if (index !== -1) {
         this._recentChatList[index] = {
           ...this._recentChatList[index],
-          ...data
+          ...processedData
         };
       } else {
         // 数组第一项追加
-        this._recentChatList.unshift(data)
-
+        this._recentChatList.unshift(processedData);
       }
     },
 

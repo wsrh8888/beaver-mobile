@@ -40,7 +40,7 @@
               <view class="contact-item" v-for="contact in group.contacts" :key="contact.userId"
                 @click="toggleSelect(contact)">
                 <view class="contact-avatar">
-                  <image :src="previewOnlineFileApi(contact.avatar)" mode="aspectFill" />
+                  <image :src="contact.avatar" mode="aspectFill" />
                 </view>
                 <view class="contact-info">
                   <view class="contact-name">{{ contact.nickname }}</view>
@@ -83,7 +83,7 @@
             <view class="contact-item" v-for="member in filteredRemoveContacts" :key="member.userId"
               @click="toggleSelect(member)">
               <view class="contact-avatar">
-                <image :src="previewOnlineFileApi(member.avatar)" mode="aspectFill" />
+                <image :src="member.avatar" mode="aspectFill" />
               </view>
               <view class="contact-info">
                 <view class="contact-name">{{ member.nickname }}</view>
@@ -117,7 +117,7 @@
             <view class="letter-index">成员</view>
             <view class="contact-item" v-for="member in groupMembers" :key="member.userId">
               <view class="contact-avatar">
-                <image :src="previewOnlineFileApi(member.avatar)" mode="aspectFill" />
+                <image :src="member.avatar" mode="aspectFill" />
               </view>
               <view class="contact-info">
                 <view class="contact-name">{{ member.nickname }}</view>
@@ -153,7 +153,6 @@ import { onLoad } from '@dcloudio/uni-app';
 import { addGroupMemberApi, removeGroupMemberApi } from '@/api/group';
 import type { IGroupMember } from '@/types/ajax/group';
 import type { IFriendInfo } from '@/types/ajax/friend';
-import { previewOnlineFileApi } from "@/api/file";
 
 export default defineComponent({
   name: 'GroupSetting',
@@ -376,7 +375,6 @@ export default defineComponent({
       }
     });
     return {
-      previewOnlineFileApi,
       statusBarHeight,
       mode,
       searchText,

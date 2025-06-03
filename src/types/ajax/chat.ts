@@ -30,6 +30,8 @@ export interface IChatInfo {
   nickname: string;
   title?: string;
   unread_count?: number;
+  chatType?: number; // 1: 私聊, 2: 群聊
+  create_at?: string;
 }
 
 export interface IConversationInfoRes extends IChatInfo {
@@ -58,7 +60,7 @@ export interface IMessage {
 }
 
 export interface IChatHistory {
-  messageId: number;
+  id: number;
   conversationId: string;
   msg: IMessage;
   sender: {
