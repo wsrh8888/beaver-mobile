@@ -9,6 +9,8 @@
 + 如果喜欢可以点一个star
 + 加入QQ群：[![加入QQ群](https://img.shields.io/badge/加入QQ群-1013328597-blue.svg)](https://qm.qq.com/q/82rbf7QBzO)（1013328597）
 
+### 文档地址
+https://wsrh8888.github.io/beaver-docs/
 
 ### 功能介绍
 + 用户注册
