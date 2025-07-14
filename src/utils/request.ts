@@ -1,7 +1,9 @@
 import { getLocal, removeLocal } from "./local"
 import { v4 as uuidv4 } from 'uuid';
 import { useInitStore } from '@/pinia/init/init';
+import Logger from '@/logger/logger';
 
+const logger = new Logger("ajax")
 export interface IResponseSuccessData<T> {
   code: number
   msg: string
@@ -34,11 +36,13 @@ export const request = <T>(config: IRequestConfig): Promise<IResponseSuccessData
   return new Promise((resolve, reject) => {
     const token = getLocal('token');
     const requestId = uuidv4();
-    console.log({
-      btnName: "request 请求",
-      uuid: requestId,
-      config: config
-    });
+    
+    // 记录请求开始
+    const requestConfig = {
+      ...config,
+      requestId
+    };
+
     uni.request({
       method: config.method,
       url: config.url,
@@ -52,49 +56,46 @@ export const request = <T>(config: IRequestConfig): Promise<IResponseSuccessData
       },
       success: (res: any) => {
         const data = res.data as IResponseSuccessData<T>;
+        
+      
         if (data.code === 0) {
-          console.log({
-            btnName: "response 请求成功",
-            uuid: requestId,
-            data: data
+          logger.info({
+            text: "[ajax]接口正常",
+            data: {
+              uuid: requestId,
+              url: config.url,
+              config: config,
+              response: data
+            }
           });
+          
         }else {
-          console.log({
-            btnName: "response 请求失败",
-            uuid: requestId,
-            data: data
+          logger.error({
+            text: "[ajax]状态码异常",
+            data: {
+              uuid: requestId,
+              url: config.url,
+              config: config,
+              response: data
+            }
           });
-        }
-        // 如果返回码为1，说明token已失效
-        if (data.code != 0 && config.url.includes('authentication')) {
-          const initStore = useInitStore();
-          removeLocal('token');
-          initStore.resetApp();
-          uni.reLaunch({
-            url: '/pages/login/login'
-          });
-          reject(new Error('Token expired'));
-          return;
         }
         
         resolve(data);
       },
       fail: (err: UniApp.GeneralCallbackResult) => {
-        if (config.url.includes('authentication')) {
-          const initStore = useInitStore();
-          removeLocal('token');
-          initStore.resetApp();
-          uni.reLaunch({
-            url: '/pages/login/login'
-          });
-          reject(new Error('Token expired'));
-          return;
-        }
-        console.error({
-          btnName: "response 请求异常",
-          uuid: requestId,
-          data: err
+        // 记录请求失败日志
+        logger.error({
+          text: "[ajax]接口异常",
+          data: {
+            uuid: requestId,
+            url: config.url,
+            config: config,
+            response: err
+          }
         });
+
+        
         reject({
           code: -1,
           msg: err.errMsg

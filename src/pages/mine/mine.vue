@@ -57,6 +57,19 @@
 						</view>
 					</view>
 					
+					<!-- 项目声明 -->
+					<view class="list-item" @click="navigateToDisclaimer">
+						<view class="item-icon">
+							<image src="@/static/img/common/about.svg" mode="aspectFit" class="icon-img"></image>
+						</view>
+						<view class="item-content">
+							<view class="item-title">项目声明</view>
+							<view class="item-right">
+								<image src="@/static/img/common/arrow-right.svg" mode="aspectFit" class="arrow-icon"></image>
+							</view>
+						</view>
+					</view>
+					
 					<!-- 关于 -->
 					<view class="list-item" @click="navigateToAbout">
 						<view class="item-icon">
@@ -64,6 +77,19 @@
 						</view>
 						<view class="item-content">
 							<view class="item-title">关于 Beaver</view>
+							<view class="item-right">
+								<image src="@/static/img/common/arrow-right.svg" mode="aspectFit" class="arrow-icon"></image>
+							</view>
+						</view>
+					</view>
+					
+					<!-- 检查更新 -->
+					<view class="list-item" @click="navigateToUpdate">
+						<view class="item-icon">
+							<image src="@/static/img/update/update-icon.svg" mode="aspectFit" class="icon-img"></image>
+						</view>
+						<view class="item-content">
+							<view class="item-title">检查更新</view>
 							<view class="item-right">
 								<image src="@/static/img/common/arrow-right.svg" mode="aspectFit" class="arrow-icon"></image>
 							</view>
@@ -109,9 +135,21 @@ export default defineComponent({
 			});
 		};
 
+		const navigateToDisclaimer = () => {
+			uni.navigateTo({
+				url: '/pages/disclaimer/disclaimer'
+			});
+		};
+
 		const navigateToAbout = () => {
 			uni.navigateTo({
 				url: '/pages/about/about'
+			});
+		};
+
+		const navigateToUpdate = () => {
+			uni.navigateTo({
+				url: '/pages/update/update'
 			});
 		};
 
@@ -121,7 +159,9 @@ export default defineComponent({
 			navigateToQRCode,
 			navigateToSettings,
 			navigateToFeedback,
-			navigateToAbout
+			navigateToDisclaimer,
+			navigateToAbout,
+			navigateToUpdate
 		};
 	}
 });

@@ -1,5 +1,5 @@
 import { getLocal } from "@/utils/local";
-import { baseUrl } from '@/env.json'
+import { ws } from '@/env.json'
 import { useWsStore } from '@/pinia/ws/ws';
 import type { IWsStore } from "@/types/ws/ws";
 import { v4 as uuidv4 } from 'uuid';
@@ -117,8 +117,9 @@ class WsManager {
 
     return new Promise((resolve, reject) => {
       try {
+        console.error('1111111111111111111111', ws);
         uni.connectSocket({
-          url: `${baseUrl}/api/ws/ws?token=${token}`,
+          url: `${ws}?token=${token}`,
           method: 'GET',
           success: () => {
             console.log('WebSocket 连接请求成功');

@@ -4,19 +4,64 @@ import { onLaunch, onShow, onHide } from "@dcloudio/uni-app";
 import { getLocal } from './utils/local';
 import WsManager from '@/ws-manager/ws'
 import { useInitStore } from '@/pinia/init/init'
+import { track } from '@/logger/track'
 
 export default defineComponent({
 	setup() {		
 		onLaunch( async () => {
 			console.log("App Launch");
+			
+			// 上报版本信息（仅在启动时调用一次）
+			try {
+				await reportVersionApi();
+				console.log('版本信息上报成功');
+			} catch (error) {
+				console.error('版本信息上报失败:', error);
+			}
+			
+			// 追踪应用启动
+			track.view('APP_LAUNCH', {
+				timestamp: Date.now(),
+				hasToken: !!getLocal('token')
+			})
+			
 			const initStore = useInitStore();
-			if (!getLocal('token')) {
-				uni.reLaunch({
-					url: 'pages/login/login'
+			
+			// 无论是否有token，都先测试认证接口是否可用
+			try {
+				await initStore.getAuthentication();
+				console.log('认证接口测试成功');
+			} catch (error) {
+				console.error('认证接口测试失败:', error);
+				// 认证接口不可用，可能是网络问题或服务端问题
+				uni.showToast({
+					title: '网络连接异常，请检查网络设置',
+					icon: 'none',
+					duration: 3000
 				});
+			}
+			
+			if (!getLocal('token')) {
+				// 没有token，跳转到登录页
+				// 检查当前页面路径，避免重复导航
+				const pages = getCurrentPages();
+				const currentPage = pages[pages.length - 1];
+				const currentPath = currentPage?.route;
+				
+				if (currentPath !== 'pages/login/login') {
+					uni.reLaunch({
+						url: 'pages/login/login'
+					});
+				}
 				return
 			}
+			
+			// 有token，初始化应用
 			await initStore.initApp()
+		});
+
+
+		onHide(() => {
 
 		});
 

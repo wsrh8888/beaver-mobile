@@ -5,9 +5,9 @@
 		
 		<!-- 头部导航 -->
 		<HeaderComponent 
-			:conversationId="conversationId" 
-			:title="conversationInfo?.nickname.length >= 10 ? `${conversationInfo?.nickname.slice(0,10)}...` : conversationInfo?.nickname " 
-			@goBack="goBack"
+			:title="getDisplayTitle()"
+			:show-back="true"
+			@back="goBack"
 		>
 			<template #right-content>
 				<view class="header-button" @click="handleClickMore">
@@ -38,7 +38,6 @@
 
 <script lang="ts">
 	import { 
-		defineComponent, 
 		ref, 
 		computed, 
 		nextTick,
@@ -57,7 +56,7 @@
 	import type { ChatType } from "./types";
 	import { usePageChatStore } from '@/pinia/page/pageChat/pageChat';
 
-	export default defineComponent({
+	export default {
 		name: 'ChatPage',
 		components: {
 			HeaderComponent,
@@ -172,6 +171,15 @@
 				}
 			};
 
+			// 获取显示标题
+			const getDisplayTitle = () => {
+				const nickname = conversationInfo.value?.nickname;
+				if (nickname && nickname.length >= 10) {
+					return `${nickname.slice(0, 10)}...`;
+				}
+				return nickname || '';
+			};
+
 			return {
 				...pageChatStore,
 				conversationInfo,
@@ -185,10 +193,11 @@
 				handleMessageSent,
 				loadMoreMessages,
 				goBack,
-				handleClickMore
+				handleClickMore,
+				getDisplayTitle
 			};
 		}
-	});
+	};
 </script>
 
 <style lang="scss" scoped>

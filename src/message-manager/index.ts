@@ -11,14 +11,38 @@ import wsManager from '@/ws-manager/ws';
 export class MessageManager {
   private static instance: MessageManager;
   private pendingMessages = new Map<string, IChatHistory>(); // 待确认的消息
-  private messageStore = useMessageStore();
-  private userStore = useUserStore();
+  private messageStore: any = null;
+  private userStore: any = null;
+
+  constructor() {
+    // 不在构造函数中初始化store，避免初始化时机问题
+  }
 
   static getInstance(): MessageManager {
     if (!MessageManager.instance) {
       MessageManager.instance = new MessageManager();
     }
     return MessageManager.instance;
+  }
+
+  /**
+   * @description: 延迟初始化store
+   */
+  private initStores() {
+    if (!this.messageStore) {
+      try {
+        this.messageStore = useMessageStore();
+      } catch (error) {
+        console.warn('MessageStore初始化失败:', error);
+      }
+    }
+    if (!this.userStore) {
+      try {
+        this.userStore = useUserStore();
+      } catch (error) {
+        console.warn('UserStore初始化失败:', error);
+      }
+    }
   }
 
   /**
@@ -32,6 +56,7 @@ export class MessageManager {
     messageContent: any, 
     messageType: MessageType = MessageType.TEXT
   ): Promise<string> {
+    this.initStores();
     const messageId = uuidv4();
     const timestamp = new Date().toISOString();
 
@@ -41,9 +66,9 @@ export class MessageManager {
       conversationId,
       msg: this.buildMessageContent(messageContent, messageType),
       sender: {
-        userId: this.userStore.userInfo.userId,
-        avatar: this.userStore.userInfo.avatar,
-        nickname: this.userStore.userInfo.nickName
+        userId: this.userStore?.userInfo?.userId || '',
+        avatar: this.userStore?.userInfo?.avatar || '',
+        nickname: this.userStore?.userInfo?.nickName || ''
       },
       create_at: timestamp
     };
@@ -69,6 +94,7 @@ export class MessageManager {
    * @description: 处理服务端消息（去重处理）
    */
   handleServerMessage(serverMessage: any) {
+    this.initStores();
     const { messageId, conversationId } = serverMessage;
     
     console.log('收到服务端消息:', {
@@ -98,13 +124,14 @@ export class MessageManager {
     };
     
     console.log('📩 添加其他人的消息或未匹配的消息:', message);
-    this.messageStore.addMessage(conversationId, message);
+    this.messageStore?.addMessage?.(conversationId, message);
   }
 
   /**
    * @description: 添加本地消息
    */
   private addLocalMessage(message: IChatHistory, messageId: string, status: MessageStatus) {
+    this.initStores();
     // 添加到待确认列表（使用发送时的 messageId 作为 key）
     this.pendingMessages.set(messageId, message);
     
@@ -115,7 +142,7 @@ export class MessageManager {
     });
     
     // 添加到消息列表
-    this.messageStore.addMessage(message.conversationId, message);
+    this.messageStore?.addMessage?.(message.conversationId, message);
     
     // 设置状态
     this.updateMessageStatus(message.id, status);
@@ -184,7 +211,8 @@ export class MessageManager {
    * @description: 更新消息状态
    */
   private updateMessageStatus(messageId: number, status: MessageStatus) {
-    this.messageStore.updateMessageStatus(messageId, status);
+    this.initStores();
+    this.messageStore?.updateMessageStatus?.(messageId, status);
   }
 
   /**

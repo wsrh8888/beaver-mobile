@@ -41,6 +41,10 @@ export default defineComponent({
 		userId: {
 			type: String,
 			default: ''
+		},
+		currentUserId: {
+			type: String,
+			default: ''
 		}
 	},
 	emits: ['scroll-bottom'],
@@ -50,6 +54,10 @@ export default defineComponent({
 		const imageHeight = ref(0);
 
 		const handleGoDetail = () => {
+			// 如果是自己的消息，点击无效
+			if (props.userId === props.currentUserId) {
+				return;
+			}
 			uni.navigateTo({
 				url: `/pages/detail/detail?id=${props.userId}`
 			})
@@ -77,6 +85,8 @@ export default defineComponent({
 			imageHeight.value = newHeight * 2;  // 通过比例调整图片高度
 			emit('scroll-bottom');
 		}
+
+
 		const convertedContent = computed(() => {
 			// return content.replace(/\[微笑\]/g, '<img src="path_to_smile_image.png" alt="微笑" />');\
 			let content = message.value.textMsg.content;

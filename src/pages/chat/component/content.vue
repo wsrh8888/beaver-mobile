@@ -6,7 +6,7 @@
       :refresher-threshold="40" 
       class="scroll" 
       scroll-y="true"
-      :style="{ height: contentHeight + 'rpx' }"
+      :style="{ height: contentHeight + 'rpx', marginTop: (statusBarHeight + 44) + 'px' }"
     >
 			<view v-for="(item) in messages" class="messageList" :key="item">
 				<MessageItem 
@@ -14,6 +14,7 @@
           :avatar="(allUserMapInfo.get(item.sender.userId)?.avatar|| item.sender.avatar)"
           :user-id="item.sender.userId"
           :position="item.sender.userId === userInfo.userId ? 'right' : 'left'"
+          :current-user-id="userInfo.userId"
 					@scroll-bottom="scrollToBottom"
 
         />
@@ -52,6 +53,7 @@ export default defineComponent({
 		const chatType = ref(0);
 		const userStore = useUserStore();
 		const friendStore = useFriendStore();
+		const statusBarHeight = ref(0);
 		const userInfo = computed(() => {
 			return userStore.userInfo
 		})
@@ -61,6 +63,15 @@ export default defineComponent({
 
 		const scrollTop = ref(0);
 		const contentHeight = ref(0);
+		const getStatusBarHeight = () => {
+      try {
+        const info = uni.getSystemInfoSync();
+        statusBarHeight.value = info.statusBarHeight || 0;
+      } catch (error) {
+        console.error('获取系统信息失败:', error);
+      }
+    };
+		getStatusBarHeight()
 
 		const getHeight = (h = 100) => {
 			const val = uni.getSystemInfoSync();
@@ -74,7 +85,6 @@ export default defineComponent({
 			
 			// 计算可用高度
 			const availableHeight = val.windowHeight - headerHeight - inputHeight - safeArea - emojiHeight - keyboardHeight - morePanelHeight;
-			console.error('4234234', availableHeight, emojiHeight)
 			// 转换为 rpx 单位（1px = 2rpx）
 			contentHeight.value = availableHeight * 2;
 		};
@@ -113,6 +123,7 @@ export default defineComponent({
 		}, { deep: true, immediate: true });
 
 		return {
+			statusBarHeight,
 			allUserMapInfo,
 			messages,
 			contentHeight,

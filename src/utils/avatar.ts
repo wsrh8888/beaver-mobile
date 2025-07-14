@@ -45,5 +45,5 @@ export function processArrayAvatars<T extends Record<string, any>>(
   array: T[], 
   avatarField: string = 'avatar'
 ): T[] {
-  return array.map(item => processObjectAvatar(item, avatarField));
+  return array?.map(item => processObjectAvatar(item, avatarField));
 } 

@@ -1,7 +1,7 @@
 <template>
   <view class="guide__content">
     <view class="guide__bg">
-      <image src="@/static/img/bg.jpg" class="logo" />
+      <image :src="APP_CONFIG.logo" class="logo" />
     </view>
     <view class="guide__btn">
       <view class="btn register" @click="goNavigate('/pages/register/register')">注册</view>
@@ -12,7 +12,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-
+import { APP_CONFIG } from '@/config/data';
 
 export default defineComponent({
   setup() {
@@ -24,7 +24,8 @@ export default defineComponent({
       });
     }
     return {
-      goNavigate
+      goNavigate,
+      APP_CONFIG
     };
   }
 });

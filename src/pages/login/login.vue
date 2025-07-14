@@ -5,7 +5,7 @@
     <view class="content">
       <view class="logo-container">
         <view class="logo">
-          <!-- 这里可以放置品牌logo -->
+          <image :src="APP_CONFIG.logo" mode="aspectFit" />
         </view>
       </view>
       
@@ -13,19 +13,19 @@
       <view class="title-decoration"></view>
       
       <view class="welcome-text">
-        登录您的Beaver账号，开启社交新体验
+        登录您的{{ APP_CONFIG.name }}账号，开启社交新体验
       </view>
       
       <view class="form-container">
         <view class="form-group">
           <input 
-            type="tel" 
+            type="email" 
             class="form-input" 
-            v-model="userInfo.phone" 
-            placeholder="手机号码"
-            @input="inputPhone"
+            v-model="userInfo.email" 
+            placeholder="邮箱地址"
+            @input="inputEmail"
           >
-          <view v-if="phoneTouched && !isPhoneValid" class="error__message">请输入有效手机号</view>
+          <view v-if="emailTouched && !isEmailValid" class="error__message">请输入有效邮箱地址</view>
         </view>
         
         <view class="form-group">
@@ -70,17 +70,18 @@ import { useUserStore } from '@/pinia/user/user';
 import { setLocal } from '@/utils/local';
 import WsManager from '@/ws-manager/ws'
 import { useInitStore } from '@/pinia/init/init';
+import { APP_CONFIG } from '@/config/data';
 
 export default defineComponent({
   setup() {
     interface userInfo {
-      phone: string;
+      email: string;
       password: string;
     }
     const sUserInfo = useUserStore();
     const initStore = useInitStore();
     const userInfo = reactive<userInfo>({
-      phone: '',
+      email: '',
       password: ''
     });
 
@@ -88,11 +89,11 @@ export default defineComponent({
     const passwordType = ref('password');
 
     // 是否已点击输入框
-    const phoneTouched = ref(false);
+    const emailTouched = ref(false);
     const passwordTouched = ref(false);
 
     // 验证状态
-    const isPhoneValid = ref(false);
+    const isEmailValid = ref(false);
     const isPasswordValid = ref(false);
 
     // 表单是否有效
@@ -104,8 +105,9 @@ export default defineComponent({
     }
 
     // 邮箱校验
-    function validatePhone(phone: string): boolean {
-      return phone.length === 11 && /^[0-9]+$/.test(phone);
+    function validateEmail(email: string): boolean {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
     }
 
     // 密码校验
@@ -115,15 +117,15 @@ export default defineComponent({
     }
 
     // 表单校验
-    watch([() => userInfo.phone, () => userInfo.password], () => {
-      isPhoneValid.value = validatePhone(userInfo.phone);
+    watch([() => userInfo.email, () => userInfo.password], () => {
+      isEmailValid.value = validateEmail(userInfo.email);
       isPasswordValid.value = validatePassword(userInfo.password);
-      isFormValid.value = isPhoneValid.value && isPasswordValid.value;
+      isFormValid.value = isEmailValid.value && isPasswordValid.value;
     });
 
-    // 手机号输入处理
-    function inputPhone(): void {
-      phoneTouched.value = true;
+    // 邮箱输入处理
+    function inputEmail(): void {
+      emailTouched.value = true;
     }
 
     // 密码输入处理
@@ -143,13 +145,13 @@ export default defineComponent({
     // 点击登录跳转到主页
     function goHome(): void {
       // 标记已经点击过登录按钮，以便显示错误提示
-      phoneTouched.value = true;
+      emailTouched.value = true;
       passwordTouched.value = true;
 
       // if (isFormValid.value) {
         // 对密码加密传输过去
         loginApi({
-          phone: userInfo.phone,
+          email: userInfo.email,
           password: MD5(userInfo.password).toString()
         }).then((res) => {
           if (res.code === 0) {
@@ -175,17 +177,18 @@ export default defineComponent({
 
     return {
       togglePasswordVisibility,
-      inputPhone,
+      inputEmail,
       inputPass,
       navigateToPage,
       goHome,
       userInfo,
       passwordType,
-      phoneTouched,
+      emailTouched,
       passwordTouched,
-      isPhoneValid,
+      isEmailValid,
       isPasswordValid,
-      isFormValid
+      isFormValid,
+      APP_CONFIG
     };
   }
 });
@@ -341,16 +344,7 @@ export default defineComponent({
     color: white;
     box-shadow: 0 8rpx 24rpx rgba(255, 125, 69, 0.15);
     
-    &:after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 50%;
-      background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
-      border-radius: 28rpx 28rpx 0 0;
-    }
+
     
     &:hover {
       transform: translateY(-4rpx);

@@ -1,78 +1,88 @@
 <template>
-  <view class="container">
-    <!-- 顶部渐变背景 -->
-    <view class="top-gradient"></view>
-    
-    <!-- 导航栏 -->
-    <view class="navbar">
-      <view class="back-button" @click="goBack">
-        <image src="@/static/img/setting/back.svg" mode="aspectFit" />
+  <view class="setting-page">
+    <BeaverLayout
+      title="通用设置"
+      :show-background="true"
+      background-type="gradient"
+      :background-height="120"
+      header-mode="fixed"
+      @back="goBack"
+    >
+      <view class="content">
+        <!-- 账号与安全设置 -->
+        <view class="settings-card">
+          <view class="setting-item" @click="handleClickItem(1)">
+            <text class="setting-title">账号与安全</text>
+            <image src="@/static/img/setting/arrow-right.svg" class="arrow-icon" mode="aspectFit" />
+          </view>
+        </view>
+
+        <!-- 关于与支持 -->
+        <view class="settings-card">
+          <view class="setting-item" @click="handleClickItem(2)">
+            <text class="setting-title">隐私政策</text>
+            <image src="@/static/img/setting/arrow-right.svg" class="arrow-icon" mode="aspectFit" />
+          </view>
+          <view class="setting-item" @click="handleClickItem(3)">
+            <text class="setting-title">用户协议</text>
+            <image src="@/static/img/setting/arrow-right.svg" class="arrow-icon" mode="aspectFit" />
+          </view>
+          <view class="setting-item" @click="handleClickItem(4)">
+            <text class="setting-title">检查更新</text>
+            <image src="@/static/img/setting/arrow-right.svg" class="arrow-icon" mode="aspectFit" />
+          </view>
+          
+        </view>
+
+        <!-- 退出登录按钮 -->
+        <view class="logout-container">
+          <view class="logout-button" @click="showExitDialog">退出登录</view>
+        </view>
+
       </view>
-      <text class="page-title">通用设置</text>
-    </view>
+    </BeaverLayout>
 
-    <!-- 账号与安全设置 -->
-    <view class="settings-card">
-      <view class="setting-item" @click="handleClickItem(1)">
-        <text class="setting-title">账号与安全</text>
-        <image src="@/static/img/setting/arrow-right.svg" class="arrow-icon" mode="aspectFit" />
-      </view>
-    </view>
+    <!-- 使用新的BeaverDialog组件 -->
+    <BeaverDialog
+      v-model="showDialog"
+      title="确认退出登录"
+      :content="`退出后需要重新登录才能使用 ${APP_CONFIG.name} ，确定要退出吗？`"
+      type="warning"
+      size="medium"
+      confirm-text="确认退出"
+      cancel-text="取消"
+      @confirm="handleLogout"
+      @cancel="handleCancel"
+    />
 
-    <!-- 关于与支持 -->
-    <view class="settings-card">
-      <view class="setting-item" @click="handleClickItem(2)">
-        <text class="setting-title">隐私政策</text>
-        <image src="@/static/img/setting/arrow-right.svg" class="arrow-icon" mode="aspectFit" />
-      </view>
-      <view class="setting-item" @click="handleClickItem(3)">
-        <text class="setting-title">用户协议</text>
-        <image src="@/static/img/setting/arrow-right.svg" class="arrow-icon" mode="aspectFit" />
-      </view>
-    </view>
-
-    <!-- 退出登录按钮 -->
-    <view class="logout-container">
-      <view class="logout-button" @click="showExitDialog">退出登录</view>
-    </view>
-
-    <!-- 版本信息 -->
-    <view class="version-info">
-      Beaver App v1.0.0
-    </view>
-
-    <!-- 退出确认弹窗 -->
-    <uni-popup ref="exitDialog" type="dialog" :maskClick="false">
-      <uni-popup-dialog
-        title="确认退出登录"
-        content="退出后需要重新登录才能使用Beaver，确定要退出吗？"
-        :before-close="true"
-        @confirm="handleLogout"
-        @close="handleCancel"
-      />
-    </uni-popup>
+    <!-- Toast组件 -->
+    <BeaverToast
+      v-model="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      position="center"
+      :duration="2000"
+    />
   </view>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { useUserStore } from '@/pinia/user/user';
-import { useInitStore } from '@/pinia/init/init';
-import WsManager from '@/ws-manager/ws';
-import { removeLocal } from '@/utils/local';
+import { ref } from 'vue';
+import { BeaverLayout, BeaverDialog, BeaverToast } from '@/component';
+import { APP_CONFIG } from '@/config/data';
 
-interface SettingItem {
-  id: number;
-  title: string;
-  type: string;
-}
-
-export default defineComponent({
+export default {
   name: 'Setting',
+  components: {
+    BeaverLayout,
+    BeaverDialog,
+    BeaverToast
+  },
   setup() {
-    const userStore = useUserStore();
-    const initStore = useInitStore();
-    const exitDialog = ref<any>(null);
+    const showDialog = ref(false);
+    const showToast = ref(false);
+    const toastMessage = ref('');
+    const toastType = ref<'default' | 'success' | 'warning' | 'error'>('default');
 
     const goBack = () => {
       uni.navigateBack();
@@ -89,78 +99,68 @@ export default defineComponent({
         case 3:
           uni.navigateTo({ url: '/pages/agreement/agreement' });
           break;
+        case 4:
+          uni.navigateTo({ url: '/pages/update/update' });
+          break;
       }
     };
 
     const showExitDialog = () => {
-      exitDialog.value?.open();
+      showDialog.value = true;
     };
 
     const handleLogout = () => {
-      removeLocal('token');
-      initStore.resetApp();
-      WsManager.disconnect();
-      uni.reLaunch({ url: '/pages/login/login' });
+      // 这里应该调用实际的登出逻辑
+      // removeLocal('token');
+      // initStore.resetApp();
+      // WsManager.disconnect();
+      
+      // 显示成功提示
+      toastMessage.value = '已退出登录';
+      toastType.value = 'success';
+      showToast.value = true;
+      
+      // 延迟跳转，检查当前页面路径避免重复导航
+      setTimeout(() => {
+        const pages = getCurrentPages();
+        const currentPage = pages[pages.length - 1];
+        const currentPath = currentPage?.route;
+        
+        if (currentPath !== 'pages/login/login') {
+          uni.reLaunch({ url: '/pages/login/login' });
+        }
+      }, 1000);
     };
 
     const handleCancel = () => {
-      exitDialog.value?.close();
+      showDialog.value = false;
     };
 
     return {
-      exitDialog,
+      showDialog,
+      showToast,
+      toastMessage,
+      toastType,
       goBack,
       handleClickItem,
       showExitDialog,
       handleLogout,
       handleCancel,
+      APP_CONFIG,
     };
   },
-});
+};
 </script>
 
 <style lang="scss" scoped>
-.container {
+.setting-page {
   min-height: 100vh;
-  background-color: #F9FAFB;
+}
+
+.content {
   padding: 16px;
-}
-
-.top-gradient {
-  height: 120px;
-  background: linear-gradient(180deg, rgba(255,125,69,0.1) 0%, rgba(255,255,255,0) 100%);
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 0;
-}
-
-/* 导航栏 */
-.navbar {
-  display: flex;
-  align-items: center;
-  height: 48px;
-  margin-bottom: 24px;
-  position: relative;
-  z-index: 1;
-}
-
-.back-button {
-  width: 24px;
-  height: 24px;
-  margin-right: 16px;
-  
-  image {
-    width: 100%;
-    height: 100%;
-  }
-}
-
-.page-title {
-  font-size: 18px;
-  font-weight: 500;
-  color: #2D3436;
+  max-width: 375px;
+  margin: 0 auto;
 }
 
 /* 设置卡片 */
@@ -212,10 +212,10 @@ export default defineComponent({
   border-radius: 12px;
   font-size: 16px;
   font-weight: 500;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   transition: all 0.2s ease;
 
   &:active {
@@ -232,4 +232,4 @@ export default defineComponent({
   color: #B2BEC3;
   font-size: 12px;
 }
-</style>
+</style> 

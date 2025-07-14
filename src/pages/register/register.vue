@@ -3,23 +3,24 @@
     <view class="top-gradient"></view>
     
     <view class="content">
-      <view class="header">
-        <view class="avatar">
-          <uni-icons type="person" size="32" color="#FFFFFF"></uni-icons>
+      <view class="logo-container">
+        <view class="logo">
+          <image :src="APP_CONFIG.logo" mode="aspectFit" />
         </view>
-        <view class="title">创建账号</view>
       </view>
+      
+      <view class="title">创建账号</view>
       
       <view class="form-container">
         <view class="form-group">
           <input 
-            type="tel" 
+            type="email" 
             class="form-input" 
-            v-model="phoneNumber" 
-            placeholder="手机号码"
-            @input="inputPhone"
+            v-model="emailAddress" 
+            placeholder="邮箱地址"
+            @input="inputEmail"
           >
-          <view v-if="phoneTouched && phoneError" class="error__message">请输入有效手机号</view>
+          <view v-if="emailTouched && emailError" class="error__message">请输入有效邮箱地址</view>
         </view>
         
         <view class="form-group">
@@ -30,7 +31,7 @@
             placeholder="设置密码"
             @input="inputPass"
           >
-          <view v-if="passwordTouched && passwordError" class="error__message">密码长度不少于13位，且必须包含中英文</view>
+          <view v-if="passwordTouched && passwordError" class="error__message">密码长度不少于13位，且不能包含空格</view>
         </view>
         
         <view class="form-group">
@@ -75,36 +76,39 @@
 </template>
 
 <script lang="ts">
-import { registerApi } from '@/api/user';
+import { emailRegisterApi, getEmailCodeApi } from '@/api/auth';
 import { defineComponent, ref, computed } from 'vue';
 import { MD5 } from 'crypto-js';
+import { APP_CONFIG } from '@/config/data';
 
 export default defineComponent({
   setup() {
-    const phoneNumber = ref('');
+    const emailAddress = ref('');
     const verificationCode = ref('');
     const password = ref('');
     const isCodeButtonDisabled = ref(false);
     const countdown = ref(60);
 
-    const phoneError = ref(false);
+    const emailError = ref(false);
     const verificationError = ref(false);
     const passwordError = ref(false);
 
-    const phoneTouched = ref(false);
+    const emailTouched = ref(false);
     const verificationTouched = ref(false);
     const passwordTouched = ref(false);
 
     const isFormValid = computed(() => {
-      return !phoneError.value && !verificationError.value && !passwordError.value && phoneNumber.value && verificationCode.value && password.value;
+      return !emailError.value && !verificationError.value && !passwordError.value && emailAddress.value && verificationCode.value && password.value;
     });
 
-    const validatePhoneNumber = () => {
-      phoneTouched.value = true;
-      phoneError.value = !/^\d{11}$/.test(phoneNumber.value);
+    const validateEmailAddress = () => {
+      emailTouched.value = true;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      emailError.value = !emailRegex.test(emailAddress.value);
     };
-    const inputPhone = (e: any) => {
-      phoneError.value = false;
+    
+    const inputEmail = (e: any) => {
+      emailError.value = false;
     };
 
     const validateVerificationCode = () => {
@@ -114,44 +118,68 @@ export default defineComponent({
 
     const validatePassword = () => {
       passwordTouched.value = true;
-      passwordError.value = !/^(?=.*[a-zA-Z])(?=.*\d).{13,}$/.test(password.value);
+      passwordError.value = !/^[^\s]{13,}$/.test(password.value);
     };
+    
     const inputPass = (e: any) => {
       passwordError.value = false;
     };
+    
     const sendVerificationCode = () => {
-      console.log(MD5(password.value).toString(),'====');
-      validatePhoneNumber();
-      if (isCodeButtonDisabled.value || phoneError.value) {
+      validateEmailAddress();
+      if (isCodeButtonDisabled.value || emailError.value) {
         return;
       }
-      isCodeButtonDisabled.value = true;
-      let counter = countdown.value;
-      const interval = setInterval(() => {
-        counter -= 1;
-        countdown.value = counter;
-        if (counter <= 0) {
-          clearInterval(interval);
-          isCodeButtonDisabled.value = false;
-          countdown.value = 60;
+      
+      getEmailCodeApi({
+        email: emailAddress.value,
+        type: 'register'
+      }).then((res) => {
+        if (res.code === 0) {
+          uni.showToast({
+            title: '验证码已发送',
+            duration: 2000
+          });
+          isCodeButtonDisabled.value = true;
+          let counter = countdown.value;
+          const interval = setInterval(() => {
+            counter -= 1;
+            countdown.value = counter;
+            if (counter <= 0) {
+              clearInterval(interval);
+              isCodeButtonDisabled.value = false;
+              countdown.value = 60;
+            }
+          }, 1000);
+        } else {
+          uni.showToast({
+            title: res.msg || '发送失败',
+            duration: 2000
+          });
         }
-      }, 1000);
+      }).catch(() => {
+        uni.showToast({
+          title: '发送失败',
+          duration: 2000
+        });
+      });
     };
 
     const register = () => {
-      validatePhoneNumber();
+      validateEmailAddress();
       validateVerificationCode();
       validatePassword();
       if (!isFormValid.value) {
         return;
       }
       // 处理注册逻辑
-      registerApi({
-        phone: phoneNumber.value,
+      emailRegisterApi({
+        email: emailAddress.value,
         password: MD5(password.value).toString(),
+        code: verificationCode.value
       }).then((res) => {
         if (res.code === 0) {
-          // 跳转到message页面
+          // 跳转到登录页面
           uni.reLaunch({
             url: "/pages/login/login",
             animationType: 'pop-in',
@@ -165,6 +193,7 @@ export default defineComponent({
         }
       });
     };
+    
     const handleGoBack = () => {
       uni.reLaunch({
 		  url: '/pages/guide/guide'
@@ -187,28 +216,29 @@ export default defineComponent({
 
     return {
       handleGoBack,
-      inputPhone,
+      inputEmail,
       inputPass,
-      phoneNumber,
+      emailAddress,
       verificationCode,
       password,
       isCodeButtonDisabled,
       countdown,
-      phoneError,
+      emailError,
       verificationError,
       passwordError,
-      phoneTouched,
+      emailTouched,
       verificationTouched,
       passwordTouched,
       isFormValid,
-      validatePhoneNumber,
+      validateEmailAddress,
       validateVerificationCode,
       validatePassword,
       sendVerificationCode,
       register,
       isAgreed,
       toggleAgreement,
-      navigateToPage
+      navigateToPage,
+      APP_CONFIG
     };
   }
 });
@@ -230,6 +260,35 @@ export default defineComponent({
   padding: 0 32rpx;
   max-width: 750rpx;
   margin: 0 auto;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 48rpx;
+}
+
+.logo {
+  width: 112rpx;
+  height: 112rpx;
+  background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
+  border-radius: 32rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  box-shadow: 0 8rpx 24rpx rgba(255, 125, 69, 0.2);
+  
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+    border-radius: 32rpx 32rpx 0 0;
+  }
 }
 
 .header {

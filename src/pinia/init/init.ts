@@ -59,15 +59,8 @@ export const useInitStore = defineStore('useInitStore', {
      */
     async getAuthentication() {
       try {
-        const res = await getAuthenticationApi();
+         await getAuthenticationApi();
         this.lastAuthTime = Date.now();
-        
-        if (res.code === 1) {
-          this.resetApp();
-          uni.reLaunch({
-            url: '/pages/login/login'
-          });
-        }
       } catch (error) {
         console.error('Authentication failed:', error);
         this.initError = error instanceof Error ? error : new Error('Authentication failed');

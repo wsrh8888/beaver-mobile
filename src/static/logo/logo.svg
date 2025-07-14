@@ -1,0 +1,46 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 主渐变 -->
+    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF7D45;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E86835;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 高光效果 -->
+    <linearGradient id="highlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.15);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0);stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 海狸渐变 -->
+    <linearGradient id="beaverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D2691E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A0522D;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 方形背景 -->
+  <rect x="10" y="10" width="100" height="100" rx="20" fill="url(#primaryGradient)" stroke="#E86835" stroke-width="1"/>
+  
+  <!-- 高光效果 -->
+  <rect x="10" y="10" width="100" height="50" rx="20" fill="url(#highlight)"/>
+  
+  <!-- 海狸头部 - 简洁现代设计 -->
+  <circle cx="60" cy="50" r="22" fill="url(#beaverGradient)"/>
+  
+  <!-- 海狸眼睛 - 大而友好 -->
+  <circle cx="52" cy="42" r="4" fill="#FFFFFF"/>
+  <circle cx="68" cy="42" r="4" fill="#FFFFFF"/>
+  
+  <!-- 海狸瞳孔 -->
+  <circle cx="53" cy="41" r="2" fill="#2D3436"/>
+  <circle cx="69" cy="41" r="2" fill="#2D3436"/>
+  
+  <!-- 海狸鼻子 - 小圆点 -->
+  <circle cx="60" cy="52" r="2" fill="#2D3436"/>
+  
+  <!-- 消息气泡元素 - 与海狸结合 -->
+  <circle cx="45" cy="35" r="3" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="75" cy="35" r="3" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="60" cy="30" r="3" fill="#FFFFFF" opacity="0.8"/>
+</svg> 

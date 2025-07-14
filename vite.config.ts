@@ -10,5 +10,8 @@ export default defineConfig({
         api: 'modern-compiler', // or 'modern'
       },
     },
+  },
+  server: {
+    host: '0.0.0.0',
   }
 });

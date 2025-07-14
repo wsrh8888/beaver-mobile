@@ -1,24 +1,14 @@
 <template>
-  <view class="container">
-    <!-- 导航栏 -->
-    <view class="navbar" :style="{ top: statusBarHeight + 'px' }">
-      <view class="back-button" @click="goBack">
-        <image src="/static/groupList/back.svg" mode="aspectFit" class="back-icon" />
-      </view>
-      <text class="page-title">我的群聊</text>
-      <view class="nav-placeholder"></view>
-    </view>
-
-    <!-- 搜索框 -->
-    <view class="search-container" :style="{ top: statusBarHeight + 44 + 'px' }">
-      <view class="search-form">
-        <image src="/static/groupList/search.svg" mode="aspectFit" class="search-icon" />
-        <input type="text" class="search-input" placeholder="搜索群聊" placeholder-class="search-placeholder" />
-      </view>
-    </view>
-
+  <BeaverLayout
+    title="我的群聊"
+    :show-back="true"
+    :scrollable="true"
+    :scroll-y="true"
+    :show-scrollbar="false"
+    @back="goBack"
+  >
     <!-- 群聊列表 -->
-    <scroll-view class="group-list" scroll-y :style="{ top: statusBarHeight + 96 + 'px' }">
+    <view class="group-list">
       <view 
         class="group-item" 
         v-for="item in groupList" 
@@ -37,29 +27,33 @@
           </view>
         </view>
       </view>
-    </scroll-view>
+    </view>
 
     <!-- 创建群聊按钮 -->
     <view class="fab-button" @click="createGroup">
       <image src="/static/groupList/add.svg" mode="aspectFit" class="add-icon" />
     </view>
-  </view>
+  </BeaverLayout>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from 'vue';
+import { computed } from 'vue';
 import { useGroupStore } from '@/pinia/group/group';
 import type { IGroupInfo } from '@/types/ajax/group';
+import BeaverLayout from '@/component/layout/layout.vue';
 
 interface GroupInfo extends IGroupInfo {
   lastMessage?: string;
 }
 
-export default defineComponent({
+export default {
+  components: {
+    BeaverLayout
+  },
   setup() {
     const groupStore = useGroupStore();
     const groupList = computed(() => groupStore.groupList as GroupInfo[]);
-    const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 0;
+
     const goBack = () => {
       uni.navigateBack();
     };
@@ -82,13 +76,12 @@ export default defineComponent({
 
     return {
       groupList,
-      statusBarHeight,
       goBack,
       handleClickGroup,
       createGroup
     };
   }
-});
+};
 </script>
 
 <style lang="scss" scoped>
@@ -105,131 +98,39 @@ export default defineComponent({
   --divider: #EBEEF5;
 }
 
-.container {
-  max-width: 375px;
-  margin: 0 auto;
-  min-height: 100vh;
-  background-color: var(--background);
-}
-
-/* 顶部导航栏 */
-.navbar {
-  display: flex;
-  align-items: center;
-  height: 44px;
-  padding: 0 16px;
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  background-color: var(--background);
-  border-bottom: 1px solid var(--divider);
-
-  .back-button {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 8px;
-
-    .back-icon {
-      width: 20px;
-      height: 20px;
-    }
-  }
-
-  .page-title {
-    flex: 1;
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--text-title);
-    text-align: center;
-  }
-
-  .nav-placeholder {
-    width: 24px;
-    margin-left: 8px;
-  }
-}
-
-/* 搜索框 */
-.search-container {
-  padding: 8px 12px;
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 9;
-  background-color: var(--background);
-
-  .search-form {
-    position: relative;
-
-    .search-icon {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 16px;
-      height: 16px;
-    }
-
-    .search-input {
-      width: 100%;
-      height: 36px;
-      background-color: var(--background-secondary);
-      border: none;
-      border-radius: 8px;
-      padding: 0 12px 0 32px;
-      font-size: 14px;
-      color: var(--text-title);
-
-      &:focus {
-        outline: none;
-        box-shadow: 0 0 0 1px rgba(255, 125, 69, 0.1);
-      }
-    }
-
-    .search-placeholder {
-      color: var(--text-auxiliary);
-    }
-  }
-}
-
 /* 群聊列表 */
 .group-list {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 4px 12px;
+  padding: 16px;
   background-color: var(--background);
 }
 
 .group-item {
   display: flex;
-  padding: 12px;
-  margin-bottom: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
   background-color: var(--background);
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  transition: transform 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 
   &:active {
     transform: scale(0.98);
     background-color: var(--background-secondary);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   }
 
   .group-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
     overflow: hidden;
-    margin-right: 12px;
+    margin-right: 16px;
     flex-shrink: 0;
     position: relative;
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
+    box-shadow: 0 4px 12px rgba(255, 125, 69, 0.2);
 
     &::before {
       content: "";
@@ -257,23 +158,25 @@ export default defineComponent({
 
     .group-name {
       display: block;
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 16px;
+      font-weight: 600;
       color: var(--text-title);
-      margin-bottom: 4px;
+      margin-bottom: 6px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       width: 100%;
+      line-height: 1.3;
     }
 
     .group-message {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text-body);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+      line-height: 1.4;
     }
 
     .member-count {
@@ -283,9 +186,9 @@ export default defineComponent({
       align-items: center;
 
       .member-icon {
-        width: 12px;
-        height: 12px;
-        margin-right: 4px;
+        width: 14px;
+        height: 14px;
+        margin-right: 6px;
       }
     }
   }
@@ -293,24 +196,24 @@ export default defineComponent({
 
 /* 创建群聊按钮 */
 .fab-button {
-  width: 44px;
-  height: 44px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #E86835 0%, #D55A2B 100%);
   position: fixed;
   bottom: 20px;
   right: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(255, 125, 69, 0.3);
+  box-shadow: 0 4px 12px rgba(232, 104, 53, 0.4);
   z-index: 100;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease;
   cursor: pointer;
 
   &:active {
-    transform: translateY(1px);
-    box-shadow: 0 1px 4px rgba(255, 125, 69, 0.2);
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(255, 125, 69, 0.2);
   }
 
   .add-icon {

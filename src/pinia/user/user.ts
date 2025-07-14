@@ -40,6 +40,8 @@ export const useUserStore = defineStore('useUserStore', {
           const userInfo = {
             userId: res.result.userId,
             nickName: res.result.nickName,
+            email: res.result.email,
+            gender: res.result.gender,
             avatar: processAvatarUrl(res.result.avatar),
           };
           this.userInfo = userInfo;

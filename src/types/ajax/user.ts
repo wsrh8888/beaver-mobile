@@ -5,10 +5,12 @@ export interface IUserInfoRes {
   nickName: string;
   avatar: string;
   abstract: string
-  phone: string;
+  email: string;
+  gender: number;
 }
 
 export interface IRegisterReq {
   password: string;
-  phone: string;
+  email: string;
+  code: string;
 }

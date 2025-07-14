@@ -1,34 +1,43 @@
 <template>
-	<view class="container">
-		<view class="top-gradient"></view>
-		
-		<!-- 导航栏 -->
-		<view class="navbar">
-			<view class="back-button" @click="handleClickGoBack">
-				<image src="@/static/img/detail/back-icon.svg" mode="aspectFit" class="back-icon" />
-			</view>
+	<BeaverLayout
+		title="好友资料"
+		:show-back="true"
+		:scrollable="true"
+		:scroll-y="true"
+		:show-scrollbar="false"
+		:show-background="true"
+		background-type="gradient"
+		:background-height="200"
+		@back="handleClickGoBack"
+	>
+		<template #right>
 			<view class="more-button" @click="showMoreMenu">
 				<image src="@/static/img/detail/more-icon.svg" mode="aspectFit" class="more-icon" />
 			</view>
-		</view>
+		</template>
 
-		<!-- 好友资料卡片 -->
-		<view class="profile-card">
-			<!-- 用户基本信息头部 -->
-			<view class="profile-header">
-				<view class="user-avatar">
-					<image :src="friendInfo.avatar" mode="aspectFill" class="avatar-img" />
-				</view>
-				<view class="user-name">
-					{{ friendInfo.nickname }}
-					<image v-if="friendInfo.gender === 'male'" src="@/static/img/detail/gender-male-icon.svg" mode="aspectFit" class="gender-icon" />
-				</view>
-				<view v-if="friendInfo.remarkName" class="user-alias">备注: {{ friendInfo.remarkName }}</view>
-				<view class="user-id">ID: {{ friendInfo.userId }}</view>
-				<view class="user-signature">{{ friendInfo.signature || '这个人很懒，什么都没写~' }}</view>
-			</view>
-
-			<!-- 基本资料卡片 -->
+		<!-- 滚动内容区域 -->
+		<scroll-view 
+			class="scroll-content" 
+			scroll-y="true"
+		>
+			<view class="content">
+				<!-- 好友资料卡片 -->
+				<view class="profile-card">
+					<!-- 用户基本信息头部 -->
+					<view class="profile-header">
+						<view class="user-avatar">
+							<image :src="getAvatarUrl(friendInfo.avatar)" mode="aspectFill" class="avatar-img" />
+						</view>
+						<view class="user-name">
+							{{ friendInfo.nickname }}
+							<image v-if="friendInfo.gender === 'male'" src="@/static/img/detail/gender-male-icon.svg" mode="aspectFit" class="gender-icon" />
+						</view>
+						<view v-if="friendInfo.remarkName" class="user-alias">备注: {{ friendInfo.remarkName }}</view>
+						<view class="user-id">ID: {{ friendInfo.userId }}</view>
+						<view class="user-signature">{{ friendInfo.signature || '这个人很懒，什么都没写~' }}</view>
+					</view>
+					<!-- 基本资料卡片 -->
 			<view class="info-card">
 				<view class="card-header">
 					<view class="card-title">基本资料</view>
@@ -42,40 +51,26 @@
 						<view class="info-label">年龄</view>
 						<view class="info-value">{{ friendInfo.age || '未设置' }}</view>
 					</view>
-					<view class="info-item">
-						<view class="info-label">星座</view>
-						<view class="info-value">{{ friendInfo.constellation || '未设置' }}</view>
-					</view>
-					<view class="info-item">
-						<view class="info-label">职业</view>
-						<view class="info-value">{{ friendInfo.occupation || '未设置' }}</view>
-					</view>
-					<view class="info-item">
-						<view class="info-label">学历</view>
-						<view class="info-value">{{ friendInfo.education || '未设置' }}</view>
-					</view>
-					<view class="info-item">
-						<view class="info-label">兴趣爱好</view>
-						<view class="info-value">{{ friendInfo.hobbies || '未设置' }}</view>
-					</view>
 				</view>
 			</view>
 
-			<!-- 相册预览卡片 -->
-			<view class="info-card" v-if="friendInfo.photos && friendInfo.photos.length">
-				<view class="card-header">
-					<view class="card-title">相册动态</view>
-				</view>
-				<view class="photo-grid">
-					<view class="photo-item" v-for="(photo, index) in displayPhotos" :key="index">
-						<image :src="photo" mode="aspectFill" />
-					</view>
-					<view v-if="friendInfo.photos.length > 3" class="photo-item more-photos" @click="viewAllPhotos">
-						查看更多
+					<!-- 相册预览卡片 -->
+					<view class="info-card" v-if="friendInfo.photos && friendInfo.photos.length">
+						<view class="card-header">
+							<view class="card-title">相册动态</view>
+						</view>
+						<view class="photo-grid">
+							<view class="photo-item" v-for="(photo, index) in displayPhotos" :key="index">
+								<image :src="photo" mode="aspectFill" />
+							</view>
+							<view v-if="friendInfo.photos.length > 3" class="photo-item more-photos" @click="viewAllPhotos">
+								查看更多
+							</view>
+						</view>
 					</view>
 				</view>
 			</view>
-		</view>
+		</scroll-view>
 
 		<!-- 底部操作栏 -->
 		<view class="bottom-bar">
@@ -119,16 +114,23 @@
 				</view>
 			</view>
 		</uni-popup>
-	</view>
+	</BeaverLayout>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { getFriendInfoApi, updateRemarkNameApi, deleteFriendApi } from '@/api/friend';
+import { previewOnlineFileApi } from '@/api/file';
+import BeaverLayout from '@/component/layout/layout.vue';
 
-export default defineComponent({
+export default {
+	components: {
+		BeaverLayout
+	},
 	setup() {
+		const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 0;
+		
 		const friendInfo = ref({
 			userId: '',
 			nickname: '',
@@ -149,6 +151,10 @@ export default defineComponent({
 		const newRemarkName = ref('');
 		const editNotePopup = ref();
 		const moreMenuPopup = ref();
+
+		const getAvatarUrl = (avatar: string) => {
+			return previewOnlineFileApi(avatar);
+		};
 
 		const displayPhotos = computed(() => {
 			return friendInfo.value.photos.slice(0, 3);
@@ -255,6 +261,8 @@ export default defineComponent({
 			newRemarkName,
 			editNotePopup,
 			moreMenuPopup,
+			statusBarHeight,
+			getAvatarUrl,
 			handleClickGoBack,
 			showMoreMenu,
 			showEditNote,
@@ -267,71 +275,61 @@ export default defineComponent({
 			viewAllPhotos
 		};
 	}
-});
+};
 </script>
 
 <style lang="scss" scoped>
+
+/* 移除 header 的边框 */
+:deep(.header-content) {
+  border-bottom: none !important;
+}
+
 /* 基础样式 */
 .container {
-	min-height: 100vh;
+	height: 100vh;
 	background-color: #F9FAFB;
 	color: #636E72;
 	font-size: 28rpx;
 	line-height: 1.5;
-	padding-bottom: 180rpx;
 	position: relative;
 }
 
-/* 顶部渐变区域 */
-.top-gradient {
-	height: 440rpx;
-	background: linear-gradient(180deg, rgba(255,125,69,0.15) 0%, rgba(255,255,255,0) 100%);
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	z-index: 1;
-}
-
-/* 导航栏 */
-.navbar {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	height: 96rpx;
-	padding: 0 32rpx;
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	z-index: 10;
-	background: transparent;
-}
-
-.back-button,
+/* 更多按钮样式 */
 .more-button {
-	width: 64rpx;
-	height: 64rpx;
+	width: 40rpx;
+	height: 40rpx;
 	border-radius: 50%;
-	background-color: white;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.08);
 }
 
-.back-icon,
 .more-icon {
 	width: 40rpx;
 	height: 40rpx;
 }
 
+/* 滚动内容区域 */
+.scroll-content {
+	background-color: #F9FAFB;
+}
+
+.content {
+	padding: 0 32rpx;
+	padding-bottom: 32rpx;
+	max-width: 750rpx;
+	box-sizing: border-box;
+	margin: 0 auto;
+}
+
 /* 用户资料卡片 */
 .profile-card {
-	padding: 0 32rpx;
+	padding: 0;
 	position: relative;
 	z-index: 2;
-	padding-top: 144rpx;
+	padding-top: 40rpx;
 }
 
 .profile-header {

@@ -1,15 +1,17 @@
 <template>
-  <view class="container">
-    <!-- 顶部导航栏 -->
-    <view class="navbar" :style="{ top: statusBarHeight + 'px' }">
-      <view class="back-button" @click="goBack">
-        <image src="@/static/img/common/arrow-left.svg" mode="aspectFit" class="back-icon"></image>
-      </view>
-      <view class="nav-title">我的二维码</view>
-    </view>
-    
+  <BeaverLayout
+    title="我的二维码"
+    :show-back="true"
+    :scrollable="true"
+    :scroll-y="true"
+    :show-scrollbar="false"
+    :show-background="true"
+    background-type="gradient"
+    :background-height="300"
+    @back="goBack"
+  >
     <!-- 主要内容 -->
-    <view class="content" :style="{ paddingTop: statusBarHeight + 44 + 'px' }">
+    <view class="content">
       <!-- 二维码卡片 -->
       <view class="qrcode-card">
         <!-- 卡片顶部 -->
@@ -19,7 +21,7 @@
             <image v-else :src="userInfo.avatar" mode="aspectFill" class="avatar-img"></image>
           </view>
           <view class="user-info">
-            <view class="user-name">{{ userInfo.nickName || 'Beaver' }}</view>
+            <view class="user-name">{{ userInfo.nickName || APP_CONFIG.name }}</view>
             <view class="user-id">ID: {{ userInfo.userId || '未设置' }}</view>
           </view>
         </view>
@@ -59,21 +61,26 @@
     
     <!-- 底部装饰 -->
     <view class="bottom-decoration"></view>
-  </view>
+  </BeaverLayout>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, nextTick, getCurrentInstance, onMounted } from 'vue';
+import { computed, ref, nextTick, getCurrentInstance } from 'vue';
 import { useUserStore } from '@/pinia/user/user';
+import BeaverLayout from '@/component/layout/layout.vue';
+import { APP_CONFIG } from '@/config/data';
 
-export default defineComponent({
+export default {
+  name: 'Qrcode',
+  components: {
+    BeaverLayout
+  },
   setup() {
     const store = useUserStore();
     const userInfo = computed(() => store.userInfo);
     const qrCanvasId = ref("qrcode-canvas");
     const instance = getCurrentInstance();
     const isH5 = ref(false);
-    const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 0;
     
     // 获取用户名首字母
     const getUserInitial = () => {
@@ -81,21 +88,19 @@ export default defineComponent({
     };
     
     // 判断当前环境
-    onMounted(() => {
-      // #ifdef H5
-      isH5.value = true;
-      qrCanvasId.value = "h5-qrcode-canvas";
-      // #endif
-      
-      // 设置用户头像作为logo
-      nextTick(() => {
-        if (userInfo.value && userInfo.value.avatar) {
-          options.value.logoImage = userInfo.value.avatar;
-          // 强制更新options来触发二维码重新渲染
-          options.value = {...options.value};
-          console.log('设置logo图片:', userInfo.value.avatar);
-        }
-      });
+    // #ifdef H5
+    isH5.value = true;
+    qrCanvasId.value = "h5-qrcode-canvas";
+    // #endif
+    
+    // 设置用户头像作为logo
+    nextTick(() => {
+      if (userInfo.value && userInfo.value.avatar) {
+        options.value.logoImage = userInfo.value.avatar;
+        // 强制更新options来触发二维码重新渲染
+        options.value = {...options.value};
+        console.log('设置logo图片:', userInfo.value.avatar);
+      }
     });
     
     // 导航返回
@@ -126,7 +131,7 @@ export default defineComponent({
     const qrValue = ref(JSON.stringify({
       type: "addFriend",
       query: `id=${userInfo.value.userId || ''}`,
-      name: "beaver"
+      name: APP_CONFIG.name
     }));
     
     // H5环境下载图片
@@ -135,7 +140,7 @@ export default defineComponent({
         // 创建下载链接
         const link = document.createElement('a');
         link.href = base64Data;
-        link.download = `beaver-qrcode-${userInfo.value.userId || 'friend'}.png`;
+        link.download = `${APP_CONFIG.name}-qrcode-${userInfo.value.userId || 'friend'}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -155,15 +160,14 @@ export default defineComponent({
       }
     };
     
-    // 保存二维码图片
+        // 保存二维码图片
     const handleSaveQrcode = () => {
       try {
         // 获取二维码组件引用
         const qrCodeComponent = instance?.proxy?.$refs.qrcode;
-        
         if (!qrCodeComponent) {
           uni.showToast({
-            title: '二维码生成失败',
+            title: '二维码组件未找到',
             icon: 'error',
             duration: 2000
           });
@@ -174,116 +178,42 @@ export default defineComponent({
           title: isH5.value ? '准备下载...' : '正在保存...'
         });
         
-        // 简单延迟确保渲染完成
-        setTimeout(() => {
-          if (isH5.value) {
-            // H5环境 - 使用简单的方法获取二维码图片
-            try {
-              // 尝试直接从DOM获取整个二维码容器区域
-              const qrContainer = document.querySelector('.qrcode-container') as HTMLElement;
-              if (!qrContainer) {
-                uni.hideLoading();
-                uni.showToast({
-                  title: '获取二维码失败',
-                  icon: 'error',
-                  duration: 2000
-                });
-                return;
-              }
-              
-              // 使用html2canvas库将整个区域转为canvas (如果已引入)
-              // 如果没有html2canvas，可以使用下面的备选方案
-              
-              // 备选方案：从DOM获取canvas元素
-              const canvas = document.querySelector(`#${qrCanvasId.value} canvas`) as HTMLCanvasElement;
-              if (canvas && typeof canvas.toDataURL === 'function') {
-                const base64 = canvas.toDataURL();
-                uni.hideLoading();
-                downloadImage(base64);
-              } else {
-                uni.hideLoading();
-                uni.showToast({
-                  title: '获取图片失败',
-                  icon: 'error',
-                  duration: 2000
-                });
-              }
-            } catch (error) {
-              uni.hideLoading();
-              console.error('H5获取二维码失败:', error);
+        // 使用二维码组件自带的save方法
+        qrCodeComponent.save({
+          success: () => {
+            uni.hideLoading();
+            uni.showToast({
+              title: isH5.value ? '下载成功' : '已保存到相册',
+              icon: 'success',
+              duration: 2000
+            });
+          },
+          fail: (err) => {
+            uni.hideLoading();
+            console.error('保存失败:', err);
+            
+            // 处理权限被拒绝的情况
+            if (err.errMsg && (err.errMsg.indexOf('auth deny') >= 0 || err.errMsg.indexOf('authorize') >= 0)) {
+              uni.showModal({
+                title: '保存失败',
+                content: '需要授权相册权限',
+                confirmText: '去设置',
+                cancelText: '取消',
+                success: (res) => {
+                  if (res.confirm) {
+                    uni.openSetting();
+                  }
+                }
+              });
+            } else {
               uni.showToast({
-                title: '获取图片失败',
+                title: '保存失败',
                 icon: 'error',
                 duration: 2000
               });
             }
-          } else {
-            // APP环境 - 使用画布直接获取整个二维码区域
-            const qrView = uni.createSelectorQuery().in(instance?.proxy);
-            qrView.select('.qrcode-container').boundingClientRect().exec((res) => {
-              if (!res || !res[0]) {
-                uni.hideLoading();
-                uni.showToast({
-                  title: '获取二维码区域失败',
-                  icon: 'error',
-                  duration: 2000
-                });
-                return;
-              }
-              
-              // 使用canvasToTempFilePath保存整个二维码区域
-              uni.canvasToTempFilePath({
-                canvasId: qrCanvasId.value,
-                success: (res) => {
-                  uni.hideLoading();
-                  
-                  // 保存到相册
-                  uni.saveImageToPhotosAlbum({
-                    filePath: res.tempFilePath,
-                    success: () => {
-                      uni.showToast({
-                        title: '已保存到相册',
-                        icon: 'success',
-                        duration: 2000
-                      });
-                    },
-                    fail: (err) => {
-                      // 处理权限被拒绝的情况
-                      if (err.errMsg.indexOf('auth deny') >= 0 || err.errMsg.indexOf('authorize') >= 0) {
-                        uni.showModal({
-                          title: '保存失败',
-                          content: '需要授权相册权限',
-                          confirmText: '去设置',
-                          cancelText: '取消',
-                          success: (res) => {
-                            if (res.confirm) {
-                              uni.openSetting();
-                            }
-                          }
-                        });
-                      } else {
-                        uni.showToast({
-                          title: '保存失败',
-                          icon: 'error',
-                          duration: 2000
-                        });
-                      }
-                    }
-                  });
-                },
-                fail: (err) => {
-                  uni.hideLoading();
-                  console.error('获取图片路径失败:', err);
-                  uni.showToast({
-                    title: '保存失败',
-                    icon: 'error',
-                    duration: 2000
-                  });
-                }
-              }, qrCodeComponent);
-            });
           }
-        }, 300);
+        });
       } catch (error) {
         uni.hideLoading();
         console.error('保存过程出错:', error);
@@ -303,18 +233,31 @@ export default defineComponent({
       qrCanvasId,
       handleSaveQrcode,
       isH5,
-      statusBarHeight,
-      getUserInitial
+      getUserInitial,
+      APP_CONFIG
     };
   }
-});
+};
 </script>
 
 <style lang="scss" scoped>
+.safe-area {
+  height: 32rpx;
+}
+
+/* 覆盖 BeaverLayout 的背景为橙色渐变 */
+:deep(.background-layer.gradient) {
+  background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%) !important;
+}
+
+/* 移除 header 的边框 */
+:deep(.header-content) {
+  border-bottom: none !important;
+}
+
 /* 基础样式 */
 .container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
   color: #2D3436;
   position: relative;
   font-size: 28rpx;
@@ -386,6 +329,8 @@ export default defineComponent({
   box-sizing: border-box;
   position: relative;
   z-index: 1;
+  background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
+
 }
 
 /* 二维码卡片 */

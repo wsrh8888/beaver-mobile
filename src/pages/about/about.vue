@@ -25,21 +25,21 @@
 		<view class="content">
 			<!-- 应用标志 -->
 			<view class="logo-container floating">
-				<image src="@/static/img/common/beaver-logo.svg" mode="aspectFit"></image>
+				<image :src="APP_CONFIG.logo" mode="aspectFit"></image>
 			</view>
 			
-			<text class="app-name">海狸</text>
-			<view class="app-version">1.0.0</view>
+			<text class="app-name">{{ APP_CONFIG.name }}</text>
+			<view class="app-version">{{ currentVersion }}</view>
 			
 			<text class="about-text">
-				海狸是一款致力于帮助用户<text class="highlight">拓展社交圈</text>，
+				{{ APP_CONFIG.name }}是一款致力于帮助用户<text class="highlight">拓展社交圈</text>，
 				发现<text class="highlight">志同道合</text>朋友的即时通讯应用。
 				我们相信真实的人际连接比以往任何时候都更加珍贵。
 			</text>
 			
 			<view class="team-info">
 				<text class="team-label">由</text>
-				<text class="team-name">海狸 团队</text>
+				<text class="team-name">{{ APP_CONFIG.developer }}</text>
 				<text class="copyright">© 2025 版权所有</text>
 			</view>
 		</view>
@@ -47,16 +47,25 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, ref } from 'vue';
+import { getCurrentVersion } from '@/utils/update/update';
+import { APP_CONFIG } from '@/config/data';
 
 export default defineComponent({
 	setup() {
+		const currentVersion = ref('1.0.0');
+		
 		const goBack = () => {
 			uni.navigateBack();
 		};
 		
+		// 使用统一的版本获取方法
+		currentVersion.value = getCurrentVersion();
+		
 		return {
-			goBack
+			currentVersion,
+			goBack,
+			APP_CONFIG
 		};
 	}
 });

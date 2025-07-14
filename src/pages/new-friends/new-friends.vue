@@ -1,155 +1,181 @@
 <template>
-  <view class="page-container">
-    <!-- 导航栏 -->
-    <view class="navbar" :style="{ top: statusBarHeight + 'px' }">
-      <view class="back-button" @click="goBack">
-        <image src="@/static/img/common/arrow-back.svg" mode="aspectFit"></image>
-      </view>
-      <view class="page-title">新的朋友</view>
-      <view style="width: 28rpx;"></view> <!-- 平衡空间 -->
-    </view>
-
-    <!-- 搜索区域 -->
-    <view class="search-container" :style="{ top: statusBarHeight + 44 + 'px' }">
-      <view class="search-box">
-        <view class="search-icon">
-          <image src="@/static/img/common/search.svg" mode="aspectFit"></image>
+  <BeaverLayout
+    title="新的朋友"
+    :show-back="true"
+    :scrollable="true"
+    :scroll-y="true"
+    :show-scrollbar="false"
+    @back="goBack"
+  >
+    <!-- 分类标签 -->
+    <view class="tabs-section">
+      <view class="tabs-container">
+        <view 
+          class="tab-item" 
+          :class="{ active: activeTab === 'received' }"
+          @click="switchTab('received')"
+        >
+          <text class="tab-text">收到的申请</text>
+          <view class="tab-badge" v-if="receivedCount > 0">{{ receivedCount }}</view>
         </view>
-        <input 
-          class="search-input" 
-          type="text" 
-          v-model="searchKeyword" 
-          @input="searchRequests" 
-          placeholder="搜索" 
-          placeholder-class="search-placeholder"
-        />
+        <view 
+          class="tab-item" 
+          :class="{ active: activeTab === 'sent' }"
+          @click="switchTab('sent')"
+        >
+          <text class="tab-text">发出的申请</text>
+        </view>
       </view>
     </view>
 
     <!-- 好友申请列表 -->
-    <scroll-view scroll-y class="friend-list">
-      <view class="friend-requests" v-if="filteredRequests.length > 0">
-        <view 
-          class="request-item fade-in" 
-          v-for="(item, index) in filteredRequests" 
-          :key="'request-' + index"
-        >
-          <view class="request-avatar">
-            <image :src="item.avatar" mode="aspectFill"></image>
-          </view>
-          <view class="request-info">
-            <view class="request-name">{{ item.nickname }}</view>
-            <view class="request-message">{{ item.message || '请求加为好友' }}</view>
-            <view class="request-meta">{{ getTimeDiff(item.createTime) }}</view>
-          </view>
-          <view class="request-actions">
-            <template v-if="item.flag === 'rev'">
-              <template v-if="item.status === 0">
-                <button class="btn btn-accept" @click="acceptRequest(item.id)">接受</button>
-                <button class="btn btn-reject" @click="rejectRequest(item.id)">拒绝</button>
-              </template>
-              <view v-else-if="item.status === 1" class="status-added">已添加</view>
-              <view v-else-if="item.status === 2" class="status-rejected">已拒绝</view>
+    <view class="requests-list" v-if="filteredRequests.length > 0">
+      <view 
+        class="request-item" 
+        v-for="(item, index) in filteredRequests" 
+        :key="'request-' + index"
+        :class="{ 'fade-in': true }"
+        :style="{ animationDelay: index * 0.05 + 's' }"
+      >
+        <view class="request-avatar">
+          <image :src="getAvatarUrl(item.avatar)" mode="aspectFill"></image>
+        </view>
+        <view class="request-content">
+          <view class="request-name">{{ item.nickname }}</view>
+          <view class="request-message">{{ item.message || '请求加为好友' }}</view>
+          <view class="request-meta">{{ item.createTime }}</view>
+        </view>
+        <view class="request-actions">
+          <template v-if="item.flag === 'receive'">
+            <template v-if="item.status === 0">
+              <view class="btn btn-accept" @click="acceptRequest(item.id)">
+                <text class="btn-text">接受</text>
+              </view>
+              <view class="btn btn-reject" @click="rejectRequest(item.id)">
+                <text class="btn-text">拒绝</text>
+              </view>
             </template>
-            <template v-else-if="item.flag === 'send'">
-              <view v-if="item.status === 0" class="status-pending">等待验证</view>
-              <view v-else-if="item.status === 1" class="status-added">已添加</view>
-              <view v-else-if="item.status === 2" class="status-rejected">已拒绝</view>
-            </template>
-          </view>
+            <view v-else-if="item.status === 1" class="status-badge success">
+              <image src="@/static/img/new-friend/check-circle.svg" mode="aspectFit"></image>
+              <text class="status-text">已添加</text>
+            </view>
+            <view v-else-if="item.status === 2" class="status-badge rejected">
+              <image src="@/static/img/new-friend/close-circle.svg" mode="aspectFit"></image>
+              <text class="status-text">已拒绝</text>
+            </view>
+          </template>
+          <template v-else-if="item.flag === 'send'">
+            <view v-if="item.status === 0" class="status-badge pending">
+              <image src="@/static/img/new-friend/clock.svg" mode="aspectFit"></image>
+              <text class="status-text">等待验证</text>
+            </view>
+            <view v-else-if="item.status === 1" class="status-badge success">
+              <image src="@/static/img/new-friend/check-circle.svg" mode="aspectFit"></image>
+              <text class="status-text">已添加</text>
+            </view>
+            <view v-else-if="item.status === 2" class="status-badge rejected">
+              <image src="@/static/img/new-friend/close-circle.svg" mode="aspectFit"></image>
+              <text class="status-text">已拒绝</text>
+            </view>
+          </template>
         </view>
       </view>
+    </view>
 
-      <!-- 空状态提示 -->
-      <view class="empty-state" v-else>
-        <view class="empty-icon">
-          <image src="@/static/img/common/users.svg" mode="aspectFit"></image>
-        </view>
-        <view class="empty-text">暂无新的好友申请</view>
-        <view class="empty-subtext">可前往"添加好友"页面添加新朋友</view>
+    <!-- 空状态 -->
+    <view class="empty-state" v-else>
+      <view class="empty-illustration">
+        <image src="@/static/img/new-friend/empty-friends.svg" mode="aspectFit"></image>
       </view>
-    </scroll-view>
+      <view class="empty-content">
+        <text class="empty-title">暂无{{ activeTab === 'received' ? '收到' : '发出' }}的好友申请</text>
+        <text class="empty-subtitle">
+          {{ activeTab === 'received' ? '当有人申请加你为好友时，会在这里显示' : '你发出的好友申请会在这里显示状态' }}
+        </text>
+      </view>
+    </view>
 
     <!-- 提示框 -->
     <uv-toast ref="uToast" />
-  </view>
+  </BeaverLayout>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { getFriendValidListApi } from '@/api/apply';
 import { valiFrienddAPi } from '@/api/friend';
+import { previewOnlineFileApi } from '@/api/file';
 import type { IValidInfo } from '@/types/ajax/friend';
+import BeaverLayout from '@/component/layout/layout.vue';
 
-export default defineComponent({
+export default {
+  components: {
+    BeaverLayout
+  },
   setup() {
-    // 请求列表数据
+    // 响应式数据
     const allRequests = ref<IValidInfo[]>([]);
     const searchKeyword = ref('');
+    const activeTab = ref('received');
     const uToast = ref();
-    const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 0;
 
-    // 过滤后的请求列表
+    // 计算属性
     const filteredRequests = computed(() => {
-      if (!searchKeyword.value) return allRequests.value;
-      
-      const keyword = searchKeyword.value.toLowerCase();
-      return allRequests.value.filter(item => 
-        item.nickname.toLowerCase().includes(keyword) || 
-        (item.message && item.message.toLowerCase().includes(keyword))
-      );
+      let requests = allRequests.value.filter(item => {
+        if (activeTab.value === 'received') {
+          return item.flag === 'receive';
+        } else {
+          return item.flag === 'send';
+        }
+      });
+
+      if (searchKeyword.value) {
+        const keyword = searchKeyword.value.toLowerCase();
+        requests = requests.filter(item => 
+          item.nickname.toLowerCase().includes(keyword) || 
+          (item.message && item.message.toLowerCase().includes(keyword))
+        );
+      }
+
+      return requests;
     });
 
-    // 搜索请求
+    const receivedCount = computed(() => {
+      return allRequests.value.filter(item => 
+        item.flag === 'receive' && item.status === 0
+      ).length;
+    });
+
+    // 方法
     const searchRequests = () => {
-      // 实现过滤逻辑，已通过computed属性实现
+      // 搜索逻辑已通过computed实现
     };
 
-    // 格式化时间
-    const getTimeDiff = (timestamp: number | string | undefined) => {
-      if (!timestamp) return '未知时间';
-      
-      // 尝试按格式 'YYYY-MM-DD HH:mm:ss' 解析时间
-      const date = typeof timestamp === 'string' 
-        ? (timestamp.includes('-') ? new Date(timestamp) : new Date(parseInt(timestamp)))
-        : new Date(timestamp);
-        
-      const now = new Date();
-      const diff = now.getTime() - date.getTime();
-      
-      // 小于1小时，显示x分钟前
-      if (diff < 3600000) {
-        const minutes = Math.floor(diff / 60000);
-        return minutes <= 0 ? '刚刚' : `${minutes}分钟前`;
-      }
-      
-      // 小于24小时，显示x小时前
-      if (diff < 86400000) {
-        const hours = Math.floor(diff / 3600000);
-        return `${hours}小时前`;
-      }
-      
-      // 小于7天，显示x天前
-      if (diff < 604800000) {
-        const days = Math.floor(diff / 86400000);
-        return `${days}天前`;
-      }
-      
-      // 超过7天，显示具体日期
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      return `${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    const switchTab = (tab: string) => {
+      activeTab.value = tab;
     };
 
-    // 接受好友请求
+    const getAvatarUrl = (avatar: string) => {
+      return previewOnlineFileApi(avatar);
+    };
+
+    const getStatusIcon = (status: number) => {
+      switch (status) {
+        case 1:
+          return '@/static/img/new-friend/check-circle.svg';
+        case 2:
+          return '@/static/img/new-friend/close-circle.svg';
+        default:
+          return '@/static/img/new-friend/clock.svg';
+      }
+    };
+
     const acceptRequest = (id: number) => {
       valiFrienddAPi({
         verifyId: id,
         status: 1
       }).then((res) => {
         if (res.code === 0) {
-          // 修改本地数据
           allRequests.value = allRequests.value.map((item) => {
             if (item.id === id) {
               item.status = 1;
@@ -165,14 +191,12 @@ export default defineComponent({
       });
     };
 
-    // 拒绝好友请求
     const rejectRequest = (id: number) => {
       valiFrienddAPi({
         verifyId: id,
         status: 2
       }).then((res) => {
         if (res.code === 0) {
-          // 修改本地数据
           allRequests.value = allRequests.value.map((item) => {
             if (item.id === id) {
               item.status = 2;
@@ -188,14 +212,12 @@ export default defineComponent({
       });
     };
 
-    // 返回上一页
     const goBack = () => {
       uni.navigateBack();
     };
 
-    // 显示提示
     const showToast = (message: string) => {
-      uToast.value.show({
+      uToast.value?.show({
         title: message,
         type: 'success',
         duration: 2000
@@ -203,299 +225,333 @@ export default defineComponent({
     };
 
     // 页面加载时获取数据
-    onMounted(() => {
-      getFriendValidListApi({
-        page: 1,
-        limit: 100
-      }).then((res) => {
-        if (res.code === 0) {
-          // 由于接口返回的数据没有时间字段，这里模拟添加createTime字段
-          allRequests.value = res.result.list.map(item => ({
-            ...item,
-            createTime: Date.now() - Math.floor(Math.random() * 1000000000) // 随机生成过去30天内的时间
-          }));
-        }
-      });
+    getFriendValidListApi({
+      page: 1,
+      limit: 100
+    }).then((res) => {
+      if (res.code === 0) {
+        allRequests.value = res.result.list.map(item => ({
+          ...item,
+          createTime: Date.now() - Math.floor(Math.random() * 1000000000)
+        }));
+      }
     });
 
     return {
       searchKeyword,
       filteredRequests,
+      activeTab,
+      receivedCount,
       searchRequests,
-      getTimeDiff,
+      switchTab,
+      getAvatarUrl,
+      getStatusIcon,
       acceptRequest,
       rejectRequest,
       goBack,
-      uToast,
-      statusBarHeight
+      uToast
     };
   }
-});
+};
 </script>
 
-<style lang="scss" scoped>
-/* 色彩系统 */
-$primary: #FF7D45;
-$primary-deep: #E86835;
-$primary-light: #FFE6D9;
-$text-title: #2D3436;
-$text-body: #636E72;
-$text-auxiliary: #B2BEC3;
-$background: #FFFFFF;
-$background-secondary: #F9FAFB;
-$divider: #EBEEF5;
-$success: #4CAF50;
-$warning: #FFC107;
-$error: #FF5252;
-$info: #2196F3;
-
-/* 基础样式 */
-.page-container {
-  background-color: $background-secondary;
-  color: $text-body;
-  line-height: 1.5;
-  font-size: 26rpx;
-  min-height: 100vh;
-}
-
-/* 导航栏 */
-.navbar {
-  display: flex;
-  align-items: center;
-  height: 44px;
-  padding: 0 24rpx;
-  background-color: $background;
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.05);
-}
-
-.back-button {
-  width: 56rpx;
-  height: 56rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  
-  image {
-    width: 40rpx;
-    height: 40rpx;
-  }
-}
-
-.page-title {
-  flex: 1;
-  text-align: center;
-  font-size: 32rpx;
-  font-weight: 500;
-  color: $text-title;
-}
-
-/* 搜索区域 */
-.search-container {
-  background-color: $background;
-  padding: 16rpx 24rpx 24rpx;
-  margin-bottom: 2rpx;
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 9;
-}
-
-.search-box {
+<style scoped>
+/* 标签页区域 */
+.tabs-section {
+  background: #FFFFFF;
+  border-bottom: 1px solid #EBEEF5;
   position: relative;
-  height: 72rpx;
+  z-index: 10;
+  margin-bottom: 12px;
 }
 
-.search-icon {
-  position: absolute;
-  left: 10rpx;
-  top: 50%;
-  transform: translateY(-50%);
-  color: $text-auxiliary;
+.tabs-container {
   display: flex;
-  justify-content: center;
-  image {
-    width: 32rpx;
-    height: 32rpx;
-  }
+  padding: 0 16px;
+  max-width: 375px;
+  margin: 0 auto;
 }
 
-.search-input {
-  width: 100%;
-  height: 100%;
-  border-radius: 16rpx;
-  background-color: $background-secondary;
-  border: none;
-  font-size: 28rpx;
-  color: $text-body;
-  padding-left: 62rpx;
-  box-sizing: border-box;
+.tab-item {
+  position: relative;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  color: #636E72;
+  font-weight: 500;
 }
 
-.search-placeholder {
-  color: $text-auxiliary;
+.tab-item.active {
+  color: #FF7D45;
+  font-weight: 600;
 }
 
-/* 好友请求列表 */
-.friend-list {
-  height: calc(100vh - 180rpx);
-  margin-top: calc(44px + 72rpx);
-  padding-top: env(safe-area-inset-top);
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #FF7D45, #E86835);
+  border-radius: 2px;
 }
 
-.friend-requests {
-  background-color: $background;
+.tab-badge {
+  margin-left: 8px;
+  background: linear-gradient(135deg, #FF5252, #E53935);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(255, 82, 82, 0.3);
+}
+
+/* 好友申请列表 */
+.requests-list {
+  background: #FFFFFF;
+  margin: 0 16px 12px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .request-item {
-  padding: 24rpx;
+  padding: 16px;
   display: flex;
   align-items: center;
-  border-bottom: 2rpx solid $divider;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: #FFFFFF;
+}
+
+.request-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 80px;
+  right: 16px;
+  bottom: 0;
+  height: 0.5px;
+  background-color: #F0F2F5;
+}
+
+.request-item:active {
+  background-color: #F9FAFB;
+  transform: scale(0.98);
 }
 
 .request-avatar {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 16rpx;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
   overflow: hidden;
-  margin-right: 24rpx;
-  background-color: $background-secondary;
+  margin-right: 16px;
+  background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 18px;
+  position: relative;
   flex-shrink: 0;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.08);
-  
-  image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+  box-shadow: 0 4px 12px rgba(255, 125, 69, 0.2);
 }
 
-.request-info {
+.request-avatar image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.status-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.request-content {
   flex: 1;
   min-width: 0;
 }
 
 .request-name {
-  font-size: 30rpx;
-  font-weight: 500;
-  color: $text-title;
-  margin-bottom: 4rpx;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2D3436;
+  margin-bottom: 4px;
+  line-height: 1.3;
 }
 
 .request-message {
-  font-size: 26rpx;
-  color: $text-body;
-  margin-bottom: 6rpx;
+  font-size: 13px;
+  color: #636E72;
+  margin-bottom: 4px;
+  line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .request-meta {
-  font-size: 22rpx;
-  color: $text-auxiliary;
+  font-size: 11px;
+  color: #B2BEC3;
 }
 
 .request-actions {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  margin-left: 24rpx;
+  gap: 10px;
+  margin-left: 16px;
 }
 
 .btn {
-  border-radius: 28rpx;
-  font-size: 26rpx;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
   border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn-accept {
-  background-color: $primary;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
   color: #FFF;
-  box-shadow: 0 4rpx 12rpx rgba(255, 125, 69, 0.2);
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
 }
 
 .btn-accept:active {
-  transform: translateY(2rpx);
-  box-shadow: 0 2rpx 6rpx rgba(255, 125, 69, 0.2);
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  opacity: 0.8;
 }
 
 .btn-reject {
-  background-color: $background-secondary;
-  color: $text-body;
-  border: 2rpx solid $divider;
+  background: rgba(255, 255, 255, 0.9);
+  color: #636E72;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .btn-reject:active {
-  background-color: $divider;
+  background: rgba(255, 255, 255, 1);
+  transform: scale(0.95);
+  opacity: 0.8;
 }
 
-.btn-reject::after {
-  border: none;
+.btn-text {
+  font-weight: 600;
 }
 
-.status-added {
-  font-size: 26rpx;
-  color: $success;
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.status-rejected {
-  font-size: 26rpx;
-  color: $error;
+.status-badge.success {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
 }
 
-.status-pending {
-  font-size: 26rpx;
-  color: $text-auxiliary;
+.status-badge.rejected {
+  background: rgba(255, 82, 82, 0.1);
+  color: #FF5252;
+}
+
+.status-badge.pending {
+  background: rgba(178, 190, 195, 0.1);
+  color: #B2BEC3;
+}
+
+.status-badge image {
+  width: 18px;
+  height: 18px;
+}
+
+.status-text {
+  font-weight: 500;
 }
 
 /* 空状态 */
 .empty-state {
-  padding: 120rpx 0;
+  padding: 80px 32px;
   text-align: center;
-  color: $text-auxiliary;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
 }
 
-.empty-icon {
-  width: 96rpx;
-  height: 96rpx;
-  margin: 0 auto 24rpx;
+.empty-illustration {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 32px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: $background-secondary;
-  border-radius: 48rpx;
-  color: $text-auxiliary;
-  
-  image {
-    width: 48rpx;
-    height: 48rpx;
-  }
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
 }
 
-.empty-text {
-  font-size: 28rpx;
-  margin-bottom: 12rpx;
+.empty-illustration image {
+  width: 60px;
+  height: 60px;
 }
 
-.empty-subtext {
-  font-size: 24rpx;
+.empty-content {
+  text-align: center;
+}
+
+.empty-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2D3436;
+  margin-bottom: 8px;
+}
+
+.empty-subtitle {
+  display: block;
+  font-size: 13px;
+  color: #636E72;
+  line-height: 1.5;
 }
 
 /* 动画 */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20rpx); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .fade-in {
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.6s ease forwards;
 }
 </style>

@@ -428,12 +428,14 @@ export default defineComponent({
   min-height: 72rpx;
   max-height: 200rpx;
   font-size: 28rpx;
-  line-height: 1.4;
+  line-height: 72rpx;
   color: #2D3436;
   background: transparent;
   border: none;
   outline: none;
   resize: none;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .voice-btn {

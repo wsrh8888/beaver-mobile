@@ -1,83 +1,68 @@
 <template>
-  <view class="container">
-    <!-- 导航栏 -->
-    <view class="navbar" :style="{ top: statusBarHeight + 'px' }">
-      <view class="back-button" @click="handleClickGoBack">
-        <image class="back-icon" src="@/static/img/common/arrow-left.svg" mode="aspectFit"></image>
-      </view>
-      <view class="page-title">添加好友</view>
-      <view style="width: 72rpx;"></view> <!-- 平衡空间 -->
-    </view>
-
-    <!-- 主内容区域 -->
-    <view class="main-content" :style="{ paddingTop: statusBarHeight + 44 + 'px' }">
-      <!-- 搜索区域 -->
-      <view class="search-container">
-        <view class="search-form">
-          <view class="search-icon">
-            <image src="@/static/img/searchFriend/search-icon.svg" mode="aspectFit" class="icon-img" />
-          </view>
-          <input type="text" class="search-input" v-model="searchQuery" placeholder="搜索好友"
-            placeholder-class="search-placeholder" />
-          <view class="search-button" @click="performSearch">
-            <text>搜索</text>
-          </view>
-        </view>
-      </view>
-      
-      <!-- 初始状态（未搜索） -->
-      <view class="state-empty" :class="{ 'active': !showResult }">
-        <!-- 添加方式 -->
-        <view class="add-methods">
-          <view class="method-item" @click="scanCode">
-            <view class="method-icon">
-              <image src="@/static/img/searchFriend/qr-code-icon.svg" mode="aspectFit" class="icon-img" />
+  <view class="search-friend-page">
+    <BeaverLayout
+      title="添加好友"
+      :show-background="false"
+      header-mode="fixed"
+      @back="handleClickGoBack"
+    >
+      <!-- 主内容区域 -->
+      <view class="main-content">
+        <!-- 搜索区域 -->
+        <view class="search-container">
+          <view class="search-form">
+            <view class="search-icon">
+              <image src="@/static/img/searchFriend/search-icon.svg" mode="aspectFit" class="icon-img" />
             </view>
-            <view class="method-info">
-              <text class="method-name">扫一扫</text>
-              <text class="method-desc">扫描好友的二维码添加</text>
-            </view>
-            <view class="arrow-right">
-              <image src="@/static/img/searchFriend/arrow-right-icon.svg" mode="aspectFit" class="icon-img" />
-            </view>
-          </view>
-          <view class="method-item" @click="navigateToContacts">
-            <view class="method-icon">
-              <image src="@/static/img/searchFriend/contacts-icon.svg" mode="aspectFit" class="icon-img" />
-            </view>
-            <view class="method-info">
-              <text class="method-name">手机通讯录</text>
-              <text class="method-desc">查找通讯录中的好友</text>
-            </view>
-            <view class="arrow-right">
-              <image src="@/static/img/searchFriend/arrow-right-icon.svg" mode="aspectFit" class="icon-img" />
+            <input type="text" class="search-input" v-model="searchQuery" placeholder="输入邮箱搜索好友"
+              placeholder-class="search-placeholder" />
+            <view class="search-button" @click="performSearch">
+              <text>搜索</text>
             </view>
           </view>
         </view>
-      </view>
-
-      <!-- 搜索结果状态 -->
-      <view class="state-result" :class="{ 'active': showResult }">
-        <view class="search-result show fade-in">
-          <view class="result-card">
-            <view class="user-profile">
-              <view class="user-avatar">
-                <image :src="searchResult.avatar " mode="aspectFill" />
+        
+        <!-- 初始状态（未搜索） -->
+        <view class="state-empty" :class="{ 'active': !showResult }">
+          <!-- 添加方式 -->
+          <view class="add-methods">
+            <view class="method-item" @click="scanCode">
+              <view class="method-icon">
+                <image src="@/static/img/searchFriend/qr-code-icon.svg" mode="aspectFit" class="icon-img" />
               </view>
-              <view class="user-info">
-                <text class="user-name">{{ searchResult.nickname }}</text>
-                <text class="user-id">ID: {{ searchResult.userId }}</text>
-               
+              <view class="method-info">
+                <text class="method-name">扫一扫</text>
+                <text class="method-desc">扫描好友的二维码添加</text>
+              </view>
+              <view class="arrow-right">
+                <image src="@/static/img/searchFriend/arrow-right-icon.svg" mode="aspectFit" class="icon-img" />
               </view>
             </view>
           </view>
-          <view class="result-actions">
-            <input type="text" class="verification-input" v-model="verificationMessage" placeholder="请输入验证消息..." />
-            <button class="btn btn-primary" @click="sendFriendRequest">添加好友</button>
+        </view>
+
+        <!-- 搜索结果状态 -->
+        <view class="state-result" :class="{ 'active': showResult }">
+          <view class="search-result show fade-in">
+            <view class="result-card">
+              <view class="user-profile">
+                <view class="user-avatar">
+                  <image :src="searchResult.avatar" mode="aspectFill" />
+                </view>
+                <view class="user-info">
+                  <text class="user-name">{{ searchResult.nickname }}</text>
+                  <text class="user-id">ID: {{ searchResult.userId }}</text>
+                </view>
+              </view>
+            </view>
+            <view class="result-actions">
+              <input type="text" class="verification-input" v-model="verificationMessage" placeholder="请输入验证消息..." />
+              <button class="btn btn-primary" @click="sendFriendRequest">添加好友</button>
+            </view>
           </view>
         </view>
       </view>
-    </view>
+    </BeaverLayout>
 
     <!-- 提示框 -->
     <view class="toast" :class="{ 'show': showToast }">{{ toastMessage }}</view>
@@ -85,9 +70,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
-import { applyAddFriendApi, getSearchFriendApi } from '@/api/friend';
+import { ref } from 'vue';
+import { BeaverLayout } from '@/component';
+import { getSearchFriendApi, applyAddFriendApi } from '@/api/friend';
+import { previewOnlineFileApi } from '@/api/file';
 
 interface SearchUserInfo {
   userId: string;
@@ -96,9 +82,12 @@ interface SearchUserInfo {
   phone: string;
 }
 
-export default defineComponent({
+export default {
+  name: 'SearchFriend',
+  components: {
+    BeaverLayout
+  },
   setup() {
-    const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 0;
     const searchQuery = ref('');
     const searchResults = ref<SearchUserInfo[]>([]);
     const isLoading = ref(false);
@@ -106,7 +95,6 @@ export default defineComponent({
     const verificationMessage = ref('我是你的好友');
     const showToast = ref(false);
     const toastMessage = ref('');
-    const defaultAvatar = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%232196F3\'%3E%3Cpath d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z\'/%3E%3C/svg%3E';
 
     const searchResult = ref({
       userId: '',
@@ -125,40 +113,43 @@ export default defineComponent({
       }, 3000);
     };
 
+    // 邮箱格式验证
+    const validateEmail = (email: string): boolean => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    };
+
     const performSearch = async () => {
       if (searchQuery.value.length > 0) {
+        // 验证邮箱格式
+        if (!validateEmail(searchQuery.value)) {
+          displayToast('请输入正确的邮箱格式');
+          return;
+        }
         isLoading.value = true;
         try {
-          // 模拟搜索延迟
-          setTimeout(async () => {
-            try {
-              const res = await getSearchFriendApi({ phone: searchQuery.value });
-              if (res.code === 0 && res.result) {
-                searchResult.value = {
-                  userId: res.result.userId || '',
-                  nickname: res.result.nickname || '',
-                  avatar: res.result.avatar || '',
-                  bio: res.result.bio || '',
-                  location: res.result.location || '',
-                };
-                showResult.value = true;
-              } else {
-                displayToast('未找到相关用户');
-              }
-            } catch (error) {
-              console.error('Search failed:', error);
-              displayToast('搜索失败，请稍后再试');
-            } finally {
-              isLoading.value = false;
-            }
-          }, 300);
-        } catch (error) {
+          const res = await getSearchFriendApi({ email: searchQuery.value });
+          if (res.code === 0 && res.result) {
+            searchResult.value = {
+              userId: res.result.userId || '',
+              nickname: res.result.nickname || '',
+              avatar: previewOnlineFileApi(res.result.avatar),
+              bio: res.result.Abstract || '',
+              location: '',
+            };
+            showResult.value = true;
+            displayToast('搜索成功');
+          } else {
+            displayToast('未找到相关用户');
+          }
+                } catch (error) {
           console.error('Search failed:', error);
           displayToast('搜索失败，请稍后再试');
+        } finally {
           isLoading.value = false;
         }
       } else {
-        displayToast('请输入搜索内容');
+        displayToast('请输入邮箱地址');
       }
     };
 
@@ -194,8 +185,6 @@ export default defineComponent({
     };
 
     const sendFriendRequest = () => {
-      // 发送好友请求的逻辑
-      displayToast('好友请求已发送');
       applyAddFriendApi({
         friendId: searchResult.value.userId,
         verify: verificationMessage.value
@@ -205,15 +194,12 @@ export default defineComponent({
           showResult.value = false;
           searchQuery.value = '';
         } else {
-          displayToast(res.msg);
+          displayToast(res.msg || '发送失败');
         }
       }).catch((error) => {
         console.error('发送好友请求失败:', error);
         displayToast('发送失败，请稍后再试');
       });
-      // setTimeout(() => {
-        
-      // }, 2000);
     };
 
     return {
@@ -223,7 +209,6 @@ export default defineComponent({
       showResult,
       verificationMessage,
       searchResult,
-      defaultAvatar,
       showToast,
       toastMessage,
       performSearch,
@@ -231,128 +216,95 @@ export default defineComponent({
       handleClickUser,
       scanCode,
       navigateToContacts,
-      sendFriendRequest,
-      statusBarHeight
+      sendFriendRequest
     };
   }
-});
+};
 </script>
 
 <style lang="scss" scoped>
-/* 变量定义 */
-:root {
-  --primary: #FF7D45;
-  --primary-deep: #E86835;
-  --primary-light: #FFE6D9;
-  --text-title: #2D3436;
-  --text-body: #636E72;
-  --text-auxiliary: #B2BEC3;
-  --background: #FFFFFF;
-  --background-secondary: #F9FAFB;
-  --divider: #EBEEF5;
-}
-
-.container {
-  background-color: #FFFFFF;
-  color: #636E72;
-  font-size: 28rpx;
-  line-height: 1.5;
+.search-friend-page {
   min-height: 100vh;
-}
-
-/* 导航栏 */
-.navbar {
-  display: flex;
-  align-items: center;
-  height: 88rpx;
-  padding: 0 32rpx;
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 100;
   background-color: #FFFFFF;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
-}
-
-.back-button {
-  width: 72rpx;
-  height: 72rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-}
-
-.back-icon {
-  width: 48rpx;
-  height: 48rpx;
-}
-
-.page-title {
-  flex: 1;
-  text-align: center;
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #2D3436;
 }
 
 /* 主内容区域 */
 .main-content {
   box-sizing: border-box;
-  min-height: 100vh;
 }
 
 /* 搜索区域 */
 .search-container {
-  padding: 32rpx;
-  margin-bottom: 48rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 20rpx;
 }
 
 .search-form {
   position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: 48rpx;
+  background: #FFFFFF;
+  border-radius: 48rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  border: 1rpx solid rgba(255, 125, 69, 0.1);
 }
 
 .search-icon {
   position: absolute;
-  left: 32rpx;
+  left: 24rpx;
   top: 50%;
   transform: translateY(-50%);
-  width: 40rpx;
-  height: 40rpx;
+  width: 36rpx;
+  height: 36rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
+  color: #FF7D45;
 }
 
 .search-input {
   flex: 1;
-  height: 96rpx;
-  background-color: #F9FAFB;
+  height: 88rpx;
+  background-color: transparent;
   border: none;
-  border-radius: 48rpx 0 0 48rpx;
-  padding: 0 40rpx 0 96rpx;
-  font-size: 32rpx;
+  padding: 0 32rpx 0 72rpx;
+  font-size: 30rpx;
   color: #2D3436;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
 }
 
+.search-input:focus {
+  outline: none;
+}
+
 .search-button {
-  height: 96rpx;
+  height: 88rpx;
   background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
-  border-radius: 0 48rpx 48rpx 0;
-  padding: 0 40rpx;
+  padding: 0 32rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: 600;
-  font-size: 32rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+  font-size: 30rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.search-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.search-button:active {
+  transform: scale(0.98);
 }
 
 .search-placeholder {
@@ -362,38 +314,38 @@ export default defineComponent({
 /* 添加方式卡片 */
 .add-methods {
   background-color: #FFFFFF;
-  border-radius: 24rpx;
+  border-radius: 20rpx;
   overflow: hidden;
-  margin: 0 32rpx;
-  box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.04);
+  margin: 0 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
 }
 
 .method-item {
   display: flex;
   align-items: center;
-  padding: 40rpx 32rpx;
+  padding: 32rpx 24rpx;
   position: relative;
 }
 
 .method-item:first-child {
-  border-bottom: 2rpx solid #EBEEF5;
+  border-bottom: 1rpx solid #EBEEF5;
 }
 
 .method-icon {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 48rpx;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
   background-color: #FFE6D9;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 32rpx;
+  margin-right: 20rpx;
   flex-shrink: 0;
 }
 
 .method-icon .icon-img {
-  width: 48rpx;
-  height: 48rpx;
+  width: 40rpx;
+  height: 40rpx;
 }
 
 .method-info {
@@ -401,7 +353,7 @@ export default defineComponent({
 }
 
 .method-name {
-  font-size: 34rpx;
+  font-size: 32rpx;
   font-weight: 600;
   color: #2D3436;
   margin-bottom: 8rpx;
@@ -409,35 +361,35 @@ export default defineComponent({
 }
 
 .method-desc {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: #636E72;
   display: block;
 }
 
 .arrow-right {
-  width: 32rpx;
-  height: 32rpx;
+  width: 28rpx;
+  height: 28rpx;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .arrow-right .icon-img {
-  width: 32rpx;
-  height: 32rpx;
+  width: 28rpx;
+  height: 28rpx;
 }
 
 /* 搜索结果 */
 .search-result {
   background-color: #FFFFFF;
-  border-radius: 24rpx;
+  border-radius: 20rpx;
   overflow: hidden;
-  box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.08);
-  margin: 0 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+  margin: 0 20rpx;
 }
 
 .result-card {
-  padding: 48rpx 32rpx;
+  padding: 36rpx 24rpx;
 }
 
 .user-profile {
@@ -446,13 +398,13 @@ export default defineComponent({
 }
 
 .user-avatar {
-  width: 100rpx;
-  height: 100rpx;
-  border-radius: 72rpx;
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 64rpx;
   overflow: hidden;
   background-color: #F9FAFB;
-  margin-right: 40rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+  margin-right: 24rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
 
@@ -467,30 +419,30 @@ export default defineComponent({
 }
 
 .user-name {
-  font-size: 40rpx;
+  font-size: 36rpx;
   font-weight: 600;
   color: #2D3436;
-  margin-bottom: 12rpx;
+  margin-bottom: 10rpx;
   display: block;
 }
 
 .user-id {
   font-size: 24rpx;
   color: #B2BEC3;
-  margin-bottom: 20rpx;
+  margin-bottom: 16rpx;
   display: block;
 }
 
 .user-bio {
-  font-size: 30rpx;
+  font-size: 28rpx;
   color: #636E72;
   line-height: 1.5;
-  margin-bottom: 12rpx;
+  margin-bottom: 10rpx;
   display: block;
 }
 
 .user-meta {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: #B2BEC3;
   display: flex;
   align-items: center;
@@ -498,28 +450,28 @@ export default defineComponent({
 
 .meta-dot {
   display: inline-block;
-  width: 6rpx;
-  height: 6rpx;
+  width: 4rpx;
+  height: 4rpx;
   background-color: #B2BEC3;
   border-radius: 50%;
-  margin: 0 12rpx;
+  margin: 0 8rpx;
 }
 
 /* 搜索结果动作区 */
 .result-actions {
-  padding: 40rpx 48rpx;
-  border-top: 2rpx solid #EBEEF5;
+  padding: 32rpx 28rpx;
+  border-top: 1rpx solid #EBEEF5;
 }
 
 .verification-input {
   width: 100%;
-  height: 96rpx;
-  padding: 0 32rpx;
-  border-radius: 24rpx;
-  border: 2rpx solid #EBEEF5;
+  height: 80rpx;
+  padding: 0 24rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid #EBEEF5;
   background-color: #F9FAFB;
-  font-size: 30rpx;
-  margin-bottom: 40rpx;
+  font-size: 28rpx;
+  margin-bottom: 32rpx;
   color: #2D3436;
   box-sizing: border-box;
 }
@@ -527,7 +479,7 @@ export default defineComponent({
 .verification-input:focus {
   outline: none;
   border-color: #FF7D45;
-  box-shadow: 0 0 0 6rpx rgba(255, 125, 69, 0.1);
+  box-shadow: 0 0 0 4rpx rgba(255, 125, 69, 0.1);
 }
 
 /* 按钮 */
@@ -535,9 +487,9 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 96rpx;
-  border-radius: 48rpx;
-  font-size: 32rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  font-size: 30rpx;
   font-weight: 600;
   width: 100%;
 }
@@ -546,24 +498,16 @@ export default defineComponent({
   background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
   color: white;
   border: none;
-  box-shadow: 0 12rpx 32rpx rgba(255, 125, 69, 0.2);
+  box-shadow: 0 10rpx 28rpx rgba(255, 125, 69, 0.18);
   position: relative;
   overflow: hidden;
 }
 
-.btn-primary::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
-}
+
 
 .btn-primary:active {
   transform: translateY(2rpx);
-  box-shadow: 0 6rpx 16rpx rgba(255, 125, 69, 0.2);
+  box-shadow: 0 6rpx 16rpx rgba(255, 125, 69, 0.18);
 }
 
 /* 状态类 */
@@ -603,14 +547,14 @@ export default defineComponent({
 /* 提示框 */
 .toast {
   position: fixed;
-  bottom: 160rpx;
+  bottom: 140rpx;
   left: 50%;
   transform: translateX(-50%);
-  padding: 28rpx 48rpx;
+  padding: 24rpx 40rpx;
   background-color: rgba(0, 0, 0, 0.8);
   color: white;
-  border-radius: 48rpx;
-  font-size: 30rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
   opacity: 0;
   transition: opacity 0.3s;
   z-index: 1000;

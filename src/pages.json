@@ -85,6 +85,14 @@
 			}
 		},
 		{
+			"path": "pages/forget/forget",
+			"style": {
+				"navigationBarTitleText": "forget",
+				"enablePullDownRefresh": false,
+				"disableScroll": true
+			}
+		},
+		{
 			"path": "pages/friend/friend",
 			"style": {
 				"enablePullDownRefresh": false,
@@ -124,14 +132,7 @@
 				"onReachBottomDistance": 0
 			}
 		},
-		{
-			"path": "pages/discover/discover",
-			"style": {
-				"enablePullDownRefresh": false,
-				"backgroundTextStyle": "dark",
-				"onReachBottomDistance": 0
-			}
-		},
+
 		{
 			"path": "pages/mine/mine",
 			"style": {
@@ -175,6 +176,15 @@
 		{
 			"path": "pages/userConfig/userConfig",
 			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/disclaimer/disclaimer",
+			"style": {
+				"navigationBarTitleText": "项目声明",
 				"enablePullDownRefresh": false,
 				"backgroundTextStyle": "dark",
 				"onReachBottomDistance": 0

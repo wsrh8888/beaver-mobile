@@ -24,7 +24,7 @@ export const registerApi = (data: IRegisterReq) => {
   return request({
     method: 'POST',
     data,
-    url: `${baseUrl}/api/auth/register`
+    url: `${baseUrl}/api/auth/email_register`
   })
 }
 
@@ -37,7 +37,7 @@ export const loginApi = (data: ILoginReq) => {
   return request<ILoginRes>({
     data,
     method: 'POST',
-    url: `${baseUrl}/api/auth/login`
+    url: `${baseUrl}/api/auth/email_password_login`
   })
 }
 /**
@@ -48,5 +48,16 @@ export const updateInfoApi = (data: IUpdateInfoReq) => {
     data,
     method: 'POST',
     url: `${baseUrl}/api/user/update_info`
+  })
+}
+
+/**
+ * @description: 找回密码
+ */
+export const resetPasswordApi = (data: { email: string; verifyCode: string; password: string }) => {
+  return request({
+    data,
+    method: 'POST',
+    url: `${baseUrl}/api/user/reset_password`
   })
 }

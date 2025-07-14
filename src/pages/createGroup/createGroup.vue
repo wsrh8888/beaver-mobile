@@ -1,67 +1,59 @@
 <template>
-  <view class="container">
-    <!-- 导航栏 -->
-    <view class="navbar" :style="{ top: statusBarHeight + 'px' }">
-      <view class="back-button" @click="goBack">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M15.41 7.41L14 6L8 12L14 18L15.41 16.59L10.83 12L15.41 7.41Z" fill="#2D3436"/>
-        </svg>
-      </view>
-      <text class="page-title">发起群聊</text>
-    </view>
-
+  <BeaverLayout
+    title="发起群聊"
+    :show-back="true"
+    :custom-before-height="52"
+    :custom-after-height="50"
+    @back="goBack"
+  >
     <!-- 搜索栏 -->
-    <view class="search-container" :style="{ top: statusBarHeight + 44 + 'px' }">
-      <view class="search-bar">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M10.5 9.5L13.5 12.5L12.5 13.5L9.5 10.5C8.7 11.1 7.7 11.5 6.5 11.5C3.5 11.5 1 9 1 6C1 3 3.5 0.5 6.5 0.5C9.5 0.5 12 3 12 6C12 7.2 11.6 8.2 11 9L10.5 9.5ZM6.5 2.5C4.6 2.5 3 4.1 3 6C3 7.9 4.6 9.5 6.5 9.5C8.4 9.5 10 7.9 10 6C10 4.1 8.4 2.5 6.5 2.5Z" fill="#B2BEC3"/>
-        </svg>
-        <input 
-          type="text" 
-          class="search-input" 
-          placeholder="搜索" 
-          v-model="searchQuery"
-          @input="handleSearch"
-        />
+    <template #before>
+      <view class="search-container">
+        <view class="search-bar">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10.5 9.5L13.5 12.5L12.5 13.5L9.5 10.5C8.7 11.1 7.7 11.5 6.5 11.5C3.5 11.5 1 9 1 6C1 3 3.5 0.5 6.5 0.5C9.5 0.5 12 3 12 6C12 7.2 11.6 8.2 11 9L10.5 9.5ZM6.5 2.5C4.6 2.5 3 4.1 3 6C3 7.9 4.6 9.5 6.5 9.5C8.4 9.5 10 7.9 10 6C10 4.1 8.4 2.5 6.5 2.5Z" fill="#B2BEC3"/>
+          </svg>
+          <input 
+            type="text" 
+            class="search-input" 
+            placeholder="搜索" 
+            v-model="searchQuery"
+            @input="handleSearch"
+          />
+        </view>
       </view>
-    </view>
+    </template>
 
     <!-- 联系人列表 -->
-    <scroll-view 
-      class="content-wrapper" 
-      scroll-y 
-      :scroll-top="scrollTop"
-      :style="{ top: statusBarHeight + 96 + 'px' }"
-      @scroll="handleScroll"
-      :scroll-with-animation="true"
-    >
-      <view class="contacts-list">
-        <template v-for="(group, letter) in groupedContacts" :key="letter">
-          <view class="contact-section" :id="'section-' + letter">
-            <view class="section-header">{{ letter }}</view>
-            <view 
-              v-for="contact in group" 
-              :key="contact.userId"
-              class="contact-item ripple"
-              @click="handleSelect(contact)"
-            >
-              <view class="contact-avatar">
-                <image :src="contact.avatar" mode="aspectFill" />
-              </view>
-              <view class="contact-info">
-                <text class="contact-name">{{ contact.nickname }}</text>
-                <text class="contact-detail">{{ contact.status }}</text>
-              </view>
-              <view class="checkbox" :class="{'selected': isSelected(contact.userId)}">
-                <svg v-if="isSelected(contact.userId)" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M4.5 8.5L2 6L1 7L4.5 10.5L11 4L10 3L4.5 8.5Z" fill="white"/>
-                </svg>
-              </view>
-            </view>
+    <view class="contacts-list">
+      <view 
+        v-for="(group, letter) in groupedContacts" 
+        :key="letter"
+        class="contact-section" 
+        :id="'section-' + letter"
+      >
+        <view class="section-header">{{ letter }}</view>
+        <view 
+          v-for="contact in group" 
+          :key="contact.userId"
+          class="contact-item ripple"
+          @click="handleSelect(contact)"
+        >
+          <view class="contact-avatar">
+            <image :src="contact.avatar" mode="aspectFill" />
           </view>
-        </template>
+          <view class="contact-info">
+            <text class="contact-name">{{ contact.nickname }}</text>
+            <text class="contact-detail">{{ contact.status }}</text>
+          </view>
+          <view class="checkbox" :class="{'selected': isSelected(contact.userId)}">
+            <svg v-if="isSelected(contact.userId)" width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M4.5 8.5L2 6L1 7L4.5 10.5L11 4L10 3L4.5 8.5Z" fill="white"/>
+            </svg>
+          </view>
+        </view>
       </view>
-    </scroll-view>
+    </view>
 
     <!-- 字母索引栏 -->
     <view class="index-bar" @touchstart="handleIndexTouch" @touchmove="handleIndexTouch">
@@ -74,32 +66,37 @@
     </view>
 
     <!-- 底部操作栏 -->
-    <view class="bottom-bar">
-      <view class="selected-avatars">
-        <template v-for="(contact, index) in selectedAvatars" :key="contact.userId">
-          <view class="selected-avatar">
+    <template #after>
+      <view class="bottom-bar">
+        <view class="selected-avatars">
+          <view 
+            v-for="contact in selectedAvatars" 
+            :key="contact.userId"
+            class="selected-avatar"
+          >
             <image :src="contact.avatar" mode="aspectFill" />
           </view>
-        </template>
-        <view v-if="selectedContacts.length > 3" class="more-avatars">
-          +{{ selectedContacts.length - 3 }}
+          <view v-if="selectedContacts.length > 3" class="more-avatars">
+            +{{ selectedContacts.length - 3 }}
+          </view>
         </view>
+        <view 
+          :class="['btn-start-chat', {'disabled': selectedContacts.length === 0}]"
+          @click="createGroup"
+        >完成<text v-if="selectedContacts.length > 0">({{ selectedContacts.length }}人)</text></view>
       </view>
-      <view 
-        :class="['btn-start-chat', {'disabled': selectedContacts.length === 0}]"
-        @click="createGroup"
-      >完成<text v-if="selectedContacts.length > 0">({{ selectedContacts.length }}人)</text></view>
-    </view>
+    </template>
 
     <!-- 快速跳转提示 -->
     <view class="quick-jump" :class="{'show': showQuickJump}">
       {{ currentLetter }}
     </view>
-  </view>
+  </BeaverLayout>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { ref, computed } from 'vue';
+import BeaverLayout from '@/component/layout/layout.vue';
 import { useFriendStore } from '@/pinia/friend/friend';
 import { createGroupApi } from '@/api/group';
 import { useGroupStore } from '@/pinia/group/group';
@@ -111,12 +108,14 @@ interface CreateGroupResponse {
   };
 }
 
-export default defineComponent({
+export default {
   name: 'CreateGroup',
+  components: {
+    BeaverLayout
+  },
   setup() {
     const friendStore = useFriendStore();
     const groupStore = useGroupStore();
-    const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 0;
     
     // 状态管理
     const searchQuery = ref('');
@@ -148,15 +147,11 @@ export default defineComponent({
     const selectedAvatars = computed(() => selectedContacts.value.slice(0, 3));
 
     // 声明 quickJumpTimeout
-    let quickJumpTimeout: number | null = null;
+    let quickJumpTimeout: any = null;
 
     // 方法
     const handleSearch = () => {
       // 搜索逻辑已通过 groupedContacts 计算属性实现
-    };
-
-    const handleScroll = () => {
-      // 处理滚动事件，可以在这里添加滚动相关的逻辑
     };
 
     const handleSelect = (contact: any) => {
@@ -184,7 +179,7 @@ export default defineComponent({
         showQuickJump.value = true;
         
         // 使用正确的 uni-app API 方法
-        const query = uni.createSelectorQuery().in(this);
+        const query = uni.createSelectorQuery();
         query.select(`#section-${letter}`).boundingClientRect();
         query.selectViewport().scrollOffset();
         query.exec((res: any[]) => {
@@ -252,9 +247,7 @@ export default defineComponent({
       indexList,
       selectedAvatars,
       scrollTop,
-      statusBarHeight,
       handleSearch,
-      handleScroll,
       handleSelect,
       isSelected,
       handleIndexTouch,
@@ -262,60 +255,14 @@ export default defineComponent({
       goBack,
     };
   }
-});
+};
 </script>
 
 <style lang="scss" scoped>
-.container {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #fff;
-}
-
-.back-button {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 8px;
-  
-  svg {
-    display: block;
-  }
-}
-
-/* 导航栏 */
-.navbar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  height: 44px;
-  background-color: #FFFFFF;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  border-bottom: 1px solid #EBEEF5;
-}
-
-.page-title {
-  flex: 1;
-  font-size: 16px;
-  font-weight: 500;
-  color: #2D3436;
-}
-
 /* 搜索栏 */
 .search-container {
-  position: fixed;
-  left: 0;
-  right: 0;
-  height: 52px;
   padding: 8px 16px;
   background-color: #FFFFFF;
-  z-index: 99;
 }
 
 .search-bar {
@@ -345,18 +292,6 @@ export default defineComponent({
   }
 }
 
-/* 联系人列表 */
-.content-wrapper {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #FFFFFF;
-}
-
-.contacts-list {
-  padding-bottom: calc(env(safe-area-inset-bottom) + 50px); /* 底部安全区域 + 底部栏高度 */
-}
 
 .contact-section {
   margin-bottom: 8px;
@@ -461,19 +396,13 @@ export default defineComponent({
 
 /* 底部操作栏 */
 .bottom-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
   height: 50px;
-  background-color: #fff;
   display: flex;
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.05);
   padding: 0 16px;
   padding-bottom: env(safe-area-inset-bottom);
-  z-index: 100;
 }
 
 .selected-avatars {

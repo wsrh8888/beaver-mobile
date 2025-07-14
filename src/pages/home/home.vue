@@ -229,6 +229,8 @@ export default defineComponent({
       // 获取最新的会话列表
       // conversationStore.getRecentChatList();
     });
+
+ 
     const parseConversationGetFriendId = (conversationId: string) =>{
       return parseConversation(conversationId, userStore.userInfo.userId)
     }

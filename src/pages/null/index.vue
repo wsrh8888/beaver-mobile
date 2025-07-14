@@ -16,4 +16,5 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+// 使用嵌套的scss
 </style>

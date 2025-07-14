@@ -154,7 +154,7 @@ export const useWsStore = defineStore('useWsStore', {
         }
       }
     },
-    /**
+        /**
      * @description: 解析聊天消息
      * @param {IWsContent} content - 消息内容
      */

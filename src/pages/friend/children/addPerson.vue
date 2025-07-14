@@ -22,16 +22,14 @@
         </view> -->
 
 				<view class="info">
-					<img src="https://resources.zerocollege.com/engine/enterprise_logo/0043f18a8b475ee546b2754d33ea3a76%E7%8C%AB%E9%80%94%E9%B9%B0.png"
-						alt="">
+					<img :src="APP_CONFIG.logo" alt="">
 					<view class="info-right">
 						<text class="nickname">{{ userInfo.nickname }}</text>
 						<view class="add-btn" @click="confirmAddPerson(userInfo)">添加</view>
 					</view>
 				</view>
 				<view class="info">
-					<img src="https://resources.zerocollege.com/engine/enterprise_logo/0043f18a8b475ee546b2754d33ea3a76%E7%8C%AB%E9%80%94%E9%B9%B0.png"
-						alt="">
+					<img :src="APP_CONFIG.logo" alt="">
 					<view class="info-right">
 						<text class="nickname">{{ userInfo.nickname }}</text>
 						<view class="add-btn">添加</view>
@@ -51,6 +49,7 @@
 		getSearchFriendApi,
 	} from "@/api/friend";
 	import type { IResSearchUserInfo } from "@/types/friend/friend";
+	import { APP_CONFIG } from '@/config/data';
 	export default defineComponent({
 		setup() {
 			const tabList = ["全部", "用户", "群聊"]
@@ -89,7 +88,8 @@
 				selectTab,
 				handleTab,
 				goBack,
-				confirmAddPerson
+				confirmAddPerson,
+				APP_CONFIG
 			};
 		},
 	});

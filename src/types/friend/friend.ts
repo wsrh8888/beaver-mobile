@@ -3,7 +3,7 @@ export interface IAddFriend {
   verify: string;
 }
 export interface ISearchUser {
-  phone: string;
+  email: string;
 }
 export interface IResSearchUserInfo {
   Abstract: string;

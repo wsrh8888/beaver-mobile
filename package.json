@@ -2,6 +2,7 @@
   "name": "uni-preset-vue",
   "version": "0.0.0",
   "scripts": {
+    "build_dev": "node upload.js dev",
     "build_test": "node upload.js test",
     "build_prod": "node upload.js prod",
     "dev:custom": "uni -p",
