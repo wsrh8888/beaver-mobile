@@ -166,7 +166,7 @@ beaver-mobile/
 
 ## 🆘 获取帮助
 
-- 📧 邮箱：[your-email@example.com]
+- 📧 邮箱：[751135385@qq.com]
 - 💬 QQ群：[1013328597](https://qm.qq.com/q/82rbf7QBzO)
 - 📖 文档：[https://wsrh8888.github.io/beaver-docs/](https://wsrh8888.github.io/beaver-docs/)
 
