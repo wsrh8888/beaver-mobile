@@ -139,9 +139,11 @@ beaver-mobile/
 | **beaver-mobile** | [GitHub](https://github.com/wsrh8888/beaver-mobile) / [Gitee](https://gitee.com/dawwdadfrf/beaver-mobile) | 移动端应用 |
 | **beaver-desktop** | [GitHub](https://github.com/wsrh8888/beaver-desktop) / [Gitee](https://gitee.com/dawwdadfrf/beaver-desktop) | 桌面端应用 |
 
-## 📖 文档
+## 📖 文档与教程
 
-详细文档请访问：[Beaver IM 文档](https://wsrh8888.github.io/beaver-docs/)
+- 📚 **详细文档**：[Beaver IM 文档](https://wsrh8888.github.io/beaver-docs/)
+- 🎥 **视频教程**：[B站教程](https://www.bilibili.com/video/BV1HrrKYeEB4/)
+- 📱 **演示包下载**：[v1.0.0 APK](https://github.com/wsrh8888/beaver-docs/releases/download/v1.0.0/1.0.0.apk)
 
 ## 🤝 贡献指南
 
@@ -168,7 +170,8 @@ beaver-mobile/
 
 - 📧 邮箱：[751135385@qq.com]
 - 💬 QQ群：[1013328597](https://qm.qq.com/q/82rbf7QBzO)
-- 📖 文档：[https://wsrh8888.github.io/beaver-docs/](https://wsrh8888.github.io/beaver-docs/)
+- 📚 文档：[Beaver IM 文档](https://wsrh8888.github.io/beaver-docs/)
+- 🎥 教程：[B站视频教程](https://www.bilibili.com/video/BV1HrrKYeEB4/)
 
 ## ⭐ 支持项目
 
