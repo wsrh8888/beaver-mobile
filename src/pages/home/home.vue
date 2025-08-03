@@ -115,7 +115,7 @@ import { showToast } from '@/component/toast';
 import { pinnedChatApi } from '@/api/chat';
 import plusIcon from '@/static/img/home/plus-icon.svg';
 import { homeMenusList } from './home';
-import { handleScanResult } from '@/utils/qrcode';
+import { handleScanResult } from '@/utils/qrcode/index';
 
 export default {
   components: {
