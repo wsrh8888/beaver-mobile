@@ -1,22 +1,22 @@
 # 🦫 Beaver IM - 海狸即时通讯
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
 [![Vue](https://img.shields.io/badge/vue-3.x-brightgreen.svg)](https://vuejs.org/)
-[![Go](https://img.shields.io/badge/go-1.21+-blue.svg)](https://golang.org/)
+[![UniApp](https://img.shields.io/badge/UniApp-3.x-orange.svg)](https://uniapp.dcloud.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![QQ群](https://img.shields.io/badge/QQ群-1013328597-blue.svg)](https://qm.qq.com/q/82rbf7QBzO)
 
-> 🚀 基于 Vue3 + UniApp + Go-Zero 构建的现代化即时通讯应用，支持移动端、桌面端多平台
+> 🚀 **现代化即时通讯应用** - 基于 Vue3 + UniApp 构建，支持移动端、桌面端多平台，提供完整的社交聊天体验
 
-## 📖 项目简介
+[English](README_EN.md) | [中文](README.md)
 
-Beaver IM 是一个功能完整的即时通讯应用，采用现代化的技术栈构建。项目包含移动端（UniApp）、桌面端（Electron）和后端服务（Go-Zero），为用户提供流畅的聊天体验。
+---
 
-### ✨ 核心特性
+## ✨ 核心特性
 
 - 🔐 **安全认证** - 用户注册、登录、密码找回
-- 👥 **社交功能** - 好友管理、群聊、二维码添加
 - 💬 **即时通讯** - 私聊、群聊支持文本、图片、表情
+- 👥 **社交功能** - 好友管理、二维码添加、朋友圈
 - 🖼️ **多媒体支持** - 图片发送、头像上传（七牛云）
 - 📱 **多端同步** - 移动端、桌面端数据实时同步
 - 🔄 **实时通信** - WebSocket 长连接保证消息实时性
@@ -24,56 +24,11 @@ Beaver IM 是一个功能完整的即时通讯应用，采用现代化的技术�
 
 ## 🛠️ 技术栈
 
-### 前端技术
 - **Vue 3** - 渐进式 JavaScript 框架
 - **UniApp** - 跨平台应用开发框架
-- **Pinia** - 状态管理
 - **TypeScript** - 类型安全
-
-### 后端技术
-- **Go-Zero** - 微服务框架
+- **Pinia** - 状态管理
 - **WebSocket** - 实时通信
-- **MySQL** - 数据存储
-- **Redis** - 缓存和会话管理
-
-### 桌面端
-- **Electron** - 跨平台桌面应用框架
-
-## 🚀 快速开始
-
-### 环境要求
-
-- Node.js >= 20.0.0
-- Go >= 1.21
-- MySQL >= 8.0
-- Redis >= 6.0
-
-### 安装步骤
-
-1. **克隆项目**
-```bash
-git clone https://github.com/wsrh8888/beaver-mobile.git
-cd beaver-mobile
-```
-
-2. **安装依赖**
-```bash
-npm install
-```
-
-3. **构建项目**
-```bash
-npm run build_test
-```
-
-4. **启动开发**
-```bash
-# 在 UniApp 客户端中导入项目并运行
-```
-
-### 后端服务
-
-请参考 [beaver-server](https://github.com/wsrh8888/beaver-server) 仓库进行后端服务部署。
 
 ## 📱 功能展示
 
@@ -89,6 +44,9 @@ npm run build_test
   <img src="./static/mobile/message.jpg" width="200" alt="消息主界面"/>
   <img src="./static/mobile/private-chat.jpg" width="200" alt="私聊聊天"/>
   <img src="./static/mobile/group-chat.jpg" width="200" alt="群聊聊天"/>
+  <img src="./static/mobile/send-text.jpg" width="200" alt="发送文字"/>
+  <img src="./static/mobile/send-emoji.jpg" width="200" alt="发送表情"/>
+  <img src="./static/mobile/chat-details.jpg" width="200" alt="聊天详情"/>
 </div>
 
 ### 👥 社交功能
@@ -96,6 +54,17 @@ npm run build_test
   <img src="./static/mobile/friend.jpg" width="200" alt="好友列表"/>
   <img src="./static/mobile/new-friends.jpg" width="200" alt="新的朋友"/>
   <img src="./static/mobile/friend-info.jpg" width="200" alt="好友资料"/>
+  <img src="./static/mobile/edit-remark.jpg" width="200" alt="编辑备注"/>
+</div>
+
+### 🏠 朋友圈与群组
+<div align="center">
+  <img src="./static/mobile/moments.jpg" width="200" alt="朋友圈"/>
+  <img src="./static/mobile/send-moments.jpg" width="200" alt="发布朋友圈"/>
+  <img src="./static/mobile/group-list.jpg" width="200" alt="群聊列表"/>
+  <img src="./static/mobile/create-group.jpg" width="200" alt="创建群聊"/>
+  <img src="./static/mobile/group-details.jpg" width="200" alt="群聊详情"/>
+  <img src="./static/mobile/add-members.jpg" width="200" alt="添加成员"/>
 </div>
 
 ### 👤 个人中心
@@ -105,30 +74,33 @@ npm run build_test
   <img src="./static/mobile/qcode.jpg" width="200" alt="二维码功能"/>
 </div>
 
-### 🎯 其他功能
+### ⚙️ 系统功能
 <div align="center">
-  <img src="./static/mobile/start-group.jpg" width="200" alt="发起群聊"/>
-  <img src="./static/mobile/update.jpg" width="200" alt="更新页面"/>
-  <img src="./static/mobile/feedback.jpg" width="200" alt="意见反馈"/>
-  <img src="./static/mobile/about.jpg" width="200" alt="关于页面"/>
-  <img src="./static/mobile/statement.jpg" width="200" alt="项目声明"/>
+  <img src="./static/mobile/settings.jpg" width="200" alt="设置"/>
+  <img src="./static/mobile/update.jpg" width="200" alt="更新"/>
+  <img src="./static/mobile/feedback.jpg" width="200" alt="反馈"/>
+  <img src="./static/mobile/about.jpg" width="200" alt="关于"/>
+  <img src="./static/mobile/statement.jpg" width="200" alt="声明"/>
 </div>
 
-## 📚 项目结构
+## 🚀 快速开始
 
-```
-beaver-mobile/
-├── src/
-│   ├── api/           # API 接口
-│   ├── component/     # 公共组件
-│   ├── pages/         # 页面组件
-│   ├── pinia/         # 状态管理
-│   ├── static/        # 静态资源
-│   ├── types/         # TypeScript 类型定义
-│   ├── utils/         # 工具函数
-│   └── ws-manager/    # WebSocket 管理
-├── static/            # 静态资源
-└── unpackage/         # 打包输出
+### 环境要求
+- Node.js >= 20.0.0
+
+### 安装步骤
+```bash
+# 克隆项目
+git clone https://github.com/wsrh8888/beaver-mobile.git
+cd beaver-mobile
+
+# 安装依赖
+npm install
+
+# 构建项目
+npm run build_test
+
+# 在 UniApp 客户端中导入项目并运行
 ```
 
 ## 🔗 相关项目
@@ -139,22 +111,15 @@ beaver-mobile/
 | **beaver-mobile** | [GitHub](https://github.com/wsrh8888/beaver-mobile) / [Gitee](https://gitee.com/dawwdadfrf/beaver-mobile) | 移动端应用 |
 | **beaver-desktop** | [GitHub](https://github.com/wsrh8888/beaver-desktop) / [Gitee](https://gitee.com/dawwdadfrf/beaver-desktop) | 桌面端应用 |
 
-## 📖 文档与教程
+## 📚 文档与资源
 
-- 📚 **详细文档**：[Beaver IM 文档](https://wsrh8888.github.io/beaver-docs/)
-- 🎥 **视频教程**：[B站教程](https://www.bilibili.com/video/BV1HrrKYeEB4/)
-- 📱 **演示包下载**：[v1.0.0 APK](https://github.com/wsrh8888/beaver-docs/releases/download/v1.0.0/1.0.0.apk)
+- 📖 **详细文档**: [Beaver IM 文档](https://wsrh8888.github.io/beaver-docs/)
+- 🎥 **视频教程**: [B站教程](https://www.bilibili.com/video/BV1HrrKYeEB4/)
+- 📱 **演示包下载**: [v1.0.0 APK](https://github.com/wsrh8888/beaver-docs/releases/download/v1.0.0/1.0.0.apk)
 
 ## 🤝 贡献指南
 
-我们欢迎所有形式的贡献，包括但不限于：
-
-- 🐛 Bug 报告
-- 💡 功能建议
-- 📝 文档改进
-- 🔧 代码贡献
-
-### 贡献步骤
+我们欢迎所有形式的贡献！
 
 1. Fork 本仓库
 2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
@@ -162,16 +127,15 @@ beaver-mobile/
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 开启 Pull Request
 
-## 📄 开源协议
-
-本项目基于 [MIT](LICENSE) 协议开源。
-
 ## 🆘 获取帮助
 
-- 📧 邮箱：[751135385@qq.com]
 - 💬 QQ群：[1013328597](https://qm.qq.com/q/82rbf7QBzO)
 - 📚 文档：[Beaver IM 文档](https://wsrh8888.github.io/beaver-docs/)
 - 🎥 教程：[B站视频教程](https://www.bilibili.com/video/BV1HrrKYeEB4/)
+
+## 📄 开源协议
+
+本项目基于 [MIT](LICENSE) 协议开源。
 
 ## ⭐ 支持项目
 
