@@ -1,0 +1,55 @@
+// 主题色彩系统 - 使用CSS变量实现动态换肤
+// 这些变量会被JavaScript动态更新，初始值使用默认主题
+page {
+  --theme-primary: #FF7D45;        // 主色调
+  --theme-primaryDeep: #E86835;    // 深色主调
+  --theme-primaryLight: #FFE6D9;   // 浅色主调
+  --theme-textTitle: #2D3436;      // 标题文字
+  --theme-textBody: #636E72;       // 正文文字
+  --theme-textAuxiliary: #B2BEC3;  // 辅助文字
+  --theme-background: #FFFFFF;     // 主背景
+  --theme-backgroundSecondary: #F9FAFB; // 次要背景
+  --theme-divider: #EBEEF5;        // 分割线
+  --theme-success: #4CAF50;        // 成功色
+  --theme-warning: #FFC107;        // 警告色
+  --theme-error: #FF5252;          // 错误色
+  --theme-info: #2196F3;           // 信息色
+}
+
+// H5环境兼容
+// #ifdef H5
+:root {
+  --theme-primary: #FF7D45;
+  --theme-primaryDeep: #E86835;
+  --theme-primaryLight: #FFE6D9;
+  --theme-textTitle: #2D3436;
+  --theme-textBody: #636E72;
+  --theme-textAuxiliary: #B2BEC3;
+  --theme-background: #FFFFFF;
+  --theme-backgroundSecondary: #F9FAFB;
+  --theme-divider: #EBEEF5;
+  --theme-success: #4CAF50;
+  --theme-warning: #FFC107;
+  --theme-error: #FF5252;
+  --theme-info: #2196F3;
+}
+// #endif
+
+// 主题工具类 - 快速应用主题颜色
+.theme {
+  &-bg { background-color: var(--theme-background); }
+  &-bg-secondary { background-color: var(--theme-backgroundSecondary); }
+  &-text-title { color: var(--theme-textTitle); }
+  &-text-body { color: var(--theme-textBody); }
+  &-text-auxiliary { color: var(--theme-textAuxiliary); }
+  &-primary { color: var(--theme-primary); }
+  &-primary-bg { background-color: var(--theme-primary); }
+  &-primary-light { background-color: var(--theme-primaryLight); }
+  &-border { border-color: var(--theme-divider); }
+  &-divider { background-color: var(--theme-divider); }
+}
+
+// 主题切换动画
+.theme-transition {
+  transition: all 0.3s ease-in-out;
+} 

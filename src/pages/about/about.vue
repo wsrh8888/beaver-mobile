@@ -47,11 +47,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { ref } from 'vue';
 import { getCurrentVersion } from '@/utils/update/update';
 import { APP_CONFIG } from '@/config/data';
-
-export default defineComponent({
+import x from '@/env.json'
+export default {
 	setup() {
 		const currentVersion = ref('1.0.0');
 		
@@ -68,7 +68,7 @@ export default defineComponent({
 			APP_CONFIG
 		};
 	}
-});
+};
 </script>
 
 <style lang="scss" scoped>
@@ -178,7 +178,7 @@ $text-auxiliary: #B2BEC3;
 	position: relative;
 	height: 112rpx;
 	padding: 0 32rpx;
-	margin-top: 40rpx;
+	margin-top:10rpx;
 	z-index: 2;
 }
 
@@ -230,8 +230,8 @@ $text-auxiliary: #B2BEC3;
 
 /* 应用标志 */
 .logo-container {
-	width: 240rpx;
-	height: 240rpx;
+	width: 200rpx;
+	height: 200rpx;
 	border-radius: 76rpx;
 	background: linear-gradient(135deg, $primary 0%, $primary-deep 100%);
 	display: flex;
@@ -254,8 +254,6 @@ $text-auxiliary: #B2BEC3;
 	}
 	
 	image {
-		width: 140rpx;
-		height: 140rpx;
 		position: relative;
 	}
 }

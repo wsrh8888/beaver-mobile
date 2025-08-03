@@ -3,7 +3,6 @@
     <BeaverLayout
       title="意见反馈"
       :show-background="false"
-      header-mode="fixed"
       @back="goBack"
     >
       <!-- 主卡片 -->
@@ -54,7 +53,7 @@
               :key="index"
               class="image-preview"
             >
-              <image :src="item.fileId" mode="aspectFill" />
+              <image :src="item.fileName" mode="aspectFill" />
               <view class="remove-image" @click="removeImage(index)">×</view>
             </view>
             
@@ -83,17 +82,18 @@
       </view>
     </BeaverLayout>
 
-    <!-- 提示框 -->
-    <view class="toast" :class="{ show: showToast }">{{ toastMessage }}</view>
+
   </view>
 </template>
 
 <script lang="ts">
 import { ref, computed } from 'vue';
-import { BeaverLayout } from '@/component';
+import BeaverLayout from '@/component/layout/layout.vue';
+import Logger from '@/logger/logger';
+import { showToast } from '@/component/toast';
 
 interface UploadedImage {
-  fileId: string;
+  fileName: string;
   name: string;
 }
 
@@ -119,8 +119,6 @@ export default {
     const content = ref('');
     const charCount = ref(0);
     const uploadedImages = ref<UploadedImage[]>([]);
-    const showToast = ref(false);
-    const toastMessage = ref('');
 
     const canSubmit = computed(() => {
       return selectedType.value !== null && content.value.trim().length > 0;
@@ -151,9 +149,16 @@ export default {
         // });
         // uploadedImages.value.push(...results);
         
-        showToastMessage('图片上传功能待实现');
+        showToast('图片上传功能待实现', 2000, 'none');
       } catch (error) {
-        showToastMessage('上传图片失败，请重试');
+        const logger = new Logger('意见反馈');
+        logger.error({
+          text: '上传图片失败',
+          data: {
+            error: error instanceof Error ? error.message : String(error)
+          }
+        });
+        showToast('上传图片失败，请重试', 2000, 'error');
       }
     };
 
@@ -161,36 +166,37 @@ export default {
       uploadedImages.value.splice(index, 1);
     };
 
-    const showToastMessage = (message: string) => {
-      toastMessage.value = message;
-      showToast.value = true;
-      setTimeout(() => {
-        showToast.value = false;
-      }, 3000);
-    };
+
 
     const submitFeedback = async () => {
       if (!canSubmit.value) return;
 
       try {
-        const fileIds = uploadedImages.value.map(image => image.fileId);
+        const fileNames = uploadedImages.value.map(image => image.fileName);
         // 这里应该调用实际的提交API
         // const submit = await submitFeedbackApi({
         //   content: content.value,
         //   type: selectedType.value,
-        //   fileIds
+        //   fileNames
         // });
         // if (submit.code === 0) {
         //   goBack()
         // }
         
-        showToastMessage('提交成功！');
+        showToast('提交成功！', 2000, 'success');
         setTimeout(() => {
           goBack();
         }, 1500);
 
       } catch (error) {
-        showToastMessage('提交失败，请稍后重试');
+        const logger = new Logger('意见反馈');
+        logger.error({
+          text: '提交反馈失败',
+          data: {
+            error: error instanceof Error ? error.message : String(error)
+          }
+        });
+        showToast('提交失败，请稍后重试', 2000, 'error');
       }
     };
 
@@ -200,8 +206,6 @@ export default {
       content,
       charCount,
       uploadedImages,
-      showToast,
-      toastMessage,
       canSubmit,
       goBack,
       selectFeedbackType,
@@ -223,9 +227,11 @@ export default {
 .main-card {
   background-color: #FFFFFF;
   border-radius: 32rpx;
-  margin: 32rpx;
+  margin: 5rpx 32rpx;
   padding: 40rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
+  box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.08);
+  box-sizing: border-box;
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
 }
 
 .section {
@@ -243,34 +249,34 @@ export default {
 /* 反馈类型 */
 .feedback-types {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24rpx;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
   margin-bottom: 16rpx;
 }
 
 .feedback-type {
-  width: 176rpx;  /* 88*2 */
-  height: 77rpx;  /* 38.5*2 */
-  border-radius: 16rpx;
-  background-color: #F9FAFB;
-  color: #636E72;
+  height: 88rpx;
+  border-radius: 20rpx;
+  background-color: #f8f9fa;
+  color: #6c757d;
   font-size: 28rpx;
   text-align: center;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  -webkit-tap-highlight-color: transparent;
-  padding: 0;
+  border: 2rpx solid transparent;
+  cursor: pointer;
 
   &.selected {
     background-color: rgba(255, 125, 69, 0.1);
     color: #FF7D45;
-    font-weight: 500;
+    font-weight: 600;
+    border-color: #FF7D45;
   }
 
   &:active {
-    opacity: 0.8;
+    transform: scale(0.98);
   }
 }
 
@@ -288,18 +294,20 @@ export default {
 }
 
 .form-control {
-  width: calc(100% - 64rpx);
-  padding: 24rpx 32rpx;
-  border-radius: 24rpx;
-  border: 2rpx solid #EBEEF5;
-  background-color: #F9FAFB;
+  width: 100%;
+  padding: 28rpx 32rpx;
+  border-radius: 20rpx;
+  border: 2rpx solid #e9ecef;
+  background-color: #f8f9fa;
   font-size: 28rpx;
-  color: #2D3436;
-  height: 240rpx;
-  transition: all 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+  color: #333333;
+  height: 280rpx;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
 
   &:focus {
     border-color: #FF7D45;
+    background-color: #ffffff;
     box-shadow: 0 0 0 4rpx rgba(255, 125, 69, 0.1);
   }
 }
@@ -345,20 +353,28 @@ export default {
 }
 
 .image-upload-box {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 24rpx;
-  background-color: #F9FAFB;
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 20rpx;
+  background-color: #f8f9fa;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 2rpx dashed #EBEEF5;
+  border: 2rpx dashed #dee2e6;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:active {
+    background-color: #e9ecef;
+    transform: scale(0.98);
+  }
 
   image {
     width: 48rpx;
     height: 48rpx;
-    margin-bottom: 8rpx;
+    margin-bottom: 12rpx;
+    opacity: 0.6;
   }
 }
 
@@ -368,13 +384,18 @@ export default {
 }
 
 .image-preview {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 24rpx;
-  background-color: #F9FAFB;
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 20rpx;
+  background-color: #f8f9fa;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
+  box-shadow: 0 6rpx 20rpx rgba(0,0,0,0.12);
+  transition: transform 0.2s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
 
   image {
     width: 100%;
@@ -385,24 +406,31 @@ export default {
 
 .remove-image {
   position: absolute;
-  top: 8rpx;
-  right: 8rpx;
-  width: 40rpx;
-  height: 40rpx;
-  border-radius: 20rpx;
-  background-color: rgba(0,0,0,0.6);
+  top: 12rpx;
+  right: 12rpx;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 22rpx;
+  background-color: rgba(0,0,0,0.7);
   color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:active {
+    background-color: rgba(0,0,0,0.8);
+    transform: scale(0.9);
+  }
 }
 
 /* 底部按钮区 */
 .button-container {
   display: flex;
   padding: 0 32rpx;
-  margin-bottom: 80rpx;
 }
 
 .submit-btn {
@@ -411,18 +439,19 @@ export default {
   background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
   color: #FFFFFF;
   font-size: 32rpx;
-  font-weight: 500;
+  font-weight: 600;
   border-radius: 48rpx;
-  box-shadow: 0 12rpx 24rpx rgba(255, 125, 69, 0.2);
+  box-shadow: 0 12rpx 24rpx rgba(255, 125, 69, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  cursor: pointer;
 
   &:active {
-    transform: translateY(4rpx);
+    transform: translateY(4rpx) scale(0.98);
     box-shadow: 0 6rpx 12rpx rgba(255, 125, 69, 0.2);
   }
 
@@ -430,6 +459,7 @@ export default {
     background: #CCCCCC;
     box-shadow: none;
     opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 

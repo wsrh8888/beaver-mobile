@@ -1,7 +1,6 @@
 import { loggerApi } from '@/api/track'
 import type { ILogData, ILogEventsReq, ITransformLog } from '@/types/ajax/track'
 import { BatchReporter, type IBatchReporterConfig } from './batch-reporter'
-import { useUserStore } from '@/pinia/user/user'
 import { loggerId } from '@/env.json'
 
 class LogBatchReporter {

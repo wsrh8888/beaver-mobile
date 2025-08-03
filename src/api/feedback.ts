@@ -1,4 +1,4 @@
-import { request } from '@/utils/request'
+import { request } from '@/utils/request/request'
 import { baseUrl } from '@/env.json'
 /**
  * @description: 提交反馈信息

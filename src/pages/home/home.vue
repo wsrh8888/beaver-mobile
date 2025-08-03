@@ -1,32 +1,25 @@
 <template>
   <view class="container">
-    <!-- 顶部导航栏 -->
-    <view class="header" :style="{ top: statusBarHeight + 'rpx' }">
-      <text class="header-title">消息</text>
-      <view class="header-icon" @click="showDropdown = !showDropdown">
-        <image src="@/static/img/home/plus-icon.svg" mode="aspectFit" class="icon-img" />
-      </view>
-    </view>
+    <!-- 使用通用Header组件 -->
+    <BeaverHeader 
+      title="消息"
+      :show-back="false"
+      :right-icon="plusIcon"
+      @right-click="showDropdown = !showDropdown"
+    />
 
     <!-- 下拉菜单 -->
-    <view class="dropdown" :class="{ 'show': showDropdown }" :style="{ top: (statusBarHeight + 112) + 'rpx' }">
-      <view class="dropdown-item" @click="navigateTo('/pages/createGroup/createGroup')">
+    <view class="dropdown" :class="{ 'show': showDropdown }" :style="{ top: (statusBarHeight + 88) + 'rpx' }">
+      <view 
+        v-for="menu in homeMenusList" 
+        :key="menu.id"
+        class="dropdown-item" 
+        @click="handleMenuClick(menu)"
+      >
         <view class="dropdown-icon">
-          <image src="@/static/img/home/group-icon.svg" mode="aspectFit" class="icon-img" />
+          <image :src="menu.icon" mode="aspectFit" class="icon-img" />
         </view>
-        <text>发起群聊</text>
-      </view>
-      <view class="dropdown-item" @click="navigateTo('/pages/searchFriend/searchFriend')">
-        <view class="dropdown-icon">
-          <image src="@/static/img/home/add-friend-icon.svg" mode="aspectFit" class="icon-img" />
-        </view>
-        <text>添加好友</text>
-      </view>
-      <view class="dropdown-item" @click="scanCode">
-        <view class="dropdown-icon">
-          <image src="@/static/img/home/scan-icon.svg" mode="aspectFit" class="icon-img" />
-        </view>
-        <text>扫一扫</text>
+        <text>{{ menu.title }}</text>
       </view>
     </view>
 
@@ -34,18 +27,18 @@
     <view class="mask" :class="{ 'show': showDropdown }" @click="showDropdown = false"></view>
 
     <!-- 内容区域 -->
-    <scroll-view scroll-y class="content" :style="{ top: statusBarHeight + 112 + 'rpx' }" @scroll="onScroll">
+    <scroll-view scroll-y class="content" :style="{ top: statusBarHeight + 88 + 'rpx' }" @scroll="onScroll">
       <!-- 搜索栏 -->
-      <view class="search-wrapper">
+      <!-- <view class="search-wrapper">
         <view class="search-bar" @click="navigateTo('/pages/search/search')">
           <view class="search-icon">
             <image src="@/static/img/home/search-icon.svg" mode="aspectFit" class="icon-img" />
           </view>
           <text class="search-placeholder">搜索</text>
         </view>
-      </view>
+      </view> -->
       <!-- 置顶消息列表 -->
-      <view class="message-section" v-if="pinnedChats.length > 0">
+      <view class="message-section search-wrapper-top" v-if="pinnedChats.length > 0">
         <view class="section-header">
           <view class="section-title">置顶会话</view>
         </view>
@@ -53,10 +46,15 @@
           <view v-for="chat in pinnedChats" :key="chat.conversationId" class="pinned-item"
             @click="handleChatClick(chat)">
             <view class="pinned-avatar">
-              <image :src="(allUserMapInfo.get(parseConversationGetFriendId(chat.conversationId) || '')?.avatar || chat.avatar)" mode="aspectFill" class="avatar-img" />
+              <BeaverAvatar 
+                :conversation-id="chat.conversationId"
+                :user-id="getFriendIdFromConversation(chat.conversationId)"
+                mode="aspectFill" 
+                class="avatar-img" 
+              />
             </view>
             <view class="pinned-info">
-              <view class="pinned-name">{{ (allUserMapInfo.get(parseConversationGetFriendId(chat.conversationId) || '')?.nickname || chat.nickname) }}</view>
+              <view class="pinned-name">{{ getChatName(chat) }}</view>
               <view class="pinned-message">{{ chat.msg_preview }}</view>
             </view>
           </view>
@@ -70,20 +68,26 @@
         <view class="regular-list">
           <uni-swipe-action>
             <uni-swipe-action-item v-for="(chat, index) in chatList" :key="chat.conversationId"
-              :right-options="swipeOptions" @change="(e: string, chat: any) => handleSwipeAction(e, chat, index)">
+              :right-options="getSwipeOptions(chat)" @click="(e) => handleSwipeAction(e, chat, index)">
               <view class="message-item" @click="handleChatClick(chat)">
                 <view class="avatar-wrapper">
                   <view class="avatar">
-                    <image :src="(allUserMapInfo.get(parseConversationGetFriendId(chat.conversationId) || '')?.avatar || chat.avatar)" mode="aspectFill" class="avatar-img" />
-                    <view v-if="chat.unread_count" class="badge" :class="chat.unread_count > 99 ? 'yellow' : 'red'">
-                      {{ chat.unread_count > 99 ? '99+' : chat.unread_count }}
-                    </view>
+                    <BeaverAvatar 
+                      :conversation-id="chat.conversationId"
+                      :user-id="getFriendIdFromConversation(chat.conversationId)"
+                      mode="aspectFill" 
+                      class="avatar-img" 
+                    />
+                    <!-- 暂时注释掉未读消息数量显示 -->
+                    <!-- <view v-if="chat.unreadCount" class="badge" :class="chat.unreadCount > 99 ? 'yellow' : 'red'">
+                      {{ chat.unreadCount > 99 ? '99+' : chat.unreadCount }}
+                    </view> -->
                   </view>
                 </view>
                 <view class="message-content">
                   <view class="message-header">
-                    <view class="message-name">{{ (allUserMapInfo.get(parseConversationGetFriendId(chat.conversationId) || '')?.nickname || chat.nickname) }}</view>
-                    <view class="message-time">{{ formatTime(chat.update_at) }}</view>
+                    <view class="message-name">{{ getChatName(chat) }}</view>
+                    <view class="message-time">{{ chat.update_at }}</view>
                   </view>
                   <view class="message-preview">{{ chat.msg_preview }}</view>
                 </view>
@@ -97,24 +101,34 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useMessageStore } from '@/pinia/message/message';
 import { useConversationStore } from '@/pinia/conversation/conversation';
 import { useFriendStore } from '@/pinia/friend/friend';
-import { formatTime } from '@/utils/time';
+import { formatTime } from '@/utils/time/time';
 import type { IChatInfo } from '@/types/ajax/chat';
-import {parseConversation} from '@/utils/conversation'
+import { parseConversation } from '@/utils/conversation';
 import { useUserStore } from '@/pinia/user/user';
-export default defineComponent({
+import { BeaverAvatar, BeaverHeader } from '@/component';
+import Logger from '@/logger/logger';
+import { showToast } from '@/component/toast';
+import { pinnedChatApi } from '@/api/chat';
+import plusIcon from '@/static/img/home/plus-icon.svg';
+import { homeMenusList } from './home';
+import { handleScanResult } from '@/utils/qrcode';
+
+export default {
+  components: {
+    BeaverAvatar,
+    BeaverHeader
+  },
   setup() {
+    const logger = new Logger('首页');
     const showDropdown = ref(false);
     const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 0);
     const conversationStore = useConversationStore();
     const friendStore = useFriendStore();
     const userStore = useUserStore();
-    const allUserMapInfo = computed(() => {
-			return friendStore.allUserMapInfo
-		})
 
     // 获取聊天列表
     const chatList = computed(() => conversationStore.getRecentChatList());
@@ -122,12 +136,12 @@ export default defineComponent({
     // 置顶聊天列表
     const pinnedChats = computed(() => chatList.value.filter(chat => chat.is_top));
 
-    // 左滑选项
-    const swipeOptions = [
+    // 获取左滑选项（根据置顶状态动态显示）
+    const getSwipeOptions = (chat: any) => [
       {
-        text: '置顶',
+        text: chat.is_top ? '取消置顶' : '置顶',
         style: {
-          backgroundColor: '#FF7D45',
+          backgroundColor: chat.is_top ? '#FFA726' : '#FF7D45',
           width: '120rpx',
           height: '100%',
           color: '#FFFFFF',
@@ -156,28 +170,45 @@ export default defineComponent({
       }
     ];
 
+    // 处理菜单点击
+    const handleMenuClick = (menu: any) => {
+      showDropdown.value = false;
+      
+      switch (menu.id) {
+        case 1: // 添加好友
+          navigateTo('/pages/searchFriend/searchFriend');
+          break;
+        case 2: // 创建群聊
+          navigateTo('/pages/createGroup/createGroup');
+          break;
+        case 3: // 扫一扫
+          scanCode();
+          break;
+        default:
+          console.log('未知菜单项:', menu);
+      }
+    };
+
     // 扫描二维码
     const scanCode = () => {
-      showDropdown.value = false;
       uni.scanCode({
+        scanType: ['qrCode'], // 只扫描二维码，不扫描条形码
         success: (res) => {
-          try {
-            const data = JSON.parse(res.result);
-            // 处理扫码结果
-          } catch (e) {
-            uni.showToast({
-              title: '无效的二维码',
-              icon: 'none'
-            });
-          }
+          console.error('二维码数据', res)
+          handleScanResult(res.result);
+        },
+        fail: (error) => {
+          logger.error({
+            text: '扫码失败',
+            data: { error }
+          });
+          showToast('扫码失败', 2000, 'none');
         }
       });
     };
 
-   
     // 页面导航
     const navigateTo = (url: string) => {
-      showDropdown.value = false;
       uni.navigateTo({
         url,
         animationType: 'slide-in-right',
@@ -195,24 +226,46 @@ export default defineComponent({
     };
 
     // 处理左滑动作
-    const handleSwipeAction = (type: string, chat: IChatInfo, index: number) => {
-      if (type === 'pin') {
-        conversationStore.toggleTopChat(chat.conversationId);
-        uni.showToast({
-          title: chat.is_top ? '取消置顶' : '已置顶',
-          icon: 'none'
-        });
-      } else if (type === 'delete') {
+    const handleSwipeAction = async (e: any, chat: any, index: number) => {
+      console.log('左滑点击事件:', e);
+      
+      // uni-swipe-action的click事件结构: { content: item, index, position }
+      const buttonIndex = e.index || 0;
+      const buttonContent = e.content || {};
+      
+      console.log('按钮索引:', buttonIndex, '按钮内容:', buttonContent);
+      
+      // 第一个按钮是置顶/取消置顶，第二个按钮是删除
+      if (buttonIndex === 0) {
+        try {
+          console.log('执行置顶操作:', chat.conversationId, '当前置顶状态:', chat.is_top);
+          
+          // 调用置顶/取消置顶API
+          const result = await pinnedChatApi({
+            conversationId: chat.conversationId,
+            isPinned: !chat.is_top
+          });
+          
+          console.log('API返回结果:', result);
+          
+          if (result.code === 0) {
+            // 更新本地状态
+            conversationStore.toggleTopChat(chat.conversationId);
+            showToast(chat.is_top ? '已取消置顶' : '已置顶', 2000, 'success');
+          } else {
+            showToast(result.msg || '操作失败', 2000, 'error');
+          }
+        } catch (error) {
+          console.error('置顶操作失败:', error);
+          showToast('操作失败', 2000, 'error');
+        }
+      } else if (buttonIndex === 1) {
         uni.showModal({
           title: '提示',
           content: '确定删除该会话吗？',
           success: (res) => {
             if (res.confirm) {
-              
-              uni.showToast({
-                title: '已删除',
-                icon: 'none'
-              });
+              showToast('已删除', 2000, 'none');
             }
           }
         });
@@ -225,34 +278,45 @@ export default defineComponent({
       // 可以在这里处理滚动事件
     };
 
+    // 从会话ID中获取好友ID
+    const getFriendIdFromConversation = (conversationId: string) => {
+      return parseConversation(conversationId, userStore.userInfo.userId);
+    };
+
+    // 获取聊天名称
+    const getChatName = (chat: any) => {
+      console.error(chat, '1111111111111')
+      const friendId = getFriendIdFromConversation(chat.conversationId);
+      const friendInfo = friendStore.getFriendByUserId(friendId);
+      return friendInfo?.notice || friendInfo?.nickname || chat.nickname;
+    };
+
     onMounted(() => {
       // 获取最新的会话列表
       // conversationStore.getRecentChatList();
     });
 
- 
-    const parseConversationGetFriendId = (conversationId: string) =>{
-      return parseConversation(conversationId, userStore.userInfo.userId)
-    }
-
     return {
-      parseConversationGetFriendId,
-      allUserMapInfo,
       statusBarHeight,
       showDropdown,
       chatList,
       pinnedChats,
-      swipeOptions,
+      getSwipeOptions,
+      handleMenuClick,
       scanCode,
       navigateTo,
       handleChatClick,
       handleSwipeAction,
       onScroll,
       formatTime,
-      friendStore
+      getFriendIdFromConversation,
+      getChatName,
+      friendStore,
+      plusIcon,
+      homeMenusList
     };
   }
-});
+};
 </script>
 
 <style lang="scss" scoped>
@@ -423,7 +487,6 @@ export default defineComponent({
 /* 普通消息列表 */
 .regular-list {
   padding: 0 32rpx;
-  padding-bottom: calc(env(safe-area-inset-bottom) + 100rpx);
 }
 
 .message-item {
@@ -461,7 +524,7 @@ export default defineComponent({
   position: relative;
 }
 
-.avatar::before {
+.fileName::before {
   content: '';
   position: absolute;
   top: 0;

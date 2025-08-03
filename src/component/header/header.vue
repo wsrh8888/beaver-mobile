@@ -1,7 +1,7 @@
 <template>
   <view 
     class="page-header"
-    :class="[`header-${mode}`, { 'header-fixed': fixed }]"
+    :class="`header-${mode}`"
     :style="headerStyle"
   >
     <!-- 状态栏占位 -->
@@ -23,8 +23,13 @@
         <slot name="left"></slot>
       </view>
       
-      <!-- 标题 -->
-      <text v-if="title" class="header-title">{{ title }}</text>
+      <!-- 左侧占位符 -->
+      <view v-else class="header-placeholder"></view>
+      
+      <!-- 中间区域 -->
+      <view v-if="title" class="header-center">
+        <text class="header-title">{{ title }}</text>
+      </view>
       
       <!-- 自定义右侧内容 -->
       <view v-if="$slots.right" class="right-slot">
@@ -40,7 +45,7 @@
         <image :src="rightIcon" mode="aspectFit" class="right-icon" />
       </view>
       
-      <!-- 占位符 -->
+      <!-- 右侧占位符 -->
       <view v-else class="header-placeholder"></view>
     </view>
   </view>
@@ -55,7 +60,7 @@ export default {
   props: {
     mode: {
       type: String as () => 'fixed' | 'static' | 'transparent',
-      default: 'fixed'
+      default: 'static'
     },
     title: {
       type: String,
@@ -76,10 +81,6 @@ export default {
     background: {
       type: String,
       default: 'transparent'
-    },
-    fixed: {
-      type: Boolean,
-      default: true
     }
   },
   emits: ['back', 'right-click'],
@@ -102,12 +103,14 @@ export default {
         backgroundColor: props.background
       };
       
-      if (props.fixed) {
+      if (props.mode === 'fixed') {
         baseStyle.position = 'fixed';
         baseStyle.left = '0';
         baseStyle.right = '0';
         baseStyle.top = '0';
         baseStyle.zIndex = '100';
+      } else {
+        baseStyle.position = 'relative';
       }
       
       return baseStyle;
@@ -148,7 +151,6 @@ export default {
   /* 静态模式 */
   &.header-static {
     position: relative;
-    margin-bottom: 16px;
   }
   
   /* 透明模式 */
@@ -170,6 +172,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 0 30rpx;
+  position: relative;
   // border-bottom: 1px solid #ebebeb;
 }
 
@@ -193,14 +196,23 @@ export default {
   height: 40rpx;
 }
 
+/* 中间区域 */
+.header-center {
+  flex: 1;
+}
+
 /* 标题 */
 .header-title {
   font-size: 36rpx;
   font-weight: bold;
   color: #333333;
   text-align: center;
-  flex: 1;
-  margin: 0 30rpx;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  pointer-events: none;
 }
 
 /* 右侧按钮 */
@@ -211,6 +223,7 @@ export default {
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  flex-shrink: 0;
   
   &:active {
     transform: scale(0.95);
@@ -233,5 +246,6 @@ export default {
 /* 占位符 */
 .header-placeholder {
   width: 40rpx;
+  flex-shrink: 0;
 }
 </style> 

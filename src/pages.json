@@ -132,6 +132,14 @@
 				"onReachBottomDistance": 0
 			}
 		},
+		{
+			"path": "pages/theme/theme",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
 
 		{
 			"path": "pages/mine/mine",
@@ -182,6 +190,31 @@
 			}
 		},
 		{
+			"path": "pages/moment/moment",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/postMoment/postMoment",
+			"style": {
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
+			"path": "pages/update/update",
+			"style": {
+				"navigationBarTitleText": "检查更新",
+				"enablePullDownRefresh": false,
+				"backgroundTextStyle": "dark",
+				"onReachBottomDistance": 0
+			}
+		},
+		{
 			"path": "pages/disclaimer/disclaimer",
 			"style": {
 				"navigationBarTitleText": "项目声明",
@@ -215,6 +248,12 @@
 				"iconPath": "static/tarBar/new-friend.png",
 				"selectedIconPath": "static/tarBar/new-friend-active.png",
 				"text": "好友"
+			},
+			{
+				"pagePath": "pages/moment/moment",
+				"iconPath": "static/tarBar/moment.png",
+				"selectedIconPath": "static/tarBar/moment-active.png",
+				"text": "朋友圈"
 			},
 			{
 				"pagePath": "pages/mine/mine",

@@ -7,3 +7,11 @@ export const parseConversation = (conversationID: string, userId: string) =>{
   return conversationID
 }
 
+/**
+ * 根据conversationId判断聊天类型
+ * @param conversationId 会话ID
+ * @returns 'single' | 'group'
+ */
+export const getChatType = (conversationId: string): 'single' | 'group' => {
+  return conversationId.includes('_') ? 'single' : 'group';
+}

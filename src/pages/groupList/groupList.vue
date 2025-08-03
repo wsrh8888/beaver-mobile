@@ -16,7 +16,7 @@
         @click="handleClickGroup(item)"
       >
         <view class="group-avatar">
-          <image :src="item.avatar" mode="aspectFill" />
+          <BeaverImage :file-name="item.fileName" mode="aspectFill" />
         </view>
         <view class="group-info">
           <text class="group-name">{{ item.title }}</text>
@@ -41,6 +41,7 @@ import { computed } from 'vue';
 import { useGroupStore } from '@/pinia/group/group';
 import type { IGroupInfo } from '@/types/ajax/group';
 import BeaverLayout from '@/component/layout/layout.vue';
+import BeaverImage from '@/component/image/image.vue';
 
 interface GroupInfo extends IGroupInfo {
   lastMessage?: string;
@@ -48,7 +49,8 @@ interface GroupInfo extends IGroupInfo {
 
 export default {
   components: {
-    BeaverLayout
+    BeaverLayout,
+    BeaverImage
   },
   setup() {
     const groupStore = useGroupStore();

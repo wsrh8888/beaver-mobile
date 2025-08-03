@@ -17,8 +17,8 @@
         <!-- 卡片顶部 -->
         <view class="card-header">
           <view class="user-avatar">
-            <text v-if="!userInfo.avatar">{{ getUserInitial() }}</text>
-            <image v-else :src="userInfo.avatar" mode="aspectFill" class="avatar-img"></image>
+            <text v-if="!userInfo.fileName">{{ getUserInitial() }}</text>
+            <beaver-image v-else :file-name="userInfo.fileName" mode="aspectFill" class="avatar-img"></beaver-image>
           </view>
           <view class="user-info">
             <view class="user-name">{{ userInfo.nickName || APP_CONFIG.name }}</view>
@@ -65,19 +65,26 @@
 </template>
 
 <script lang="ts">
-import { computed, ref, nextTick, getCurrentInstance } from 'vue';
+import { computed, ref, nextTick, getCurrentInstance, watch } from 'vue';
 import { useUserStore } from '@/pinia/user/user';
 import BeaverLayout from '@/component/layout/layout.vue';
+import BeaverImage from '@/component/image/image.vue';
 import { APP_CONFIG } from '@/config/data';
+import Logger from '@/logger/logger';
+import { showToast } from '@/component/toast';
+import { getCurrentVersion } from '@/utils/update/update';
+import type { QRCodeData } from '@/types/utils/qrcode';
 
 export default {
   name: 'Qrcode',
   components: {
-    BeaverLayout
+    BeaverLayout,
+    BeaverImage
   },
   setup() {
-    const store = useUserStore();
-    const userInfo = computed(() => store.userInfo);
+    const logger = new Logger('二维码页面');
+    const userStore = useUserStore();
+    const userInfo = computed(() => userStore.userInfo);
     const qrCanvasId = ref("qrcode-canvas");
     const instance = getCurrentInstance();
     const isH5 = ref(false);
@@ -93,72 +100,60 @@ export default {
     qrCanvasId.value = "h5-qrcode-canvas";
     // #endif
     
-    // 设置用户头像作为logo
-    nextTick(() => {
-      if (userInfo.value && userInfo.value.avatar) {
-        options.value.logoImage = userInfo.value.avatar;
-        // 强制更新options来触发二维码重新渲染
-        options.value = {...options.value};
-        console.log('设置logo图片:', userInfo.value.avatar);
+    // 监听用户信息变化，更新二维码和logo
+    watch(userInfo, (newUserInfo) => {
+      if (newUserInfo?.userId) {
+        // 用户信息加载完成，更新logo
+        if (newUserInfo.fileName) {
+          options.value.logoImage = newUserInfo.fileName;
+          // 强制更新options来触发二维码重新渲染
+          options.value = {...options.value};
+          console.log('设置logo图片:', newUserInfo.fileName);
+        }
       }
-    });
+    }, { immediate: true });
     
     // 导航返回
     const goBack = () => {
       uni.navigateBack();
     };
     
-    // 二维码设置
+    // 二维码设置 - 类似微信风格
     const options = ref({
-      margin: 10,
-      foreground: "#2D3436",
-      background: "#ffffff",
-      colorDark: "#2D3436",
+      margin: 8, // 微信二维码边距较小
+      foreground: "#000000", // 微信使用纯黑色
+      background: "#ffffff", // 纯白色背景
+      colorDark: "#000000",
       colorLight: "#ffffff",
-      correctLevel: 3,
+      correctLevel: 2, // 微信使用中等纠错级别
       backgroundImage: "",
       backgroundDimming: "rgba(0,0,0,0)",
       logoImage: "",
-      logoWidth: 80,
-      logoHeight: 80,
+      logoWidth: 60, // 微信logo较小
+      logoHeight: 60,
       logoBackgroundColor: '#ffffff',
-      logoCornerRadius: 20,
-      logoBorderWidth: 6,
+      logoCornerRadius: 12, // 圆角较小
+      logoBorderWidth: 4, // 边框较细
       logoBorderColor: '#ffffff'
     });
-    console.error('二维码设置:', userInfo.value);
-    // 将对象转换为JSON字符串作为二维码值
-    const qrValue = ref(JSON.stringify({
-      type: "addFriend",
-      query: `id=${userInfo.value.userId || ''}`,
-      name: APP_CONFIG.name
-    }));
     
-    // H5环境下载图片
-    const downloadImage = (base64Data: string) => {
-      try {
-        // 创建下载链接
-        const link = document.createElement('a');
-        link.href = base64Data;
-        link.download = `${APP_CONFIG.name}-qrcode-${userInfo.value.userId || 'friend'}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        uni.showToast({
-          title: '图片已准备下载',
-          icon: 'success',
-          duration: 2000
-        });
-      } catch (error) {
-        console.error('下载图片失败:', error);
-        uni.showToast({
-          title: '下载失败，请截图保存',
-          icon: 'none',
-          duration: 2000
-        });
-      }
-    };
+    // 生成添加好友的二维码值
+    const qrValue = computed(() => {
+      
+      const qrData: QRCodeData<'addFriend'> = {
+        action: "addFriend",
+        appName: APP_CONFIG.englishName,
+        version: getCurrentVersion(),
+        timestamp: Date.now(),
+        expireAt: -1, // 24小时过期
+        payload: {
+          userId: userInfo.value.userId
+        }
+      };
+      return JSON.stringify(qrData);
+    });
+    
+
     
         // 保存二维码图片
     const handleSaveQrcode = () => {
@@ -166,11 +161,7 @@ export default {
         // 获取二维码组件引用
         const qrCodeComponent = instance?.proxy?.$refs.qrcode;
         if (!qrCodeComponent) {
-          uni.showToast({
-            title: '二维码组件未找到',
-            icon: 'error',
-            duration: 2000
-          });
+          showToast('二维码组件未找到', 2000, 'error');
           return;
         }
         
@@ -182,11 +173,10 @@ export default {
         qrCodeComponent.save({
           success: () => {
             uni.hideLoading();
-            uni.showToast({
-              title: isH5.value ? '下载成功' : '已保存到相册',
-              icon: 'success',
-              duration: 2000
-            });
+            if (!isH5.value) {
+              showToast( '已保存到相册', 2000, 'success');
+            }
+           
           },
           fail: (err) => {
             uni.hideLoading();
@@ -206,22 +196,20 @@ export default {
                 }
               });
             } else {
-              uni.showToast({
-                title: '保存失败',
-                icon: 'error',
-                duration: 2000
-              });
+              showToast('保存失败', 2000, 'error');
             }
           }
         });
       } catch (error) {
+        logger.error({
+          text: '保存过程出错',
+          data: {
+            error: error?.message
+          }
+        });
         uni.hideLoading();
         console.error('保存过程出错:', error);
-        uni.showToast({
-          title: '操作失败',
-          icon: 'error',
-          duration: 2000
-        });
+        showToast('操作失败', 2000, 'error');
       }
     };
 
@@ -378,7 +366,7 @@ export default {
 }
 
 /* 头像内部高光 */
-.user-avatar::after {
+.user-fileName::after {
   content: '';
   position: absolute;
   top: 0;

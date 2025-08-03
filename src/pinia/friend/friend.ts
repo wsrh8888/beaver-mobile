@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
-import { getFriendInfoApi, getFriendListApi } from '@/api/friend';
+import { friendInfoApi, friendListApi } from '@/api/friend';
 import type { IFriendInfo } from '@/types/ajax/friend';
-import { processAvatarUrl, processArrayAvatars } from '@/utils/avatar';
+import { preloadFiles } from '@/cache/file';
 
 /**
  * @description: 好友信息管理
@@ -9,34 +9,37 @@ import { processAvatarUrl, processArrayAvatars } from '@/utils/avatar';
 export const useFriendStore = defineStore('friendStore', {
   state: (): {
     friendList: IFriendInfo[],
-    allUserMapInfo: Map<string, IFriendInfo>,
   } => ({
     /**
      * @description: 好友列表
      */
     friendList: [],
-    /**
-     * @description: 用户信息映射（包含好友和非好友）
-     */
-    allUserMapInfo: new Map<string, IFriendInfo>(),
   }),
   
   getters: {
     /**
-     * @description: 根据ID获取好友信息
-     * @param {string} id - 会话id
-     * @returns {IFriendInfo} 返回好友信息
+     * @description: 根据用户ID获取好友信息
+     * @param {string} userId - 用户ID
+     * @returns {IFriendInfo | undefined} 返回好友信息
      */
-    getFriendInfoById: (state) => {
-      return (id: string): IFriendInfo | undefined => {
-        const friendInfo = state.allUserMapInfo.get(id);
-        if (friendInfo) {
-          return {
-            ...friendInfo,
-            avatar: processAvatarUrl(friendInfo.avatar)
-          };
+    getFriendByUserId: (state) => {
+      return (userId: string): IFriendInfo | undefined => {
+        return state.friendList.find(friend => friend.userId === userId);
+      };
+    },
+
+    /**
+     * @description: 根据会话ID获取好友信息
+     * @param {string} conversationId - 会话ID
+     * @returns {IFriendInfo | undefined} 返回好友信息
+     */
+    getFriendByConversationId: (state) => {
+      return (conversationId: string): IFriendInfo | undefined => {
+        const friend = state.friendList.find(friend => friend.conversationId === conversationId);
+        if (!friend) {
+          console.error('好友信息未找到，conversationId:', conversationId);
         }
-        return undefined;
+        return friend;
       };
     },
   },
@@ -44,31 +47,43 @@ export const useFriendStore = defineStore('friendStore', {
   actions: {
     reset() {
       this.friendList = [];
-      this.allUserMapInfo.clear();
+    },
+
+    /**
+     * @description: 预加载好友头像
+     */
+    async preloadFriendAvatars() {
+      try {
+        const fileNames = this.friendList
+          .filter(friend => friend.fileName)
+          .map(friend => friend.fileName!);
+        
+        if (fileNames.length > 0) {
+          console.log('预加载好友头像:', fileNames.length, '张');
+          await preloadFiles(fileNames);
+        }
+      } catch (error) {
+        console.error('预加载好友头像失败:', error);
+      }
     },
     
     async updateFriendInfo(friendId: string) {
       try {
-        const res = await getFriendInfoApi({ friendId });
+        const res = await friendInfoApi({ friendId });
         if (res.code === 0) {
-          const tempFriendInfo = {
-            ...res.result,
-            avatar: processAvatarUrl(res.result.avatar)
-          };
+          const friendInfo = res.result;
           
           const index = this.friendList.findIndex(
             item => item.userId === friendId
           );
           
           if (index !== -1) {
-            this.friendList[index] = tempFriendInfo;
+            this.friendList[index] = friendInfo;
           } else {
-            this.friendList.push(tempFriendInfo);
+            this.friendList.push(friendInfo);
           }
           
-          // 更新用户信息映射
-          this.allUserMapInfo.set(friendId, tempFriendInfo);
-          return tempFriendInfo;
+          return friendInfo;
         }
       } catch (error) {
         console.error('Failed to update friend info:', error);
@@ -78,18 +93,16 @@ export const useFriendStore = defineStore('friendStore', {
 
     async initFriendApi() {
       try {
-        const res = await getFriendListApi({
+        const res = await friendListApi({
           page: 1,
           limit: 1000,
         });
         if (res.code === 0) {
-          // 处理头像路径
-          this.friendList = processArrayAvatars(res.result.list || []);
+          // 直接使用API返回的数据
+          this.friendList = res.result.list || [];
           
-          // 初始化用户信息映射
-          this.friendList.forEach(friend => {
-            this.allUserMapInfo.set(friend.userId, friend);
-          });
+          // 预加载好友头像
+          await this.preloadFriendAvatars();
         }
       } catch (error) {
         console.error('Failed to initialize friend list:', error);

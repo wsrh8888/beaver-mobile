@@ -58,14 +58,8 @@ export const useInitStore = defineStore('useInitStore', {
      * @return {Promise<void>}
      */
     async getAuthentication() {
-      try {
-         await getAuthenticationApi();
-        this.lastAuthTime = Date.now();
-      } catch (error) {
-        console.error('Authentication failed:', error);
-        this.initError = error instanceof Error ? error : new Error('Authentication failed');
-        throw error;
-      }
+      await getAuthenticationApi();
+      
     },
 
     /**

@@ -1,7 +1,6 @@
 import { logBatchReporter } from '@/utils/report/log-batch-reporter'
 import type { ITransformLog } from '@/types/ajax/track'
 import type { ILog } from '@/types/utils/logger'
-import { useUserStore } from '@/pinia/user/user'
 
 
 
@@ -32,14 +31,12 @@ class Logger {
     this._log('error', data)
   }
   private transformLog(level: "log" | "info" | "error" | "warn", message: ILog): ITransformLog {
-    const userStore = useUserStore()
     return {
       level,
       module: this.module,
       source: 'beaver-mobile',
       message: message, // 业务数据序列化为字符串
       timestamp: Date.now(),
-      userId: userStore?.userInfo?.userId
     }
   }
   /**
@@ -47,7 +44,7 @@ class Logger {
    */
   private _log(type: "log" | "info" | "error" | "warn", message: ILog): void {
     try {
-      console[type](message)
+      console[type](this.module, message)
     } catch (error) {
       console.error('日志数据异常', error)
     }

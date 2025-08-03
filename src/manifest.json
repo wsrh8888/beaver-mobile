@@ -1,6 +1,6 @@
 {
     "name" : "海狸IM",
-    "appid" : "__UNI__B680C3B",
+    "appid" : "__UNI__359CF05",
     "description" : "",
     "versionName" : "1.0.0",
     "versionCode" : "100",
@@ -21,6 +21,8 @@
         },
         "distribute" : {
             "android" : {
+                "minSdkVersion" : 21,
+                "targetSdkVersion" : 28,
                 "permissions" : [
                     "<uses-permission android:name=\"android.permission.CHANGE_NETWORK_STATE\"/>",
                     "<uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\"/>",
@@ -36,8 +38,13 @@
                     "<uses-permission android:name=\"android.permission.WAKE_LOCK\"/>",
                     "<uses-permission android:name=\"android.permission.FLASHLIGHT\"/>",
                     "<uses-feature android:name=\"android.hardware.camera\"/>",
-                    "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
-                ]
+                    "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>",
+                    "<uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\"/>",
+                    "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>",
+                    "<uses-permission android:name=\"android.permission.MANAGE_EXTERNAL_STORAGE\"/>",
+                    "<uses-permission android:name=\"android.permission.READ_MEDIA_IMAGES\"/>"
+                ],
+                "abiFilters" : [ "arm64-v8a" ]
             },
             "ios" : {
                 "dSYMs" : false

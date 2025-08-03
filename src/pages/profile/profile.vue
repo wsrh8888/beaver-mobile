@@ -12,11 +12,11 @@
     <!-- 头像上传 -->
     <view class="avatar-upload" @click="chooseAvatar">
       <view class="avatar-container">
-        <image 
-          :src="userAvatar" 
+        <beaver-image 
+          :file-name="userInfo.fileName" 
           id="avatar-preview" 
           mode="aspectFill"
-        ></image>
+        ></beaver-image>
         <view class="edit-icon">更换</view>
       </view>
       <view class="avatar-label">点击更换头像</view>
@@ -41,7 +41,7 @@
           </view>
         </view>
         <view class="description-content">
-          <text v-if="userInfo.bio" class="bio-text">{{ userInfo.bio }}</text>
+          <text v-if="userInfo.abstract" class="bio-text">{{ userInfo.abstract }}</text>
           <text v-else class="info-placeholder">介绍一下自己，让更多人了解你</text>
         </view>
       </view>
@@ -176,26 +176,34 @@
         <view class="btn-cancel" @click="closeModal('gender')">取消</view>
         <view class="btn-save" @click="saveGender">确定</view>
       </view>
-    </BeaverDialog>
+        </BeaverDialog>
     
-  </BeaverLayout>
+
+      
+    </BeaverLayout>
 </template>
 
 <script lang="ts">
 import { computed, ref, reactive, watch } from 'vue';
 import { useUserStore } from '@/pinia/user/user';
 import { getEmailCodeApi } from '@/api/auth';
-import { openAlbum } from '@/utils/upload';
+import { updateEmailApi } from '@/api/user';
+import { openAlbum, CompressMode } from '@/utils/upload/upload';
 import BeaverLayout from '@/component/layout/layout.vue';
 import BeaverDialog from '@/component/dialog/index.vue';
+import BeaverImage from '@/component/image/image.vue';
 import { APP_CONFIG } from '@/config/data';
+import Logger from '@/logger/logger';
+import { showToast } from '@/component/toast';
 
 export default {
   components: {
     BeaverLayout,
-    BeaverDialog
+    BeaverDialog,
+    BeaverImage
   },
   setup() {
+    const logger = new Logger('个人资料页面');
     const userStore = useUserStore();
     const userInfo = computed(() => userStore.userInfo);
     
@@ -224,7 +232,7 @@ export default {
     const countdown = ref(0);
     
     // 头像相关
-    const userAvatar = ref(userInfo.value.avatar || '');
+    const userAvatar = ref(userInfo.value.fileName || '');
     
 
     
@@ -232,9 +240,9 @@ export default {
     watch(() => userInfo.value, (newUserInfo) => {
       formData.nickname = newUserInfo.nickName || '';
       formData.email = newUserInfo.email || '';
-      formData.bio = newUserInfo.bio || '';
+      formData.bio = newUserInfo.abstract || '';
       formData.gender = newUserInfo.gender || 1;
-      userAvatar.value = newUserInfo.avatar || '';
+      userAvatar.value = newUserInfo.fileName || '';
     });
     
 
@@ -262,12 +270,12 @@ export default {
           modals.nickname = true;
           break;
         case 'email':
-          formData.email = userInfo.value.email || '';
+          formData.email = '';
           formData.emailCode = '';
           modals.email = true;
           break;
         case 'description':
-          formData.bio = userInfo.value.bio || '';
+          formData.bio = userInfo.value.abstract || '';
           modals.description = true;
           break;
         case 'gender':
@@ -302,10 +310,20 @@ export default {
     
     // 选择头像
     const chooseAvatar = () => {
-      openAlbum().then((res) => {
-        console.error('2222222222222222', res)
-        userStore.updateUserInfo({ avatar: res.fileId });
-      }).catch(() => {
+      // 头像：100KB，小尺寸高质量
+      const maxSize = 100 * 1024; // 100KB
+      openAlbum('album', 1, CompressMode.CUSTOM, maxSize).then((res) => {
+        console.log('头像上传成功:', res);
+        userStore.updateUserInfo({ fileName: res.fileName });
+        showToast('头像更新成功');
+      }).catch((error) => {
+        logger.error({
+          text: '选择头像失败',
+          data: {
+            error: error?.message
+          }
+        });
+        console.error('选择头像失败:', error);
         showToast('选择头像失败');
       });
     };
@@ -337,7 +355,8 @@ export default {
       
       isCodeSending.value = true;
       getEmailCodeApi({
-        email: formData.email
+        email: formData.email,
+        type: 'update_email'
       }).then((res) => {
         if (res.code === 0) {
           showToast('验证码已发送');
@@ -349,10 +368,8 @@ export default {
             }
           }, 1000);
         } else {
-          showToast(res.message || '发送失败');
+          showToast(res.msg || '发送失败');
         }
-      }).catch(() => {
-        showToast('发送失败');
       }).finally(() => {
         isCodeSending.value = false;
       });
@@ -381,14 +398,33 @@ export default {
         return;
       }
       
-      userStore.updateUserInfo({ email: formData.email });
-      showToast('修改成功');
-      closeModal('email');
+      // 调用更新邮箱接口
+      updateEmailApi({
+        email: formData.email,
+        code: formData.emailCode
+      }).then((res) => {
+        if (res.code === 0) {
+          userStore.updateUserInfo({ email: formData.email }, false);
+          showToast('邮箱修改成功');
+          closeModal('email');
+        } else {
+          showToast(res.msg || '修改失败');
+        }
+      }).catch((error) => {
+        logger.error({
+          text: '更新邮箱失败',
+          data: {
+            error: error?.message,
+            email: formData.email
+          }
+        });
+        showToast('修改失败，请重试');
+      });
     };
     
     // 保存个人简介
     const saveBio = () => {
-      userStore.updateUserInfo({ bio: formData.bio.trim() });
+      userStore.updateUserInfo({ abstract: formData.bio.trim() });
       showToast('修改成功');
       closeModal('description');
     };
@@ -400,16 +436,6 @@ export default {
       closeModal('gender');
     };
     
-
-    
-    // 显示提示
-    const showToast = (message: string) => {
-      uToast.value?.show({
-        title: message,
-        type: 'success',
-        duration: 2000
-      });
-    };
     
     return {
       userInfo,
@@ -459,7 +485,6 @@ export default {
   margin: 0 auto 12px;
   border-radius: 20px;
   overflow: hidden;
-  background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
   box-shadow: 0 8px 24px rgba(255, 125, 69, 0.2);
 }
 

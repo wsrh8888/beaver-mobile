@@ -7,7 +7,7 @@ export interface ISearchUser {
 }
 export interface IResSearchUserInfo {
   Abstract: string;
-  avatar: string;
+  fileName: string;
   conversationId: string;
   isFriend: boolean;
   nickname: string;

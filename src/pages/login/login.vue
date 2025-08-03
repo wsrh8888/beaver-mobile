@@ -35,11 +35,12 @@
             v-model="userInfo.password" 
             placeholder="登录密码"
           >
-          <uni-icons 
+          <image 
             class="icon__password" 
-            :type="passwordType === 'password' ? 'eye' : 'eye-slash'"
+            :src="passwordType === 'password' ? '/static/img/login/eye.svg' : '/static/img/login/eye-slash.svg'"
             @click="togglePasswordVisibility"
-          ></uni-icons>
+            mode="aspectFit"
+          />
           <view v-if="passwordTouched && !isPasswordValid" class="error__message">密码长度不少于13位，且必须包含中英文</view>
         </view>
         
@@ -62,18 +63,21 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, ref, watch } from 'vue';
-import { showMsg } from '@/utils/Toast';
+import { reactive, ref, watch, computed } from 'vue';
+// import { showMsg } from '@/utils/Toast';
 import { MD5 } from 'crypto-js';
-import { loginApi } from '@/api/user';
 import { useUserStore } from '@/pinia/user/user';
 import { setLocal } from '@/utils/local';
 import WsManager from '@/ws-manager/ws'
 import { useInitStore } from '@/pinia/init/init';
 import { APP_CONFIG } from '@/config/data';
+import { emailPasswordLoginApi } from '@/api/auth';
+import Logger from '@/logger/logger';
+import { showToast } from '@/component/toast';
 
-export default defineComponent({
+export default {
   setup() {
+    const logger = new Logger('登录页面');
     interface userInfo {
       email: string;
       password: string;
@@ -142,37 +146,43 @@ export default defineComponent({
       });
     }
 
-    // 点击登录跳转到主页
-    function goHome(): void {
+    async function goHome(): Promise<void> {
       // 标记已经点击过登录按钮，以便显示错误提示
       emailTouched.value = true;
       passwordTouched.value = true;
 
-      // if (isFormValid.value) {
+      try {
         // 对密码加密传输过去
-        loginApi({
+        const res = await emailPasswordLoginApi({
           email: userInfo.email,
           password: MD5(userInfo.password).toString()
-        }).then((res) => {
-          if (res.code === 0) {
-            // 存储token
-            setLocal('token', res.result.token);
-            uni.reLaunch({
-              url: '/pages/home/home',
-              animationType: 'pop-in',
-              animationDuration: 200
-            });
-            initStore.initApp()
-          } else {
-            showMsg(res.msg);
-          }
-        }).catch(() => {
-          showMsg('登录失败');
         });
-      // }
-      //  else {
-      //   showMsg('请完善登录信息');
-      // }
+        
+        if (res.code === 0) {
+          // 存储token
+          setLocal('token', res.result.token);
+          
+          // 先初始化应用，确保所有接口和数据都准备好
+          await initStore.initApp();
+          
+          // 初始化完成后再跳转页面
+          uni.reLaunch({
+            url: '/pages/home/home',
+            animationType: 'pop-in',
+            animationDuration: 200
+          });
+        } else {
+          showToast(res.msg, 2000, 'error');
+        }
+      } catch (error) {
+        logger.error({
+          text: '登录失败',
+          data: {
+            error: error instanceof Error ? error.message : String(error)
+          }
+        });
+        showToast('登录失败，请稍后重试', 2000, 'error');
+      }
     }
 
     return {
@@ -191,7 +201,7 @@ export default defineComponent({
       APP_CONFIG
     };
   }
-});
+};
 </script>
 
 <style scoped lang="scss">
@@ -299,9 +309,10 @@ export default defineComponent({
 }
 
 .icon__password {
-  color: #B2BEC3;
-  font-size: 40rpx;
+  width: 40rpx;
+  height: 40rpx;
   padding: 0 16rpx;
+  filter: brightness(0) saturate(100%) invert(67%) sepia(8%) saturate(123%) hue-rotate(169deg) brightness(89%) contrast(86%);
 }
 
 .error__message {

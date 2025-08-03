@@ -69,121 +69,116 @@
 </template>
 
 <script lang="ts">
+import { ref, computed } from 'vue';
 import { getEmailCodeApi } from '@/api/auth';
 import { resetPasswordApi } from '@/api/user';
 import { APP_CONFIG } from '@/config/data';
+import Logger from '@/logger/logger';
+import { showToast } from '@/component/toast';
 
 export default {
-  data() {
-    return {
-      emailAddress: '',
-      verificationCode: '',
-      newPassword: '',
-      isCodeButtonDisabled: false,
-      countdown: 60,
-      
-      emailError: false,
-      verificationError: false,
-      passwordError: false,
-      
-      emailTouched: false,
-      verificationTouched: false,
-      passwordTouched: false,
-      
-      APP_CONFIG
-    };
-  },
-  
-  computed: {
-    isFormValid() {
-      return !this.emailError && !this.verificationError && !this.passwordError && 
-             this.emailAddress && this.verificationCode && this.newPassword;
-    }
-  },
-  
-  methods: {
-    validateEmailAddress() {
-      this.emailTouched = true;
+  setup() {
+    const logger = new Logger('忘记密码页面');
+    
+    // 响应式数据
+    const emailAddress = ref('');
+    const verificationCode = ref('');
+    const newPassword = ref('');
+    const isCodeButtonDisabled = ref(false);
+    const countdown = ref(60);
+    
+    const emailError = ref(false);
+    const verificationError = ref(false);
+    const passwordError = ref(false);
+    
+    const emailTouched = ref(false);
+    const verificationTouched = ref(false);
+    const passwordTouched = ref(false);
+    
+    // 计算属性
+    const isFormValid = computed(() => {
+      return !emailError.value && !verificationError.value && !passwordError.value && 
+             emailAddress.value && verificationCode.value && newPassword.value;
+    });
+    
+    // 方法
+    const validateEmailAddress = () => {
+      emailTouched.value = true;
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      this.emailError = !emailRegex.test(this.emailAddress);
-    },
+      emailError.value = !emailRegex.test(emailAddress.value);
+    };
     
-    inputEmail() {
-      this.emailError = false;
-    },
+    const inputEmail = () => {
+      emailError.value = false;
+    };
     
-    validateVerificationCode() {
-      this.verificationTouched = true;
-      this.verificationError = this.verificationCode === '';
-    },
+    const validateVerificationCode = () => {
+      verificationTouched.value = true;
+      verificationError.value = verificationCode.value === '';
+    };
     
-    validatePassword() {
-      this.passwordTouched = true;
-      this.passwordError = !/^[^\s]{13,}$/.test(this.newPassword);
-    },
+    const validatePassword = () => {
+      passwordTouched.value = true;
+      passwordError.value = !/^[^\s]{13,}$/.test(newPassword.value);
+    };
     
-    inputPassword() {
-      this.passwordError = false;
-    },
+    const inputPassword = () => {
+      passwordError.value = false;
+    };
     
-    sendVerificationCode() {
-      this.validateEmailAddress();
-      if (this.isCodeButtonDisabled || this.emailError) {
+    const sendVerificationCode = () => {
+      validateEmailAddress();
+      if (isCodeButtonDisabled.value || emailError.value) {
         return;
       }
       
-             getEmailCodeApi({
-         email: this.emailAddress,
-         type: 'reset_password'
-       }).then((res: any) => {
-         if (res.code === 0) {
-          uni.showToast({
-            title: '验证码已发送',
-            duration: 2000
-          });
-          this.isCodeButtonDisabled = true;
-          let counter = this.countdown;
+      getEmailCodeApi({
+        email: emailAddress.value,
+        type: 'reset_password'
+      }).then((res: any) => {
+        if (res.code === 0) {
+          showToast('验证码已发送', 2000);
+          isCodeButtonDisabled.value = true;
+          let counter = countdown.value;
           const interval = setInterval(() => {
             counter -= 1;
-            this.countdown = counter;
+            countdown.value = counter;
             if (counter <= 0) {
               clearInterval(interval);
-              this.isCodeButtonDisabled = false;
-              this.countdown = 60;
+              isCodeButtonDisabled.value = false;
+              countdown.value = 60;
             }
           }, 1000);
         } else {
-          uni.showToast({
-            title: res.msg || '发送失败',
-            duration: 2000
-          });
+          showToast(res.msg || '发送失败', 2000);
         }
-      }).catch(() => {
-        uni.showToast({
-          title: '发送失败',
-          duration: 2000
+      }).catch((error) => {
+        logger.error({
+          text: '发送验证码失败',
+          data: {
+            error: error?.message,
+            email: emailAddress.value
+          }
         });
+        showToast('发送失败', 2000);
       });
-    },
+    };
     
-    resetPassword() {
-      this.validateEmailAddress();
-      this.validateVerificationCode();
-      this.validatePassword();
-      if (!this.isFormValid) {
+    const resetPassword = () => {
+      validateEmailAddress();
+      validateVerificationCode();
+      validatePassword();
+      if (!isFormValid.value) {
         return;
       }
       
-             resetPasswordApi({
-         email: this.emailAddress,
-         verifyCode: this.verificationCode,
-         password: this.newPassword
-       }).then((res: any) => {
-         if (res.code === 0) {
-          uni.showToast({
-            title: '密码重置成功',
-            duration: 2000
-          });
+      resetPasswordApi({
+        email: emailAddress.value,
+        verifyCode: verificationCode.value,
+        password: newPassword.value
+      }).then((res: any) => {
+        if (res.code === 0) {
+          showToast('密码重置成功', 2000);
           // 跳转到登录页面
           setTimeout(() => {
             uni.reLaunch({
@@ -193,26 +188,52 @@ export default {
             });
           }, 2000);
         } else {
-          uni.showToast({
-            title: res.msg || '重置失败',
-            duration: 2000
-          });
+          showToast(res.msg || '重置失败', 2000);
         }
-      }).catch(() => {
-        uni.showToast({
-          title: '重置失败',
-          duration: 2000
+      }).catch((error) => {
+        logger.error({
+          text: '重置密码失败',
+          data: {
+            error: error?.message,
+            email: emailAddress.value
+          }
         });
+        showToast('重置失败', 2000);
       });
-    },
+    };
     
-    navigateToPage(url: string) {
+    const navigateToPage = (url: string) => {
       uni.navigateTo({
         url: url,
         animationType: 'slide-in-right',
         animationDuration: 200
       });
-    }
+    };
+    
+    return {
+      logger,
+      emailAddress,
+      verificationCode,
+      newPassword,
+      isCodeButtonDisabled,
+      countdown,
+      emailError,
+      verificationError,
+      passwordError,
+      emailTouched,
+      verificationTouched,
+      passwordTouched,
+      isFormValid,
+      validateEmailAddress,
+      inputEmail,
+      validateVerificationCode,
+      validatePassword,
+      inputPassword,
+      sendVerificationCode,
+      resetPassword,
+      navigateToPage,
+      APP_CONFIG
+    };
   }
 };
 </script>

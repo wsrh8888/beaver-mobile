@@ -1,21 +1,35 @@
 <script lang="ts">
-import { defineComponent } from 'vue';
 import { onLaunch, onShow, onHide } from "@dcloudio/uni-app";
 import { getLocal } from './utils/local';
 import WsManager from '@/ws-manager/ws'
 import { useInitStore } from '@/pinia/init/init'
+import { useThemeStore } from '@/pinia/theme/theme'
 import { track } from '@/logger/track'
+import { reportVersionApi } from '@/api/update'
+import Logger from '@/logger/logger'
+import { showToast } from '@/component/toast'
 
-export default defineComponent({
-	setup() {		
+export default {
+	setup() {
+		const logger = new Logger('应用启动');		
 		onLaunch( async () => {
 			console.log("App Launch");
+			
+			// 初始化主题
+			const themeStore = useThemeStore();
+			themeStore.initTheme();
 			
 			// 上报版本信息（仅在启动时调用一次）
 			try {
 				await reportVersionApi();
 				console.log('版本信息上报成功');
-			} catch (error) {
+			} catch (error: any) {
+				logger.error({
+					text: '版本信息上报失败',
+					data: {
+						error: error?.message || '未知错误'
+					}
+				});
 				console.error('版本信息上报失败:', error);
 			}
 			
@@ -28,32 +42,15 @@ export default defineComponent({
 			const initStore = useInitStore();
 			
 			// 无论是否有token，都先测试认证接口是否可用
-			try {
-				await initStore.getAuthentication();
-				console.log('认证接口测试成功');
-			} catch (error) {
-				console.error('认证接口测试失败:', error);
-				// 认证接口不可用，可能是网络问题或服务端问题
-				uni.showToast({
-					title: '网络连接异常，请检查网络设置',
-					icon: 'none',
-					duration: 3000
-				});
-			}
 			
-			if (!getLocal('token')) {
-				// 没有token，跳转到登录页
-				// 检查当前页面路径，避免重复导航
-				const pages = getCurrentPages();
-				const currentPage = pages[pages.length - 1];
-				const currentPath = currentPage?.route;
-				
-				if (currentPath !== 'pages/login/login') {
-					uni.reLaunch({
-						url: 'pages/login/login'
-					});
-				}
+			if (!getLocal('token')) {				
+				uni.reLaunch({
+					url: 'pages/login/login'
+				});
 				return
+			} else {
+				await initStore.getAuthentication();
+
 			}
 			
 			// 有token，初始化应用
@@ -68,14 +65,15 @@ export default defineComponent({
 		return {
 		};
 	}
-});
+};
 </script>
 
 
 <style>
+@import '@/styles/theme.scss';
+
 page {
 	height: 100vh;
-
 }
 
 #app {

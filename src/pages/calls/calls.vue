@@ -15,7 +15,6 @@
 <script lang="ts">
 	import { defineComponent, onMounted, reactive, ref, watch } from "vue";
 	import wsManager from "@/ws-manager/ws";
-  import emitter from '@/utils/mitt';
   import {cStyle,lStyle,rStyle} from './data'
 	export default defineComponent({
     props: {
@@ -154,7 +153,6 @@
 				peer.close();
 				peer = null;
 				closeLocalMedia()
-        emitter.emit('changeCall', false)
 
 			};
 			const connect = () => {

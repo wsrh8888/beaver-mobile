@@ -1,30 +1,40 @@
-import { request } from '@/utils/request'
+import { request } from '@/utils/request/request'
 import { baseUrl } from '@/env.json'
 import type {
-  IGroupListRes,
   IGroupCreateReq,
   IGroupCreateRes,
   IGroupDeleteReq,
+  IGroupDeleteRes,
   IGroupMemberRemoveReq,
+  IGroupMemberRemoveRes,
   IGroupMemberAddReq,
+  IGroupMemberAddRes,
+  IGroupMineReq,
+  IGroupMineRes,
   IUpdateGroupInfoReq,
+  IUpdateGroupInfoRes,
+  IGroupMemberListReq,
   IGroupMemberListRes,
   IUpdateMemberRoleReq,
+  IUpdateMemberRoleRes,
   IGroupAnnouncementReq,
+  IGroupAnnouncementRes,
   IGroupInviteReq,
+  IGroupInviteRes,
   IGroupJoinReq,
+  IGroupJoinRes,
   IGroupSettingsReq,
+  IGroupSettingsRes,
   IGroupMuteReq,
-  IGroupFileUploadReq,
-  IGroupFileUploadRes,
-  IGroupFileListReq,
-  IGroupFileListRes,
-  IGroupFileDeleteReq,
+  IGroupMuteRes,
   IGroupQuitReq,
+  IGroupQuitRes,
   ITransferOwnerReq,
+  ITransferOwnerRes,
   IGroupMuteListReq,
   IGroupMuteListRes,
   IUpdateDisplayNameReq,
+  IUpdateDisplayNameRes,
   IGroupInfoReq,
   IGroupInfoRes
 } from '@/types/ajax/group'
@@ -32,7 +42,7 @@ import type {
 /**
  * @description: 创建群组
  */
-export const createGroupApi = (data: IGroupCreateReq) => {
+export const groupCreateApi = (data: IGroupCreateReq) => {
   return request<IGroupCreateRes>({
     method: 'POST',
     data,
@@ -43,9 +53,9 @@ export const createGroupApi = (data: IGroupCreateReq) => {
 /**
  * @description: 删除群组
  */
-export const deleteGroupApi = (data: IGroupDeleteReq) => {
-  return request<{}>({
-    method: 'POST',
+export const groupDeleteApi = (data: IGroupDeleteReq) => {
+  return request<IGroupDeleteRes>({
+    method: 'DELETE',
     data,
     url: `${baseUrl}/api/group/delete/${data.groupId}`
   })
@@ -54,8 +64,8 @@ export const deleteGroupApi = (data: IGroupDeleteReq) => {
 /**
  * @description: 移除群成员
  */
-export const removeGroupMemberApi = (data: IGroupMemberRemoveReq) => {
-  return request<{}>({
+export const groupMemberRemoveApi = (data: IGroupMemberRemoveReq) => {
+  return request<IGroupMemberRemoveRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/group/memberRemove`
@@ -65,8 +75,8 @@ export const removeGroupMemberApi = (data: IGroupMemberRemoveReq) => {
 /**
  * @description: 添加群成员
  */
-export const addGroupMemberApi = (data: IGroupMemberAddReq) => {
-  return request<{}>({
+export const groupMemberAddApi = (data: IGroupMemberAddReq) => {
+  return request<IGroupMemberAddRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/group/memberAdd`
@@ -74,13 +84,13 @@ export const addGroupMemberApi = (data: IGroupMemberAddReq) => {
 }
 
 /**
- * @description: 获取群组列表
+ * @description: 退出群组
  */
-export const getGroupListApi = (data) => {
-  return request<IGroupListRes>({
+export const quitGroupApi = (data: IGroupQuitReq) => {
+  return request<IGroupQuitRes>({
     method: 'POST',
     data,
-    url: `${baseUrl}/api/group/group_mine`
+    url: `${baseUrl}/api/group/quit`
   })
 }
 
@@ -88,7 +98,7 @@ export const getGroupListApi = (data) => {
  * @description: 更新群组信息
  */
 export const updateGroupInfoApi = (data: IUpdateGroupInfoReq) => {
-  return request<{}>({
+  return request<IUpdateGroupInfoRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/group/update`
@@ -96,9 +106,31 @@ export const updateGroupInfoApi = (data: IUpdateGroupInfoReq) => {
 }
 
 /**
+ * @description: 获取群组信息
+ */
+export const groupInfoApi = (data: IGroupInfoReq) => {
+  return request<IGroupInfoRes>({
+    method: 'POST',
+    data,
+    url: `${baseUrl}/api/group/groupInfo`
+  })
+}
+
+/**
+ * @description: 获取我加入的群组列表
+ */
+export const groupMineApi = (data: IGroupMineReq) => {
+  return request<IGroupMineRes>({
+    method: 'POST',
+    data,
+    url: `${baseUrl}/api/group/group_mine`
+  })
+}
+
+/**
  * @description: 获取群成员列表
  */
-export const getGroupMembersApi = (data: { groupId: string; page?: number; limit?: number }) => {
+export const getGroupMembersApi = (data: IGroupMemberListReq) => {
   return request<IGroupMemberListRes>({
     method: 'POST',
     data,
@@ -110,7 +142,7 @@ export const getGroupMembersApi = (data: { groupId: string; page?: number; limit
  * @description: 更新群成员角色
  */
 export const updateMemberRoleApi = (data: IUpdateMemberRoleReq) => {
-  return request<{}>({
+  return request<IUpdateMemberRoleRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/group/member/role`
@@ -120,8 +152,8 @@ export const updateMemberRoleApi = (data: IUpdateMemberRoleReq) => {
 /**
  * @description: 更新群公告
  */
-export const updateGroupAnnouncementApi = (data: IGroupAnnouncementReq) => {
-  return request<{}>({
+export const updateAnnouncementApi = (data: IGroupAnnouncementReq) => {
+  return request<IGroupAnnouncementRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/group/announcement`
@@ -129,10 +161,10 @@ export const updateGroupAnnouncementApi = (data: IGroupAnnouncementReq) => {
 }
 
 /**
- * @description: 邀请成员
+ * @description: 邀请新成员
  */
-export const inviteGroupMembersApi = (data: IGroupInviteReq) => {
-  return request<{}>({
+export const inviteMembersApi = (data: IGroupInviteReq) => {
+  return request<IGroupInviteRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/group/invite`
@@ -143,7 +175,7 @@ export const inviteGroupMembersApi = (data: IGroupInviteReq) => {
  * @description: 申请加入群组
  */
 export const joinGroupApi = (data: IGroupJoinReq) => {
-  return request<{}>({
+  return request<IGroupJoinRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/group/join`
@@ -153,8 +185,8 @@ export const joinGroupApi = (data: IGroupJoinReq) => {
 /**
  * @description: 更新群组设置
  */
-export const updateGroupSettingsApi = (data: IGroupSettingsReq) => {
-  return request<{}>({
+export const updateSettingsApi = (data: IGroupSettingsReq) => {
+  return request<IGroupSettingsRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/group/settings`
@@ -162,10 +194,10 @@ export const updateGroupSettingsApi = (data: IGroupSettingsReq) => {
 }
 
 /**
- * @description: 群成员禁言管理
+ * @description: 群禁言
  */
 export const groupMuteApi = (data: IGroupMuteReq) => {
-  return request<{}>({
+  return request<IGroupMuteRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/group/mute`
@@ -173,54 +205,10 @@ export const groupMuteApi = (data: IGroupMuteReq) => {
 }
 
 /**
- * @description: 上传群文件
- */
-export const uploadGroupFileApi = (data: IGroupFileUploadReq) => {
-  return request<IGroupFileUploadRes>({
-    method: 'POST',
-    data,
-    url: `${baseUrl}/api/group/file/upload`
-  })
-}
-
-/**
- * @description: 获取群文件列表
- */
-export const getGroupFileListApi = (data: IGroupFileListReq) => {
-  return request<IGroupFileListRes>({
-    method: 'GET',
-    data,
-    url: `${baseUrl}/api/group/file/list`
-  })
-}
-
-/**
- * @description: 删除群文件
- */
-export const deleteGroupFileApi = (data: IGroupFileDeleteReq) => {
-  return request<{}>({
-    method: 'POST',
-    data,
-    url: `${baseUrl}/api/group/file/delete`
-  })
-}
-
-/**
- * @description: 退出群组
- */
-export const quitGroupApi = (data: IGroupQuitReq) => {
-  return request<{}>({
-    method: 'POST',
-    data,
-    url: `${baseUrl}/api/group/quit`
-  })
-}
-
-/**
  * @description: 转让群主
  */
-export const transferGroupOwnerApi = (data: ITransferOwnerReq) => {
-  return request<{}>({
+export const transferOwnerApi = (data: ITransferOwnerReq) => {
+  return request<ITransferOwnerRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/group/transfer`
@@ -228,9 +216,9 @@ export const transferGroupOwnerApi = (data: ITransferOwnerReq) => {
 }
 
 /**
- * @description: 获取禁言成员列表
+ * @description: 群成员禁言列表
  */
-export const getGroupMuteListApi = (data: IGroupMuteListReq) => {
+export const groupMuteListApi = (data: IGroupMuteListReq) => {
   return request<IGroupMuteListRes>({
     method: 'GET',
     data,
@@ -239,24 +227,13 @@ export const getGroupMuteListApi = (data: IGroupMuteListReq) => {
 }
 
 /**
- * @description: 更新群内显示名称
+ * @description: 修改群内显示名称
  */
 export const updateDisplayNameApi = (data: IUpdateDisplayNameReq) => {
-  return request<{}>({
+  return request<IUpdateDisplayNameRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/group/member/displayName`
-  })
-}
-
-/**
- * @description: 获取群的基础信息
- */
-export const getGroupInfoApi = (data: IGroupInfoReq) => {
-  return request<IGroupInfoRes>({
-    method: 'POST',
-    data,
-    url: `${baseUrl}/api/group/groupInfo`
   })
 }
 

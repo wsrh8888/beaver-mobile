@@ -2,8 +2,8 @@
   <BeaverLayout
     title="发起群聊"
     :show-back="true"
-    :custom-before-height="52"
-    :custom-after-height="50"
+    :before-height="104"
+    :after-height="100"
     @back="goBack"
   >
     <!-- 搜索栏 -->
@@ -40,7 +40,7 @@
           @click="handleSelect(contact)"
         >
           <view class="contact-avatar">
-            <image :src="contact.avatar" mode="aspectFill" />
+            <BeaverImage :file-name="contact.fileName" mode="aspectFill" />
           </view>
           <view class="contact-info">
             <text class="contact-name">{{ contact.nickname }}</text>
@@ -74,7 +74,7 @@
             :key="contact.userId"
             class="selected-avatar"
           >
-            <image :src="contact.avatar" mode="aspectFill" />
+            <BeaverImage :file-name="contact.fileName" mode="aspectFill" />
           </view>
           <view v-if="selectedContacts.length > 3" class="more-avatars">
             +{{ selectedContacts.length - 3 }}
@@ -95,11 +95,13 @@
 </template>
 
 <script lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import BeaverLayout from '@/component/layout/layout.vue';
 import { useFriendStore } from '@/pinia/friend/friend';
-import { createGroupApi } from '@/api/group';
+import { groupCreateApi } from '@/api/group';
 import { useGroupStore } from '@/pinia/group/group';
+import BeaverImage from '@/component/image/image.vue';
+import Logger from '@/logger/logger';
 
 interface CreateGroupResponse {
   code: number;
@@ -111,7 +113,8 @@ interface CreateGroupResponse {
 export default {
   name: 'CreateGroup',
   components: {
-    BeaverLayout
+    BeaverLayout,
+    BeaverImage
   },
   setup() {
     const friendStore = useFriendStore();
@@ -207,7 +210,7 @@ export default {
       if (selectedContacts.value.length === 0) return;
       
       try {
-        const res = await createGroupApi({
+        const res = await groupCreateApi({
           name: selectedContacts.value.map(item => item.nickname).slice(0, 3).join() + '等人的群聊',
           userIdList: selectedContacts.value.map(item => item.userId)
         }) as CreateGroupResponse;
@@ -226,6 +229,14 @@ export default {
         });
         }
       } catch (error) {
+        const logger = new Logger('创建群组页面');
+        logger.error({
+          text: '创建群聊失败',
+          data: {
+            error: error instanceof Error ? error.message : String(error),
+            memberCount: selectedContacts.value.length
+          }
+        });
         console.error('创建群聊失败:', error);
         uni.showToast({
           title: '创建群聊失败，请重试',

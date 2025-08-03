@@ -1,29 +1,14 @@
 <template>
   <view class="page-layout">
     <!-- 背景装饰层 -->
-    <view 
-      v-if="showBackground" 
-      class="background-layer"
-      :class="backgroundType"
-      :style="{ 
-        height: backgroundHeight + 'px',
-        pointerEvents: 'none'
-      }"
-    ></view>
-    
+    <view v-if="showBackground" class="background-layer" :class="backgroundType" :style="{
+      height: backgroundHeight + 'rpx',
+      pointerEvents: 'none'
+    }"></view>
+  
     <!-- Header 组件 -->
-    <PageHeader
-      v-if="showHeader"
-      :mode="headerMode"
-      :title="title"
-      :left-icon="leftIcon"
-      :right-icon="rightIcon"
-      :show-back="showBack"
-      :background="headerBackground"
-      :fixed="headerFixed"
-      @back="handleBack"
-      @right-click="handleRightClick"
-    >
+    <PageHeader v-if="showHeader" :mode="headerMode" :title="title" :left-icon="leftIcon" :right-icon="rightIcon"
+      :show-back="showBack" :background="headerBackground" @back="handleGoBack">
       <template #left v-if="$slots.left">
         <slot name="left"></slot>
       </template>
@@ -32,53 +17,25 @@
       </template>
     </PageHeader>
 
-    <!-- 前置内容区域（如搜索栏、筛选器等） -->
-    <view 
-      v-if="$slots.before"
-      class="before-content"
-      :style="beforeContentStyle"
-    >
+    <!-- 前置内容区域 -->
+    <view v-if="$slots.before" class="before-content" :style="beforeContentStyle">
       <slot name="before"></slot>
     </view>
 
     <!-- 内容区域 -->
-    <view 
-      class="content-wrapper"
-      :class="contentClass"
-      :style="contentStyle"
-    >
+    <view class="content-wrapper" >
+
       <!-- 滚动内容 -->
-      <scroll-view
-        v-if="scrollable"
-        class="scroll-content"
-        :style="scrollStyle"
-        :scroll-y="scrollY"
-        :scroll-x="scrollX"
-        :scroll-top="scrollTop"
-        :scroll-left="scrollLeft"
-        :scroll-into-view="scrollIntoView"
-        :scroll-with-animation="scrollWithAnimation"
-        :enable-back-to-top="enableBackToTop"
-        :show-scrollbar="showScrollbar"
-        @scroll="handleScroll"
-        @scrolltolower="handleScrollToLower"
-        @scrolltoupper="handleScrollToUpper"
-      >
+      <scroll-view class="scroll-content" scroll-y="true" scroll-x="false"
+        scroll-top="0" scroll-left="0" scroll-into-view=""
+        scroll-with-animation="true" enable-back-to-top="true"
+        show-scrollbar="false" :style="scrollContentStyle">
         <slot></slot>
       </scroll-view>
-      
-      <!-- 非滚动内容 -->
-      <view v-else class="static-content">
-        <slot></slot>
-      </view>
     </view>
 
-    <!-- 后置内容区域（如底部操作栏、工具栏等） -->
-    <view 
-      v-if="$slots.after"
-      class="after-content"
-      :style="afterContentStyle"
-    >
+    <!-- 后置内容区域 -->
+    <view v-if="$slots.after" class="after-content" :style="afterContentStyle">
       <slot name="after"></slot>
     </view>
   </view>
@@ -98,29 +55,15 @@ export interface PageLayoutProps {
   rightIcon?: string;
   showBack?: boolean;
   headerBackground?: string;
-  headerFixed?: boolean;
-  
+
   // 背景相关
   showBackground?: boolean;
   backgroundType?: 'gradient' | 'solid' | 'none';
-  backgroundHeight?: number;
-  
-  // 内容区域相关
-  scrollable?: boolean;
-  scrollY?: boolean;
-  scrollX?: boolean;
-  scrollTop?: number;
-  scrollLeft?: number;
-  scrollIntoView?: string;
-  scrollWithAnimation?: boolean;
-  enableBackToTop?: boolean;
-  showScrollbar?: boolean;
-  
-  // 自定义样式
-  contentClass?: string;
-  customHeaderHeight?: number;
-  customBeforeHeight?: number;
-  customAfterHeight?: number;
+  backgroundHeight?: number; // rpx
+
+  // 高度配置 (rpx)
+  beforeHeight?: number;
+  afterHeight?: number;
 }
 
 export default {
@@ -135,7 +78,7 @@ export default {
     },
     headerMode: {
       type: String as () => 'fixed' | 'static' | 'transparent',
-      default: 'fixed'
+      default: 'static'
     },
     title: {
       type: String,
@@ -157,10 +100,6 @@ export default {
       type: String,
       default: 'transparent'
     },
-    headerFixed: {
-      type: Boolean,
-      default: true
-    },
     showBackground: {
       type: Boolean,
       default: false
@@ -171,189 +110,103 @@ export default {
     },
     backgroundHeight: {
       type: Number,
-      default: 120
+      default: 240 // 120px -> 240rpx
     },
-    scrollable: {
-      type: Boolean,
-      default: true
-    },
-    scrollY: {
-      type: Boolean,
-      default: true
-    },
-    scrollX: {
-      type: Boolean,
-      default: false
-    },
-    scrollTop: {
+    beforeHeight: {
       type: Number,
       default: 0
     },
-    scrollLeft: {
-      type: Number,
-      default: 0
-    },
-    scrollIntoView: {
-      type: String,
-      default: ''
-    },
-    scrollWithAnimation: {
-      type: Boolean,
-      default: true
-    },
-    enableBackToTop: {
-      type: Boolean,
-      default: true
-    },
-    showScrollbar: {
-      type: Boolean,
-      default: true
-    },
-    contentClass: {
-      type: String,
-      default: ''
-    },
-    customHeaderHeight: {
-      type: Number,
-      default: 0
-    },
-    customBeforeHeight: {
-      type: Number,
-      default: 0
-    },
-    customAfterHeight: {
+    afterHeight: {
       type: Number,
       default: 0
     }
   },
-  emits: ['back', 'right-click', 'scroll', 'scroll-to-lower', 'scroll-to-upper'],
+  emits: ['back'],
   setup(props, { emit, slots }) {
     const statusBarHeight = ref(0);
-    const headerHeight = ref(44); // 默认 header 高度
-    const systemInfo = ref<any>({});
+    const HEADER_CONTENT_HEIGHT = 88; // rpx，对应 PageHeader 组件中的 .header-content 高度
 
     // 获取系统信息
     const getSystemInfo = () => {
       try {
         const info = uni.getSystemInfoSync();
-        statusBarHeight.value = info.statusBarHeight || 0;
-        systemInfo.value = info;
+        const pxToRpxRatio = 750 / info.windowWidth; // 750rpx = windowWidth px
+        statusBarHeight.value = (info.statusBarHeight || 0) * pxToRpxRatio; // px -> rpx
       } catch (error) {
         console.error('获取系统信息失败:', error);
       }
     };
 
-    // 计算 header 总高度
-    const totalHeaderHeight = computed(() => {
-      if (!props.showHeader) return 0;
-      if (props.headerMode === 'static') return 0;
-      return statusBarHeight.value + (props.customHeaderHeight || headerHeight.value);
-    });
-
-    // 计算前置内容高度
-    const beforeContentHeight = computed(() => {
-      return props.customBeforeHeight || 0;
-    });
-
-    // 计算后置内容高度
-    const afterContentHeight = computed(() => {
-      return props.customAfterHeight || 0;
-    });
-
-    // 计算前置内容样式
+    // 前置内容样式
     const beforeContentStyle = computed(() => {
-      if (!slots.before) return {};
-      
       return {
-        top: totalHeaderHeight.value + 'px',
-        position: 'fixed' as const,
-        left: '0',
-        right: '0',
-        zIndex: '2',
-        backgroundColor: '#FFFFFF'
+        height: props.beforeHeight + 'rpx'
       };
     });
 
-    // 计算后置内容样式
+    // 后置内容样式
     const afterContentStyle = computed(() => {
-      if (!slots.after) return {};
-      
       return {
-        bottom: '0',
-        position: 'fixed' as const,
-        left: '0',
-        right: '0',
-        zIndex: '2',
-        backgroundColor: '#FFFFFF'
+        height: props.afterHeight + 'rpx'
       };
     });
 
-    // 计算滚动区域样式
-    const scrollStyle = computed(() => {
-      if (!props.scrollable) return {};
+    // 滚动内容样式
+    const scrollContentStyle = computed(() => {
+      const beforeHeight = props.beforeHeight; // rpx
+      const afterHeight = props.afterHeight; // rpx
+      const systemInfo = uni.getSystemInfoSync();
       
-      const top = totalHeaderHeight.value + beforeContentHeight.value;
-      const bottom = afterContentHeight.value;
-      const height = `calc(100vh - ${top}px${bottom ? ` - ${bottom}px` : ''})`;
+      // 使用更精确的单位换算
+      const pxToRpxRatio = 750 / systemInfo.windowWidth; // 750rpx = windowWidth px
+      const screenHeight = systemInfo.windowHeight * pxToRpxRatio; // px -> rpx
+      const safeAreaBottom = (systemInfo.safeAreaInsets?.bottom || 0) * pxToRpxRatio; // px -> rpx
       
-      return {
-        top: top + 'px',
-        height,
-        position: 'fixed' as const,
-        left: '0',
-        right: '0',
-        zIndex: '1'
-      };
-    });
-
-    // 计算内容区域样式
-    const contentStyle = computed(() => {
-      if (props.headerMode === 'static') {
-        return {
-          paddingTop: totalHeaderHeight.value + beforeContentHeight.value + 'px',
-          paddingBottom: afterContentHeight.value + 'px'
-        };
+      let contentHeight;
+      if (props.showHeader) {
+        // 显示header时，只需要减去header内容高度，因为windowHeight已经包含了状态栏
+        contentHeight = screenHeight - HEADER_CONTENT_HEIGHT - beforeHeight - afterHeight - safeAreaBottom - statusBarHeight.value;
+      } else {
+        // 不显示header时，不需要减去状态栏高度，因为windowHeight已经包含了
+        contentHeight = screenHeight - beforeHeight - afterHeight - safeAreaBottom;
       }
-      return {};
+      
+      console.log('计算详情:', {
+        screenHeight,
+        windowHeight: systemInfo.windowHeight,
+        windowWidth: systemInfo.windowWidth,
+        pxToRpxRatio,
+        statusBarHeight: statusBarHeight.value,
+        safeAreaBottom,
+        headerHeight: HEADER_CONTENT_HEIGHT,
+        beforeHeight,
+        afterHeight,
+        contentHeight,
+        totalSubtracted: props.showHeader ? 
+          HEADER_CONTENT_HEIGHT + beforeHeight + afterHeight + safeAreaBottom :
+          beforeHeight + afterHeight + safeAreaBottom
+      });
+
+      return {
+        height: contentHeight + 'rpx'
+      };
     });
 
-    // 事件处理
-    const handleBack = () => {
+
+    // 处理返回事件
+    const handleGoBack = () => {
       emit('back');
     };
 
-    const handleRightClick = () => {
-      emit('right-click');
-    };
-
-    const handleScroll = (e: any) => {
-      emit('scroll', e);
-    };
-
-    const handleScrollToLower = (e: any) => {
-      emit('scroll-to-lower', e);
-    };
-
-    const handleScrollToUpper = (e: any) => {
-      emit('scroll-to-upper', e);
-    };
-
-    // 初始化时获取系统信息
+    // 初始化
     getSystemInfo();
 
     return {
-      totalHeaderHeight,
-      beforeContentHeight,
-      afterContentHeight,
-      scrollStyle,
-      contentStyle,
+      statusBarHeight,
       beforeContentStyle,
       afterContentStyle,
-      handleBack,
-      handleRightClick,
-      handleScroll,
-      handleScrollToLower,
-      handleScrollToUpper
+      scrollContentStyle,
+      handleGoBack
     };
   }
 };
@@ -361,9 +214,12 @@ export default {
 
 <style lang="scss" scoped>
 .page-layout {
-  min-height: 100vh;
+  height: 100vh;
   position: relative;
   background-color: #F9FAFB;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* 背景装饰层 */
@@ -374,41 +230,44 @@ export default {
   right: 0;
   z-index: 0;
   pointer-events: none;
-  
+
   &.gradient {
-    background: linear-gradient(180deg, rgba(255,125,69,0.1) 0%, rgba(255,255,255,0) 100%);
+    background: linear-gradient(180deg, rgba(255, 125, 69, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
   }
-  
+
   &.solid {
     background-color: #F8F9FA;
   }
 }
 
+/* 状态栏占位 */
+.status-bar-placeholder {
+  width: 100%;
+  background-color: transparent;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
 /* 前置内容区域 */
 .before-content {
-  background-color: #FFFFFF;
-  border-bottom: 1px solid #EBEEF5;
+  flex-shrink: 0;
 }
 
 /* 后置内容区域 */
 .after-content {
-  background-color: #FFFFFF;
-  border-top: 1px solid #EBEEF5;
+  flex-shrink: 0;
 }
 
 /* 内容包装器 */
 .content-wrapper {
+  flex: 1;
   position: relative;
   z-index: 1;
 }
 
 /* 滚动内容 */
 .scroll-content {
-  background-color: transparent;
+  width: 100%;
+  box-sizing: border-box;
 }
-
-/* 静态内容 */
-.static-content {
-  min-height: 100vh;
-}
-</style> 
+</style>

@@ -1,7 +1,9 @@
-import type { IUserInfo } from '@/types/store/userInfo';
 import { defineStore } from 'pinia';
-import { getUserInfoApi, updateInfoApi } from '@/api/user';
-import { processAvatarUrl } from '@/utils/avatar';
+import type { IUserInfoRes, IUpdateInfoReq } from '@/types/ajax/user';
+import { userInfoApi, updateInfoApi } from '@/api/user';
+import { preloadFile } from '@/cache/file';
+import Logger from '@/logger/logger';
+const logger = new Logger('用户状态管理');
 
 /**
  * @description: 用户状态管理
@@ -12,12 +14,14 @@ export const useUserStore = defineStore('useUserStore', {
    */
   state: (): {
     /** 当前登录用户信息 */
-    userInfo: IUserInfo;
+    userInfo: IUserInfoRes;
   } => ({
     userInfo: {
       userId: '',
       nickName: '',
-      avatar: '',
+      fileName: '',
+      abstract: '',
+      gender: 0,
     }
   }),
 
@@ -29,51 +33,85 @@ export const useUserStore = defineStore('useUserStore', {
 
   actions: {
     /**
+     * @description: 预加载用户头像
+     */
+    async preloadUserAvatar() {
+      const logger = new Logger('用户状态管理');
+      try {
+        if (this.userInfo.fileName) {
+          console.log('预加载用户头像:', this.userInfo.fileName);
+          await preloadFile(this.userInfo.fileName);
+        }
+      } catch (error) {
+        logger.error({
+          text: '预加载用户头像失败',
+          data: {
+            error: error instanceof Error ? error.message : String(error),
+            fileName: this.userInfo.fileName
+          }
+        });
+        console.error('预加载用户头像失败:', error);
+      }
+    },
+
+    /**
      * @description: 初始化用户信息
      * @return {Promise<void>}
      * @throws {Error} 获取用户信息失败时抛出错误
      */
     async initUserInfoApi() {
+      const logger = new Logger('用户状态管理');
       try {
-        const res = await getUserInfoApi();
+        const res = await userInfoApi({});
         if (res.code === 0 && res.result) {
-          const userInfo = {
-            userId: res.result.userId,
-            nickName: res.result.nickName,
-            email: res.result.email,
-            gender: res.result.gender,
-            avatar: processAvatarUrl(res.result.avatar),
-          };
-          this.userInfo = userInfo;
+          this.userInfo = res.result;
+
+          // 预加载用户头像
+          await this.preloadUserAvatar();
         }
       } catch (error) {
+        logger.error({
+          text: '获取用户信息失败',
+          data: {
+            error: error instanceof Error ? error.message : String(error)
+          }
+        });
         console.error('获取用户信息失败:', error);
         throw error;
       }
     },
 
+
+
     /**
      * @description: 更新自己的个人信息
-     * @param {Partial<IUserInfo>} updates - 需要更新的用户信息字段
+     * @param {Partial<IUpdateInfoReq>} updates - 需要更新的用户信息字段
+     * @param {boolean} isUpdateApi - 是否调用接口更新
      * @return {Promise<boolean>} 更新是否成功
      */
-    async updateUserInfo(updates: Partial<IUserInfo>) {
-      try {
-        const res = await updateInfoApi(updates);
-        if (res.code === 0) {
-          const updatedUser = {
-            ...this.userInfo,
-            ...updates,
-            // 如果更新了头像，需要处理头像路径
-            avatar: updates.avatar ? processAvatarUrl(updates.avatar) : this.userInfo.avatar,
-          };
-          this.userInfo = updatedUser;
-          return true;
+    async updateUserInfo(updates: Partial<IUpdateInfoReq>, isUpdateApi: boolean = true) {
+      if (isUpdateApi) {
+        try {
+          const res = await updateInfoApi(updates);
+          if (res.code === 0) {
+            // 直接合并更新，保持类型安全
+            this.userInfo = { ...this.userInfo, ...updates };
+            return true;
+          }
+          return false;
+        } catch (error) {
+          logger.error({
+            text: '更新用户信息失败',
+            data: {
+              error: error instanceof Error ? error.message : String(error),
+              updates
+            }
+          });
+          console.error('更新用户信息失败:', error);
+          return false;
         }
-        return false;
-      } catch (error) {
-        console.error('更新用户信息失败:', error);
-        return false;
+      } else {
+        this.userInfo = { ...this.userInfo, ...updates };
       }
     },
 
@@ -85,8 +123,10 @@ export const useUserStore = defineStore('useUserStore', {
       this.userInfo = {
         userId: '',
         nickName: '',
-        avatar: '',
-      };
+        fileName: '',
+        abstract: '',
+        gender: 0,
+      }
     },
   },
 });

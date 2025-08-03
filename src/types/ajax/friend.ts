@@ -1,111 +1,124 @@
-export interface IValidInfo {
-  message: string;
-  avatar: string;
-  flag: string;
-  id: number;
-  nickname: string;
-  userId: string;
-  status: number;
-  createTime?: number;
+// 好友验证信息
+export interface IFriendValidInfo {
+  userId: string; // 用户Id
+  nickname: string; // 昵称
+  fileName: string; // 头像
+  message: string; // 附加消息
+  source: string; // 添加好友来源：email/qrcode
+  id: number; // 验证记录Id
+  flag: string; // send 发送者 receive 接收者
+  status: number; // 状态 0 未处理 1 同意 2 拒绝
+  createdAt: string; // 验证时间
 }
 
+// 好友验证列表响应
 export interface IValidListRes {
+  list: IFriendValidInfo[];
   count: number;
-  list: IValidInfo[];
 }
 
+// 好友列表响应
 export interface IFriendListRes {
   list: IFriendInfo[];
 }
 
+// 好友信息
 export interface IFriendInfo {
-  avatar: string;
-  conversationId: string;
-  isFriend: boolean;
+  userId: string;
   nickname: string;
+  fileName: string;
+  abstract: string;
   notice: string;
-  userId: string;
-  index?: number;
-}
-
-export interface IUserMapInfo {
-  avatar: string;
-  conversationId: string;
   isFriend: boolean;
-  nickname: string;
-  userId: string;
+  conversationId: string;
+  email: string;
+  source?: string; // 好友关系来源：email/qrcode
 }
 
-// 新增的请求和响应类型
+// 好友列表请求
 export interface IFriendListReq {
   page?: number;
   limit?: number;
 }
 
+// 好友信息请求
 export interface IFriendInfoReq {
   friendId: string;
 }
 
+// 添加好友请求
 export interface IAddFriendReq {
   friendId: string;
   verify?: string;
+  source: string; // 添加好友来源：email(邮箱搜索)/qrcode(扫码)
 }
 
+// 添加好友响应
 export interface IAddFriendRes {}
 
-export interface ISearchReq {
-  phone: string;
+// 删除好友请求
+export interface IFriendDeleteReq {
+  friendId: string;
 }
 
+// 删除好友响应
+export interface IFriendDeleteRes {}
+
+// 搜索请求
+export interface ISearchReq {
+  email: string;
+}
+
+// 搜索响应
 export interface ISearchRes {
   userId: string;
   nickname: string;
-  avatar: string;
+  fileName: string;
   abstract: string;
   notice: string;
   isFriend: boolean;
   conversationId: string;
+  email: string;
 }
 
-export interface IDeleteFriendReq {
-  friendId: string;
-}
-
-export interface IDeleteFriendRes {}
-
-export interface IValidStatusReq {
+// 好友验证状态请求
+export interface IFriendValidStatusReq {
   verifyId: number;
   status: number;
 }
 
-export interface IValidStatusRes {}
+// 好友验证状态响应
+export interface IFriendValidStatusRes {}
 
+// 验证列表请求
 export interface IValidListReq {
   page?: number;
   limit?: number;
 }
 
+// 修改备注请求
 export interface INoticeUpdateReq {
   notice: string;
   friendId: string;
 }
 
+// 修改备注响应
 export interface INoticeUpdateRes {}
 
+// 搜索验证信息请求
 export interface ISearchValidInfoReq {
   friendId: string;
 }
 
+// 搜索验证信息响应
 export interface ISearchValidInfoRes {
   validId: number;
 }
 
-export interface IResSearchUserInfo {
-  userId: string;
-  nickname: string;
-  avatar: string;
-  abstract: string;
-  notice: string;
-  isFriend: boolean;
-  conversationId: string;
-}
+// 兼容旧版本的接口名称
+export interface IValidInfo extends IFriendValidInfo {}
+export interface IValidStatusReq extends IFriendValidStatusReq {}
+export interface IValidStatusRes extends IFriendValidStatusRes {}
+export interface IDeleteFriendReq extends IFriendDeleteReq {}
+export interface IDeleteFriendRes extends IFriendDeleteRes {}
+export interface IResSearchUserInfo extends ISearchRes {}

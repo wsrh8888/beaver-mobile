@@ -46,7 +46,7 @@ export default {
 			default: 18
 		},
 		// 是否展示头像占位图
-		avatar: {
+		fileName: {
 			type: Boolean,
 			default: false
 		},

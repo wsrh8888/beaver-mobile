@@ -31,9 +31,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-
-export default defineComponent({
+export default {
   name: 'BeaverButton',
   props: {
     // 按钮类型
@@ -93,7 +91,7 @@ export default defineComponent({
       handleClick
     };
   }
-});
+};
 </script>
 
 <style lang="scss" scoped>

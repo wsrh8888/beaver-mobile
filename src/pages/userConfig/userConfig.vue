@@ -1,91 +1,51 @@
 <template>
-  <view class="container">
-    <!-- 导航栏 -->
-    <view class="navbar" :style="{ top: statusBarHeight + 'px' }">
-      <view class="back-button" @click="goBack">
-        <image src="@/static/img/common/arrow-back.svg" mode="aspectFit" class="back-icon"></image>
-      </view>
-      <text class="navbar-title">聊天详情</text>
-      <view class="navbar-placeholder"></view>
-    </view>
-
-    <!-- 滚动内容区域 -->
-    <scroll-view 
-      class="scroll-content" 
-      :style="{ 
-        top: statusBarHeight + 44 + 'px',
-        height: 'calc(100vh - ' + (statusBarHeight + 44) + 'px)'
-      }"
-      scroll-y="true"
-    >
-      <view class="content">
-        <!-- 用户信息卡片 -->
-        <view class="user-card">
-          <view class="user-avatar">
-            <image :src="getAvatarUrl(friendInfo.avatar)" mode="aspectFill" class="avatar-img"></image>
-            <view class="online-status" v-if="friendInfo.isOnline"></view>
-          </view>
-          <view class="user-info">
-            <text class="user-name">{{ friendInfo.nickname }}</text>
-            <text class="user-id">ID: {{ friendInfo.userId }}</text>
-          </view>
+  <BeaverLayout
+    title="聊天详情"
+    :show-back="true"
+    :scrollable="true"
+    :scroll-y="true"
+    :show-scrollbar="false"
+    @back="goBack"
+  >
+    <view class="content">
+      <!-- 用户信息卡片 -->
+      <view class="user-card">
+        <view class="user-avatar">
+          <image :src="getAvatarUrl(friendInfo.fileName)" mode="aspectFill" class="avatar-img"></image>
+          <view class="online-status" v-if="friendInfo.isOnline"></view>
         </view>
+        <view class="user-info">
+          <text class="user-name">{{ friendInfo.nickname }}</text>
+          <text class="user-id">ID: {{ friendInfo.userId }}</text>
+        </view>
+      </view>
 
-        <!-- 聊天设置 -->
-        <view class="settings-section">
-          <view class="section-title">聊天设置</view>
-          
-          <!-- 置顶聊天 -->
-          <view class="setting-item" @click="toggleTopChat">
-            <view class="setting-left">
-              <image src="@/static/img/userConfig/pin-icon.svg" mode="aspectFit" class="setting-icon"></image>
-              <text class="setting-text">置顶聊天</text>
-            </view>
-            <view class="setting-right">
-              <switch 
-                :checked="chatSettings.isTopChat" 
-                @change="toggleTopChat"
-                class="setting-switch"
-              />
-            </view>
-          </view>
-
+      <!-- 聊天设置 -->
+      <view class="settings-section">
+        <view class="section-title">聊天设置</view>
         
-
-          <!-- 聊天背景 -->
-          
-
-          <!-- 查找聊天记录 -->
-         
-        </view>
-
-        <!-- 聊天管理 -->
-        <view class="settings-section">
-          <view class="section-title">聊天管理</view>
-          
-          <!-- 清空聊天记录 -->
-         
-          <!-- 举报用户 -->
-          <view class="setting-item" @click="reportUser">
-            <view class="setting-left">
-              <image src="@/static/img/userConfig/report-icon.svg" mode="aspectFit" class="setting-icon"></image>
-              <text class="setting-text">举报用户</text>
-            </view>
-            <view class="setting-right">
-              <image src="@/static/img/common/arrow-right.svg" mode="aspectFit" class="arrow-icon"></image>
-            </view>
+        <!-- 置顶聊天 -->
+        <view class="setting-item" @click="toggleTopChat">
+          <view class="setting-left">
+            <image src="@/static/img/userConfig/pin-icon.svg" mode="aspectFit" class="setting-icon"></image>
+            <text class="setting-text">置顶聊天</text>
           </view>
-        </view>
-
-        <!-- 危险操作 -->
-        <view class="danger-section">
-          <view class="danger-item" @click="showDeleteConfirm">
-            <image src="@/static/img/userConfig/delete-icon.svg" mode="aspectFit" class="danger-icon"></image>
-            <text class="danger-text">删除好友</text>
+          <view class="setting-right">
+            <view class="toggle-switch" :class="{ active: isTopChat }" @click.stop="toggleTopChat">
+              <view class="toggle-slider"></view>
+            </view>
           </view>
         </view>
       </view>
-    </scroll-view>
+
+      <!-- 危险操作 -->
+      <view class="danger-section">
+        <view class="danger-item" @click="showDeleteConfirm">
+          <image src="@/static/img/userConfig/delete-icon.svg" mode="aspectFit" class="danger-icon"></image>
+          <text class="danger-text">删除好友</text>
+        </view>
+      </view>
+    </view>
 
     <!-- 删除确认弹窗 -->
     <view v-if="showDeleteModal" class="modal-overlay" @click="hideDeleteConfirm">
@@ -104,129 +64,117 @@
         </view>
       </view>
     </view>
-  </view>
+  </BeaverLayout>
 </template>
 
 <script lang="ts">
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useFriendStore } from '@/pinia/friend/friend';
-import { deleteFriendAPi } from '@/api/friend';
+import { useConversationStore } from '@/pinia/conversation/conversation';
+import { friendDeleteApi } from '@/api/friend';
 import { previewOnlineFileApi } from '@/api/file';
+import { pinnedChatApi } from '@/api/chat';
+import BeaverLayout from '@/component/layout/layout.vue';
+import Logger from '@/logger/logger';
 
 export default {
-  data() {
-    return {
-      statusBarHeight: uni.getSystemInfoSync().statusBarHeight || 0,
-      conversationId: '',
-      showDeleteModal: false,
-      chatSettings: {
-        isTopChat: false,
-        isMuted: false
-      }
-    };
+  components: {
+    BeaverLayout
   },
+  setup() {
+    // 响应式数据
+    const conversationId = ref('');
+    const showDeleteModal = ref(false);
 
-  computed: {
-    friendInfo() {
-      const friendStore = useFriendStore();
-      const info = friendStore.getFriendInfoById(this.conversationId) || {
+    // Store
+    const friendStore = useFriendStore();
+    const conversationStore = useConversationStore();
+
+    // 计算属性
+    const friendInfo = computed(() => {
+      const info = friendStore.getFriendByConversationId(conversationId.value) || {
         nickname: '未知用户',
         userId: '',
-        avatar: '',
+        fileName: '',
         isOnline: false
       };
       return {
         ...info,
         isOnline: (info as any).isOnline || false
       };
-    }
-  },
+    });
 
-  onLoad(option: any) {
-    if (option.id) {
-      this.conversationId = option.id;
-    }
-  },
+    // 置顶状态从 conversation store 获取
+    const isTopChat = computed(() => {
+      const info = conversationStore.getConversationInfo(conversationId.value);
+      return info ? !!info.is_top : false;
+    });
 
-  methods: {
-    getAvatarUrl(avatar: string) {
-      return previewOnlineFileApi(avatar);
-    },
+    // 生命周期
+    onLoad((option: any) => {
+      if (option.id) {
+        conversationId.value = option.id;
+      }
+    });
 
-    goBack() {
+    // 方法
+    const getAvatarUrl = (fileName: string) => {
+      return previewOnlineFileApi(fileName);
+    };
+
+    const goBack = () => {
+      console.error(conversationId.value, '1111111111111')
       uni.navigateBack();
-    },
+    };
 
-    viewProfile() {
-      uni.navigateTo({
-        url: `/pages/detail/detail?id=${this.friendInfo.userId}`
-      });
-    },
-
-    toggleTopChat() {
-      this.chatSettings.isTopChat = !this.chatSettings.isTopChat;
-      uni.showToast({
-        title: this.chatSettings.isTopChat ? '已置顶' : '已取消置顶',
-        icon: 'success'
-      });
-    },
-
-    toggleMute() {
-      this.chatSettings.isMuted = !this.chatSettings.isMuted;
-      uni.showToast({
-        title: this.chatSettings.isMuted ? '已开启免打扰' : '已关闭免打扰',
-        icon: 'success'
-      });
-    },
-
-    changeChatBackground() {
-      uni.showToast({
-        title: '功能开发中',
-        icon: 'none'
-      });
-    },
-
-    searchChatHistory() {
-      uni.showToast({
-        title: '功能开发中',
-        icon: 'none'
-      });
-    },
-
-    clearChatHistory() {
-      uni.showModal({
-        title: '清空聊天记录',
-        content: '确定要清空与该好友的聊天记录吗？',
-        success: (res) => {
-          if (res.confirm) {
-            uni.showToast({
-              title: '聊天记录已清空',
-              icon: 'success'
-            });
-          }
+    const toggleTopChat = () => {
+      const newStatus = !isTopChat.value;
+      
+      pinnedChatApi({
+        conversationId: conversationId.value,
+        isPinned: newStatus
+      }).then((res) => {
+        if (res.code === 0) {
+          // 更新本地 conversation store 状态
+          conversationStore.toggleTopChat(conversationId.value);
+          uni.showToast({
+            title: newStatus ? '已置顶' : '已取消置顶',
+            icon: 'success'
+          });
+        } else {
+          uni.showToast({
+            title: res.msg || '操作失败',
+            icon: 'none'
+          });
         }
+      }).catch((error) => {
+        const logger = new Logger('用户设置页面');
+        logger.error({
+          text: '置顶聊天失败',
+          data: {
+            error: error instanceof Error ? error.message : String(error),
+            conversationId: conversationId.value
+          }
+        });
+        uni.showToast({
+          title: '操作失败',
+          icon: 'none'
+        });
       });
-    },
+    };
 
-    reportUser() {
-      uni.showToast({
-        title: '功能开发中',
-        icon: 'none'
-      });
-    },
+    const showDeleteConfirm = () => {
+      showDeleteModal.value = true;
+    };
 
-    showDeleteConfirm() {
-      this.showDeleteModal = true;
-    },
+    const hideDeleteConfirm = () => {
+      showDeleteModal.value = false;
+    };
 
-    hideDeleteConfirm() {
-      this.showDeleteModal = false;
-    },
-
-    confirmDelete() {
-      deleteFriendAPi({
-        friendId: this.friendInfo.userId
+    const confirmDelete = () => {
+      friendDeleteApi({
+        friendId: friendInfo.value.userId
       }).then(() => {
         uni.showToast({
           title: '删除成功',
@@ -239,77 +187,40 @@ export default {
             animationDuration: 200
           });
         }, 1500);
-      }).catch(() => {
+      }).catch((error) => {
+        const logger = new Logger('用户设置页面');
+        logger.error({
+          text: '删除好友失败',
+          data: {
+            error: error instanceof Error ? error.message : String(error)
+          }
+        });
         uni.showToast({
           title: '删除失败',
           icon: 'none'
         });
       });
-      this.hideDeleteConfirm();
-    }
+      hideDeleteConfirm();
+    };
+
+    return {
+      conversationId,
+      showDeleteModal,
+      friendInfo,
+      isTopChat,
+      getAvatarUrl,
+      goBack,
+      toggleTopChat,
+      showDeleteConfirm,
+      hideDeleteConfirm,
+      confirmDelete
+    };
   }
 };
 </script>
 
 <style scoped>
-/* 基础样式 */
-.container {
-  height: 100vh;
-  background-color: #F9FAFB;
-  position: relative;
-}
-
-/* 导航栏 */
-.navbar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  height: 44px;
-  background: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  z-index: 100;
-}
-
-.back-button {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #F8F9FA;
-  border: none;
-  border-radius: 8px;
-}
-
-.back-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.navbar-title {
-  text-align: center;
-  font-size: 17px;
-  font-weight: 600;
-  color: #2D3436;
-  flex: 1;
-}
-
-.navbar-placeholder {
-  width: 32px;
-}
-
-/* 滚动内容区域 */
-.scroll-content {
-  position: fixed;
-  left: 0;
-  right: 0;
-  background-color: #F9FAFB;
-}
-
+/* 内容区域 */
 .content {
   padding: 16px;
   padding-bottom: 32px;
@@ -335,8 +246,8 @@ export default {
 }
 
 .avatar-img {
-  width: 64px;
-  height: 64px;
+  width: 100rpx;
+  height: 100rpx;
   border-radius: 16px;
   background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
 }
@@ -368,26 +279,6 @@ export default {
   font-size: 14px;
   color: #636E72;
   display: block;
-}
-
-.user-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: #F8F9FA;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.action-icon {
-  width: 20px;
-  height: 20px;
 }
 
 /* 设置区域 */
@@ -446,13 +337,35 @@ export default {
   align-items: center;
 }
 
-.setting-switch {
-  transform: scale(0.8);
+/* 自定义开关样式 */
+.toggle-switch {
+  width: 44px;
+  height: 24px;
+  background: #E1E8ED;
+  border-radius: 12px;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.arrow-icon {
-  width: 16px;
-  height: 16px;
+.toggle-switch.active {
+  background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
+}
+
+.toggle-slider {
+  width: 20px;
+  height: 20px;
+  background: #FFFFFF;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-switch.active .toggle-slider {
+  transform: translateX(20px);
 }
 
 /* 危险操作区域 */

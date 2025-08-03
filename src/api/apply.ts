@@ -1,4 +1,4 @@
-import { request } from '@/utils/request'
+import { request } from '@/utils/request/request'
 import { baseUrl } from '@/env.json'
 import type { IValidInfo, IValidListRes } from '@/types/ajax/friend'
 

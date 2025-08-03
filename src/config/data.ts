@@ -4,6 +4,10 @@ import Logo from '@/static/logo/logo.png'
 export const APP_CONFIG = {
   // 应用名称
   name: '海狸',
+
+  // 英语名称
+  englishName: 'beaver',
+
   // 应用描述
   description: '智能即时通讯应用',
   // 开发者信息

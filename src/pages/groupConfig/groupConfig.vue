@@ -1,24 +1,21 @@
 <template>
-  <view class="container">
-    <!-- 顶部渐变 -->
-    <view class="gradient-header"></view>
-    
-    <!-- 导航栏 -->
-    <view class="navbar">
-      <view class="back-button" @click="goBack">
-        <image src="@/static/img/common/arrow-back.svg" mode="aspectFit" />
-      </view>
-      <view class="navbar-title">群聊详情</view>
-    </view>
+  <BeaverLayout
+    title="群聊详情"
+    :show-back="true"
+    :scrollable="true"
+    :scroll-y="true"
+    :show-scrollbar="false"
+    @back="goBack"
+  >
     <!-- 顶部区域 -->
     <view class="header">
       <view class="group-info">
         <view class="group-avatar" @click="chooseAvatar">
-          <image class="avatar-img" :src="groupInfo?.avatar || ''" mode="aspectFill" />
+          <BeaverImage class="avatar-img" :fileName="groupInfo.fileName" mode="aspectFill" />
           <view v-if="isAdmin" class="edit-icon">更换</view>
         </view>
         <view class="group-text">
-          <text class="group-name">{{ groupInfo?.title }}</text>
+          <text class="group-name">{{ groupInfo.title }}</text>
         </view>
       </view>
     </view>
@@ -32,25 +29,24 @@
             <image src="@/static/img/groupSetting/members.svg" mode="aspectFit" />
             <text>群成员</text>
           </view>
-          <view class="members-count" @click="viewAllMembers">{{ groupInfo?.memberCount || 0 }}人</view>
+          <view class="members-count" @click="navigateToGroupMember('view')">{{ groupMembers.length || 0 }}人</view>
         </view>
         <view class="members-grid">
-          <!-- {{ groupMembers }} -->
           <view class="member-item" v-for="(member, index) in groupMembers" :key="index">
             <view class="member-avatar">
-              <image :src="member.avatar" mode="aspectFill" />
+              <BeaverImage :fileName="member.fileName" mode="aspectFill" />
             </view>
             <text class="member-name">{{ member.nickname }}</text>
           </view>
           
-          <view class="member-item" @click="addMember" v-if="isAdmin">
+          <view class="member-item" @click="navigateToGroupMember('add')" v-if="isAdmin">
             <view class="member-avatar add-member">
               <image src="@/static/img/groupSetting/add.svg" mode="aspectFit" />
             </view>
             <text class="member-name">添加</text>
           </view>
           
-          <view class="member-item" @click="removeMember" v-if="isAdmin">
+          <view class="member-item" @click="navigateToGroupMember('remove')" v-if="isAdmin">
             <view class="member-avatar remove-member">
               <image src="@/static/img/groupSetting/remove.svg" mode="aspectFit" />
             </view>
@@ -58,7 +54,7 @@
           </view>
         </view>
         
-        <view class="view-all" @click="viewAllMembers">
+        <view class="view-all" @click="navigateToGroupMember('view')">
           <text>查看全部成员</text>
           <image src="@/static/img/groupSetting/arrow.svg" mode="aspectFit" />
         </view>
@@ -77,82 +73,13 @@
             </view>
           </view>
           <view class="feature-right">
-            <text class="feature-value">{{ groupInfo?.name || '群聊' }}</text>
+            <text class="feature-value">{{ groupInfo.title }}</text>
             <view class="feature-arrow">
               <image src="@/static/img/groupSetting/arrow.svg" mode="aspectFit" />
             </view>
           </view>
         </view>
-        
-        <!-- <view class="feature-item" @click="groupSettings">
-          <view class="feature-left">
-            <view class="feature-icon">
-              <image src="@/static/img/groupSetting/settings.svg" mode="aspectFit" />
-            </view>
-            <view class="feature-info">
-              <text class="feature-title">群聊设置</text>
-              <text class="feature-desc">群公告、头像等设置</text>
-            </view>
-          </view>
-          <view class="feature-right">
-            <view class="feature-arrow">
-              <image src="@/static/img/groupSetting/arrow.svg" mode="aspectFit" />
-            </view>
-          </view>
-        </view> -->
-        
-        <!-- <view class="feature-item">
-          <view class="feature-left">
-            <view class="feature-icon">
-              <image src="@/static/img/groupSetting/notification.svg" mode="aspectFit" />
-            </view>
-            <view class="feature-info">
-              <text class="feature-title">消息免打扰</text>
-              <text class="feature-desc">关闭后不再接收通知</text>
-            </view>
-          </view>
-          <view class="feature-right">
-            <switch :checked="isMuted" @change="toggleMute" color="#FF7D45" />
-          </view>
-        </view> -->
       </view>
-      
-      <!-- 第二个功能列表 -->
-      <view class="card feature-list">
-        <!-- <view class="feature-item" @click="searchChat">
-          <view class="feature-left">
-            <view class="feature-icon">
-              <image src="@/static/img/groupSetting/search.svg" mode="aspectFit" />
-            </view>
-            <view class="feature-info">
-              <text class="feature-title">查找聊天记录</text>
-              <text class="feature-desc">搜索群内历史消息</text>
-            </view>
-          </view>
-          <view class="feature-right">
-            <view class="feature-arrow">
-              <image src="@/static/img/groupSetting/arrow.svg" mode="aspectFit" />
-            </view>
-          </view>
-        </view> -->
-        
-        <!-- <view class="feature-item" @click="reportGroup">
-          <view class="feature-left">
-            <view class="feature-icon">
-              <image src="@/static/img/groupSetting/report.svg" mode="aspectFit" />
-            </view>
-            <view class="feature-info">
-              <text class="feature-title">投诉</text>
-              <text class="feature-desc">对群聊进行投诉</text>
-            </view>
-          </view>
-          <view class="feature-right">
-            <view class="feature-arrow">
-              <image src="@/static/img/groupSetting/arrow.svg" mode="aspectFit" />
-            </view>
-          </view>
-        </view>-->
-      </view> 
     </view>
     
     <!-- 底部区域 -->
@@ -161,58 +88,63 @@
     </view>
 
     <!-- 修改群名称模态框 -->
-    <uv-popup ref="namePopup" mode="center" round="10" :overlay="true">
-      <view class="modal-content">
-        <view class="modal-header">
-          <view class="modal-title">修改群名称</view>
-          <view class="modal-close" @click="closeModal('name')">
-            <image src="@/static/img/common/close.svg" mode="aspectFit" />
-          </view>
-        </view>
-        <view class="form-group">
-          <input type="text" class="form-control" v-model="formData.name" placeholder="请输入群名称" maxlength="20" />
-          <view class="char-count"><text>{{ formData.name.length }}</text>/20</view>
-        </view>
-        <button class="btn-save" @click="saveGroupName">确定</button>
+    <BeaverDialog 
+      class=""
+      v-model="showNameModal" 
+      title="修改群名称"
+      :show-buttons="false"
+      size="medium"
+    >
+      <view class="form-group">
+        <input type="text" class="form-control" v-model="formData.name" placeholder="请输入群名称" maxlength="20" />
+        <view class="char-count"><text>{{ formData.name.length }}</text>/20</view>
       </view>
-    </uv-popup>
+      <button class="btn-save" @click="saveGroupName">确定</button>
+    </BeaverDialog>
 
-    <!-- 提示框 -->
-    <uv-toast ref="uToast" />
-  </view>
+
+  </BeaverLayout>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
 import { useGroupStore } from '@/pinia/group/group';
 import { useUserStore } from '@/pinia/user/user';
-import { openAlbum } from '@/utils/upload';
+import { openAlbum, CompressMode } from '@/utils/upload/upload';
 import type { IGroupInfo, IGroupMember } from '@/types/ajax/group';
 import { updateGroupInfoApi, quitGroupApi } from '@/api/group';
+import BeaverLayout from '@/component/layout/layout.vue';
+import BeaverImage from '@/component/image/image.vue';
+import BeaverDialog from '@/component/dialog/index.vue';
+import { showToast } from '@/component/toast';
+import Logger from '@/logger/logger';
 
-export default defineComponent({
+export default {
   name: 'GroupSetting',
+  components: {
+    BeaverLayout,
+    BeaverImage,
+    BeaverDialog
+  },
   setup() {
-    const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 0;
-    const isMuted = ref(false);
     const groupStore = useGroupStore();
     const userStore = useUserStore();
     const groupId = ref('');
-    const namePopup = ref();
-    const uToast = ref();
+    const showNameModal = ref(false);
     const formData = ref({
       name: ''
     });
 
     // 获取群组信息
-    const groupInfo = computed<IGroupInfo | undefined>(() => {
-      console.error(123123, groupStore.getGroupById(groupId.value))
+    const groupInfo = computed<IGroupInfo>(() => {
       return groupStore.getGroupById(groupId.value);
     });
 
-    const groupMembers= computed(()=>{
-      return groupStore.getMembersByGroupId(groupId.value)
-    })
+    const groupMembers = computed(() => {
+      return groupStore.getMembersByGroupId(groupId.value);
+    });
+
     // 判断是否是管理员或群主
     const isAdmin = computed(() => {
       const members = groupStore.getMembersByGroupId(groupId.value);
@@ -222,43 +154,38 @@ export default defineComponent({
 
     const getGroupsMembers = async () => {
       await groupStore.getGroupMembersApi(groupId.value);
-      
     };
 
-    onMounted(() => {
-      getGroupsMembers();
+    onLoad((option: any) => {
+      if (option.id) {
+        groupId.value = option.id;
+        getGroupsMembers();
+      }
     });
 
     const goBack = () => {
       uni.navigateBack();
     };
 
-    const viewAllMembers = () => {
-      uni.navigateTo({ url: `/pages/groupMember/groupMember?id=${groupId.value}&mode=view` });
-    };
-
-    const addMember = () => {
-      uni.navigateTo({ url: `/pages/groupMember/groupMember?id=${groupId.value}&mode=add` });
-    };
-
-    const removeMember = () => {
-      uni.navigateTo({ url: `/pages/groupMember/groupMember?id=${groupId.value}&mode=remove` });
+    // 合并成员跳转方法
+    const navigateToGroupMember = (mode: 'view' | 'add' | 'remove') => {
+      uni.navigateTo({ url: `/pages/groupMember/groupMember?id=${groupId.value}&mode=${mode}` });
     };
 
     const openModal = (type: string) => {
       if (!isAdmin.value) {
-        console.error('不是群聊管理员或群主，无法修改群名称');
+        showToast('不是群聊管理员或群主，无法修改群名称');
         return;
       }
       if (type === 'name') {
         formData.value.name = groupInfo.value?.title || '';
-        namePopup.value.open();
+        showNameModal.value = true;
       }
     };
 
     const closeModal = (type: string) => {
       if (type === 'name') {
-        namePopup.value.close();
+        showNameModal.value = false;
       }
     };
 
@@ -275,7 +202,7 @@ export default defineComponent({
         });
         if (result.code === 0) {
           showToast('修改成功');
-          closeModal('name');
+          showNameModal.value = false;
           groupStore.initGroupListApi();
         } else {
           showToast(result.msg || '修改失败');
@@ -290,10 +217,12 @@ export default defineComponent({
         return;
       }
       
-      openAlbum('album').then((result: any) => {
+      // 群头像：150KB，小尺寸高质量
+      const maxSize = 150 * 1024; // 150KB
+      openAlbum('album', 1, CompressMode.CUSTOM, maxSize).then((result: any) => {
         updateGroupInfoApi({
           groupId: groupId.value,
-          avatar: result.fileId
+          fileName: result.fileName
         }).then((res) => {
           if (res.code === 0) {
             showToast('修改成功');
@@ -305,23 +234,6 @@ export default defineComponent({
           showToast('修改失败');
         });
       });
-    };
-
-    const groupSettings = () => {
-      uni.navigateTo({ url: `/pages/groupSetting/settings?id=${groupId.value}` });
-    };
-
-    const toggleMute = (e: any) => {
-      isMuted.value = e.detail.value;
-      // TODO: 调用API更新群组免打扰状态
-    };
-
-    const searchChat = () => {
-      uni.navigateTo({ url: `/pages/groupSetting/search?id=${groupId.value}` });
-    };
-
-    const reportGroup = () => {
-      uni.navigateTo({ url: `/pages/groupSetting/report?id=${groupId.value}` });
     };
 
     const exitGroup = async () => {
@@ -338,7 +250,6 @@ export default defineComponent({
                   uni.navigateBack();
                 }, 1500);
               } else {
-                console.error('dasdasd', result.msg)
                 showToast(result.msg || '退出失败');
               }
             } catch (error) {
@@ -349,45 +260,25 @@ export default defineComponent({
       });
     };
 
-    const showToast = (message: string) => {
-      uToast.value.show({
-        title: message,
-        type: 'success',
-        duration: 2000
-      });
-    };
+
 
     return {
       groupMembers,
-      statusBarHeight,
-      isMuted,
       groupInfo,
       groupId,
       isAdmin,
       formData,
-      namePopup,
-      uToast,
+      showNameModal,
       goBack,
-      viewAllMembers,
-      addMember,
-      removeMember,
+      navigateToGroupMember,
       openModal,
       closeModal,
       saveGroupName,
       chooseAvatar,
-      groupSettings,
-      toggleMute,
-      searchChat,
-      reportGroup,
       exitGroup
     };
-  },
-  onLoad(options: any) {
-    if (options.id) {
-      this.groupId = options.id;
-    }
   }
-});
+};
 </script>
 
 <style lang="scss" scoped>
@@ -405,60 +296,6 @@ $success: #4CAF50;
 $warning: #FFC107;
 $error: #FF5252;
 $info: #2196F3;
-
-.container {
-  min-height: 100vh;
-  background-color: $background;
-  position: relative;
-}
-
-/* 页面顶部渐变 */
-.gradient-header {
-  height: 240rpx;
-  background: linear-gradient(180deg, rgba(255,125,69,0.1) 0%, rgba(255,255,255,0) 100%);
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 0;
-}
-
-.navbar {
-  display: flex;
-  align-items: center;
-  height: 88rpx;
-  padding: 0 32rpx;
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: $background;
-}
-
-.back-button {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  image {
-    width: 48rpx;
-    height: 48rpx;
-  }
-}
-
-.navbar-title {
-  flex: 1;
-  text-align: center;
-  font-size: 32rpx;
-  font-weight: 500;
-  color: $text-title;
-}
 
 .header {
   padding: 88rpx 0 0;
@@ -564,18 +401,19 @@ $info: #2196F3;
 }
 
 .members-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   padding: 24rpx 16rpx;
-  gap: 0;
 }
 
 .member-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 20%;
   margin-bottom: 16rpx;
-  padding: 0 8rpx;
+  padding: 0 4rpx;
+  box-sizing: border-box;
 }
 
 .member-avatar {
@@ -610,11 +448,13 @@ $info: #2196F3;
 .member-name {
   font-size: 20rpx;
   color: $text-body;
-  max-width: 100%;
+  width: 100%;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.2;
+  margin-top: 4rpx;
 }
 
 .add-member, .remove-member {
@@ -743,48 +583,12 @@ $info: #2196F3;
   box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.05);
 }
 
-/* 模态框样式 */
-.modal-content {
-  background-color: white;
-  border-radius: 32rpx;
-  padding: 40rpx;
-  width: 640rpx;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
 
-.modal-header {
-  text-align: center;
-  margin-bottom: 36rpx;
-  position: relative;
-}
-
-.modal-title {
-  font-size: 32rpx;
-  font-weight: 500;
-  color: $text-title;
-}
-
-.modal-close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 44rpx;
-  height: 44rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  image {
-    width: 36rpx;
-    height: 36rpx;
-  }
-}
 
 .form-group {
   margin-bottom: 36rpx;
   position: relative;
+
 }
 
 .form-control {

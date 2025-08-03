@@ -1,54 +1,157 @@
-import { request } from '@/utils/request'
+import { request } from '@/utils/request/request'
 import { baseUrl } from '@/env.json'
-import type { IChatHistoryRes, IConversationInfoRes, IRecentChatRes } from '@/types/ajax/chat'
+import type { 
+  ISendMsgReq,
+  ISendMsgRes,
+  IConversationInfoReq,
+  IConversationInfoRes,
+  IRecentChatListReq,
+  IRecentChatListRes,
+  IChatHistoryReq,
+  IChatHistoryRes,
+  IDeleteRecentReq,
+  IDeleteRecentRes,
+  IPinnedChatReq,
+  IPinnedChatRes,
+  IEditMessageReq,
+  IEditMessageRes,
+  IRecallMessageReq,
+  IRecallMessageRes,
+  IForwardMessageReq,
+  IForwardMessageRes
+} from '@/types/ajax/chat'
 import { getLocal } from '@/utils/local';
+
 /**
- * @description: 获取最新的聊天列表
+ * @description: 发送消息
  */
-export const getRecentChatListApi = () => {
-  return request<IRecentChatRes>({
-    method: 'GET',
-    url: `${baseUrl}/api/chat/getRecentChatList`
-  })
-}
-/**
- * @description: 创建会话
- */
-export const getcreateConversationApi = (data:object) => {
-  return request<IRecentChatRes>({
+export const sendMsgApi = (data: ISendMsgReq) => {
+  return request<ISendMsgRes>({
     method: 'POST',
-    data:data,
-    url: `${baseUrl}/api/chat/createConversation`
+    data,
+    url: `${baseUrl}/api/chat/sendMsg`
   })
 }
 
 /**
- * @description: 通过会话id获取最新的会话信息
+ * @description: 获取会话id
  */
-export const getRecentChatInfoApi = (data) => {
+export const conversationInfoApi = (data: IConversationInfoReq) => {
   return request<IConversationInfoRes>({
     method: 'POST',
-    data: data,
+    data,
     url: `${baseUrl}/api/chat/getConversationInfo`
   })
 }
+
 /**
- * @description: 获取与好友聊天记录
+ * @description: 获取最近会话列表
  */
-export const getChatHistoryApi = (data) => {
+export const recentChatListApi = (data: IRecentChatListReq) => {
+  return request<IRecentChatListRes>({
+    method: 'GET',
+    data,
+    url: `${baseUrl}/api/chat/getRecentChatList`
+  })
+}
+
+/**
+ * @description: 获取聊天记录
+ */
+export const chatHistoryApi = (data: IChatHistoryReq) => {
   return request<IChatHistoryRes>({
     method: 'POST',
-    data:data,
+    data,
     url: `${baseUrl}/api/chat/getChatHistory`
   })
 }
+
 /**
- * @description: 上传文件到七牛云  file
+ * @description: 删除某个最近会话
  */
-export const getuploadQiniuApi = (filePath:string): Promise<{fileId: string, name: string}> => {
+export const deleteRecentApi = (data: IDeleteRecentReq) => {
+  return request<IDeleteRecentRes>({
+    method: 'POST',
+    data,
+    url: `${baseUrl}/api/chat/deleteRecentChat`
+  })
+}
+
+/**
+ * @description: 置顶某个会话
+ */
+export const pinnedChatApi = (data: IPinnedChatReq) => {
+  return request<IPinnedChatRes>({
+    method: 'POST',
+    data,
+    url: `${baseUrl}/api/chat/pinnedChat`
+  })
+}
+
+/**
+ * @description: 编辑消息
+ */
+export const editMessageApi = (data: IEditMessageReq) => {
+  return request<IEditMessageRes>({
+    method: 'POST',
+    data,
+    url: `${baseUrl}/api/chat/edit`
+  })
+}
+
+/**
+ * @description: 撤回消息
+ */
+export const recallMessageApi = (data: IRecallMessageReq) => {
+  return request<IRecallMessageRes>({
+    method: 'POST',
+    data,
+    url: `${baseUrl}/api/chat/recall`
+  })
+}
+
+/**
+ * @description: 转发消息
+ */
+export const forwardMessageApi = (data: IForwardMessageReq) => {
+  return request<IForwardMessageRes>({
+    method: 'POST',
+    data,
+    url: `${baseUrl}/api/chat/forward`
+  })
+}
+
+/**
+ * @description: 上传文件到七牛云
+ */
+export const uploadQiniuApi = (filePath: string, fileName?: string): Promise<{
+  fileName: string, 
+  originalName: string,
+  fileInfo?: {
+    type: string,
+    imageFile?: {
+      width: number,
+      height: number
+    },
+    videoFile?: {
+      width: number,
+      height: number,
+      duration: number
+    },
+    audioFile?: {
+      duration: number
+    }
+  }
+}> => {
   return new Promise((resolve, reject) => {
+    // 构建URL，如果有文件名则作为查询参数传递
+    let uploadUrl = `${baseUrl}/api/file/uploadQiniu`;
+    if (fileName) {
+      uploadUrl += `?fileName=${encodeURIComponent(fileName)}`;
+    }
+    
     uni.uploadFile({
-      url: `${baseUrl}/api/file/uploadQiniu`, 
+      url: uploadUrl, 
       filePath: filePath, 
       name: 'file',
       header: {
@@ -62,8 +165,15 @@ export const getuploadQiniuApi = (filePath:string): Promise<{fileId: string, nam
       },
       fail: (err) => {
         console.error('上传失败', err);
-        reject(err);  // 上传失败，返回错误
+        reject(err);
       }
     });
   });
 };
+
+// 保留旧的接口名称以兼容现有代码
+export const getRecentChatListApi = recentChatListApi
+export const getcreateConversationApi = conversationInfoApi
+export const getRecentChatInfoApi = conversationInfoApi
+export const getChatHistoryApi = chatHistoryApi
+export const getuploadQiniuApi = uploadQiniuApi

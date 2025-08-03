@@ -18,11 +18,11 @@
 				<view class="profile-info" @click="navigateToProfile">
 					<view class="profile-avatar-wrapper">
 						<view class="profile-avatar">
-							<image v-if="userInfo.userId" :src="userInfo.avatar" mode="aspectFill" class="avatar-img"></image>
+							<beaver-image v-if="userInfo.userId" :file-name="userInfo.fileName" mode="aspectFill" class="avatar-img"></beaver-image>
 						</view>
 					</view>
 					<view class="profile-name">{{ userInfo.nickName || 'Beaver' }}</view>
-					<view class="profile-id">ID: {{ userInfo.userId || '未设置' }}</view>
+					<view class="profile-name">ID: {{ userInfo.userId || '未设置' }}</view>
 				</view>
 			</view>
 			
@@ -102,10 +102,14 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from 'vue';
+import { computed } from 'vue';
 import { useUserStore } from '@/pinia/user/user';
+import BeaverImage from '@/component/image/image.vue';
 
-export default defineComponent({
+export default {
+	components: {
+		BeaverImage
+	},
 	setup() {
 		const store = useUserStore();
 		const userInfo = computed(() => store.userInfo);
@@ -164,7 +168,7 @@ export default defineComponent({
 			navigateToUpdate
 		};
 	}
-});
+};
 </script>
 
 <style lang="scss" scoped>
@@ -290,7 +294,7 @@ export default defineComponent({
 }
 
 /* 头像内部高光 */
-.profile-avatar::after {
+.profile-fileName::after {
 	content: '';
 	position: absolute;
 	top: 0;
@@ -308,7 +312,7 @@ export default defineComponent({
 	line-height: 1.3;
 }
 
-.profile-id {
+.profile-name {
 	font-size: 26rpx;
 	color: rgba(255, 255, 255, 0.85);
 }

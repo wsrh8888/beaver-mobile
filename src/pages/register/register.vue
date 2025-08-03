@@ -77,12 +77,15 @@
 
 <script lang="ts">
 import { emailRegisterApi, getEmailCodeApi } from '@/api/auth';
-import { defineComponent, ref, computed } from 'vue';
+import { ref, computed } from 'vue';
 import { MD5 } from 'crypto-js';
 import { APP_CONFIG } from '@/config/data';
+import Logger from '@/logger/logger';
+import { showToast } from '@/component/toast';
 
-export default defineComponent({
+export default {
   setup() {
+    const logger = new Logger('注册页面');
     const emailAddress = ref('');
     const verificationCode = ref('');
     const password = ref('');
@@ -157,11 +160,15 @@ export default defineComponent({
             duration: 2000
           });
         }
-      }).catch(() => {
-        uni.showToast({
-          title: '发送失败',
-          duration: 2000
+      }).catch((error) => {
+        logger.error({
+          text: '发送验证码失败',
+          data: {
+            error: error?.message,
+            email: emailAddress.value
+          }
         });
+        showToast('发送失败', 2000);
       });
     };
 
@@ -186,11 +193,17 @@ export default defineComponent({
             animationDuration: 200
           });
         } else {
-          uni.showToast({
-            title: res.msg,
-            duration: 2000
-          });
+          showToast(res.msg, 2000);
         }
+      }).catch((error) => {
+        logger.error({
+          text: '注册失败',
+          data: {
+            error: error?.message,
+            email: emailAddress.value
+          }
+        });
+        showToast('注册失败，请重试', 2000, 'error');
       });
     };
     
@@ -241,7 +254,7 @@ export default defineComponent({
       APP_CONFIG
     };
   }
-});
+};
 </script>
 
 <style lang="scss" scoped>

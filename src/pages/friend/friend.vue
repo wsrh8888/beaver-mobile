@@ -1,37 +1,10 @@
 <template>
   <view class="container">
-    <!-- 顶部导航栏 -->
-    <view class="header" :style="{ top: statusBarHeight + 'px' }">
-      <text class="header-title">好友</text>
-      <view class="header-icon" @click="showDropdown = !showDropdown">
-        <image src="@/static/img/friend/plus-icon.svg" mode="aspectFit" class="icon-img" />
-      </view>
-    </view>
-    
-    <!-- 下拉菜单 -->
-    <view class="dropdown" :class="{ 'show': showDropdown }" :style="{ top: (statusBarHeight + 56) + 'px' }">
-      <view class="dropdown-item" @click="navigateTo('/pages/createGroup/createGroup')">
-        <view class="dropdown-icon">
-          <image src="@/static/img/friend/dropdown-group-icon.svg" mode="aspectFit" class="icon-img" />
-        </view>
-        <text>发起群聊</text>
-      </view>
-      <view class="dropdown-item" @click="navigateTo('/pages/searchFriend/searchFriend')">
-        <view class="dropdown-icon">
-          <image src="@/static/img/friend/add-friend-icon.svg" mode="aspectFit" class="icon-img" />
-        </view>
-        <text>添加好友</text>
-      </view>
-      <view class="dropdown-item" @click="scanCode">
-        <view class="dropdown-icon">
-          <image src="@/static/img/friend/scan-icon.svg" mode="aspectFit" class="icon-img" />
-        </view>
-        <text>扫一扫</text>
-      </view>
-    </view>
-    
-    <!-- 遮罩层 -->
-    <view class="mask" :class="{ 'show': showDropdown }" @click="showDropdown = false"></view>
+    <!-- 使用通用Header组件 -->
+    <PageHeader 
+      title="好友"
+      :show-back="false"
+    />
     
     <!-- 索引栏 -->
     <view class="index-bar">
@@ -50,19 +23,19 @@
     <scroll-view 
       scroll-y 
       class="content"
-      :style="{ top: statusBarHeight + 56 + 'px' }"
+      :style="{ top: statusBarHeight + 88 + 'rpx' }"
       :scroll-into-view="'section-' + currentIndex"
       @scroll="onScroll"
     >
       <!-- 搜索栏 -->
-      <view class="search-wrapper">
+      <!-- <view class="search-wrapper">
         <view class="search-bar" @click="navigateTo('/pages/searchFriend/searchFriend')">
           <view class="search-icon">
             <image src="@/static/img/friend/search-icon.svg" mode="aspectFit" class="icon-img" />
           </view>
           <text class="search-placeholder">搜索好友</text>
         </view>
-      </view>
+      </view> -->
       
       <!-- 快捷操作区 -->
       <view class="quick-actions">
@@ -101,7 +74,7 @@
           </view>
           <view class="friend-list">
             <view 
-              v-for="(friend, index) in friends" 
+              v-for="friend in friends" 
               :key="friend.userId"
               class="friend-item" 
               @click="handlecreateConversation(friend)"
@@ -109,35 +82,38 @@
               <view 
                 class="avatar"
               >
-                <image 
-                  v-if="friend.avatar" 
-                  :src="friend.avatar" 
+                <beaver-image 
+                  v-if="friend.fileName" 
+                  :file-name="friend.fileName" 
                   mode="aspectFill" 
                   class="avatar-img" 
                 />
                 <text v-else>{{ friend.nickname.charAt(0).toUpperCase() }}</text>
               </view>
               <view class="friend-content">
-                <view class="friend-name">{{ friend.nickname }}</view>
+                <view class="friend-name">{{ friend.notice || friend.nickname }}</view>
               </view>
             </view>
           </view>
         </view>
         
-        <!-- 底部标签栏占位 -->
-        <view class="tabbar-placeholder"></view>
       </view>
     </scroll-view>
   </view>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useFriendStore } from '@/pinia/friend/friend';
+import BeaverImage from '@/component/image/image.vue';
+import PageHeader from '@/component/header/header.vue';
 
-export default defineComponent({
+export default {
+  components: {
+    BeaverImage,
+    PageHeader
+  },
   setup() {
-    const showDropdown = ref(false);
     const currentIndex = ref('A');
     const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 0;
     
@@ -150,7 +126,6 @@ export default defineComponent({
     // 动态计算索引列表
     const indexList = computed(() => {
       const letters = ['↑'];
-      console.error('213123', friendList.value)
       // 从好友列表中获取所有的首字母并去重
       const uniqueLetters = [...new Set(
         friendList.value.map(friend => {
@@ -207,27 +182,8 @@ export default defineComponent({
       }
     };
 
-    // 扫描二维码
-    const scanCode = () => {
-      showDropdown.value = false;
-      uni.scanCode({
-        success: (res) => {
-          try {
-            const data = JSON.parse(res.result);
-            // 处理扫码结果
-          } catch (e) {
-            uni.showToast({
-              title: '无效的二维码',
-              icon: 'none'
-            });
-          }
-        }
-      });
-    };
-
     // 页面导航
     const navigateTo = (url: string) => {
-      showDropdown.value = false;
       uni.navigateTo({
         url,
         animationType: 'slide-in-right',
@@ -251,19 +207,17 @@ export default defineComponent({
 
     return {
       statusBarHeight,
-      showDropdown,
       currentIndex,
       indexList,
       friendList,
       friendsGroupedByLetter,
       scrollToSection,
-      scanCode,
       navigateTo,
       handlecreateConversation,
       onScroll
     };
   }
-});
+}
 </script>
 
 <style lang="scss" scoped>
@@ -286,36 +240,7 @@ export default defineComponent({
   min-height: 100vh;
 }
 
-/* 顶部导航栏 */
-.header {
-  height: 56px;
-  width: 100%;
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  background: #FFFFFF;
-}
 
-.header-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #2D3436;
-}
-
-.header-icon {
-  width: 48rpx;
-  height: 48rpx;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FF7D45;
-}
 
 /* 内容区域 */
 .content {
@@ -418,7 +343,6 @@ export default defineComponent({
 /* 好友列表 */
 .friend-list-container {
   position: relative;
-  padding-bottom: calc(env(safe-area-inset-bottom) + 100rpx);
 }
 
 .friend-list {
@@ -461,7 +385,7 @@ export default defineComponent({
   margin-right: 16px;
 }
 
-.avatar::before {
+.fileName::before {
   content: '';
   position: absolute;
   top: 0;
@@ -518,7 +442,7 @@ export default defineComponent({
   background: #F9FAFB;
   margin-bottom: 10px;
   border-radius: 12px;
-  margin: 0 16px 10px;
+  margin: 0 10px;
 }
 
 .quick-action-item {
@@ -548,72 +472,7 @@ export default defineComponent({
   color: #636E72;
 }
 
-/* 下拉菜单 */
-.dropdown {
-  position: fixed;
-  right: 16px;
-  background: white;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-  border-radius: 12px;
-  width: 160px;
-  overflow: hidden;
-  z-index: 200;
-  display: none;
-  opacity: 0;
-  transform: translateY(-10px);
-  transform-origin: top right;
-  transition: opacity 0.2s cubic-bezier(0, 0, 0.2, 1), transform 0.2s cubic-bezier(0, 0, 0.2, 1);
-}
 
-.dropdown.show {
-  display: block;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.dropdown-item {
-  height: 44px;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  color: #2D3436;
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.dropdown-item:active {
-  background-color: #F9FAFB;
-}
-
-.dropdown-icon {
-  width: 24px;
-  height: 24px;
-  margin-right: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FF7D45;
-}
-
-/* 遮罩层 */
-.mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.2);
-  z-index: 150;
-  display: none;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.mask.show {
-  display: block;
-  opacity: 1;
-}
 
 /* 底部占位 */
 .tabbar-placeholder {

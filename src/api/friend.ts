@@ -1,45 +1,30 @@
-import { request } from '@/utils/request'
+import { request } from '@/utils/request/request'
 import { baseUrl } from '@/env.json'
-import type { IAddFriend, ISearchUser, IResSearchUserInfo } from '@/types/friend/friend'
-import type { IFriendInfo, IFriendListRes, IFriendListReq, IAddFriendReq, IAddFriendRes } from '@/types/ajax/friend'
+import type { 
+  IFriendInfo, 
+  IFriendListRes, 
+  IFriendListReq, 
+  IAddFriendReq, 
+  IAddFriendRes,
+  IFriendDeleteReq,
+  IFriendDeleteRes,
+  IFriendValidStatusReq,
+  IFriendValidStatusRes,
+  IValidListReq,
+  IValidListRes,
+  IFriendInfoReq,
+  INoticeUpdateReq,
+  INoticeUpdateRes,
+  ISearchReq,
+  ISearchRes,
+  ISearchValidInfoReq,
+  ISearchValidInfoRes
+} from '@/types/ajax/friend'
 
 /**
- * @description: 获取好友列表
+ * @description: 添加好友
  */
-export const getFriendListApi = (data: IFriendListReq) => {
-  return request<IFriendListRes>({
-    method: 'GET',
-    data: data,
-    url: `${baseUrl}/api/friend/friend_list`
-  })
-}
-
-/**
- * @description: 获取好友信息
- */
-export const getFriendInfoApi = (data) => {
-  return request<IFriendInfo>({
-    data: data,
-    method: 'GET',
-    url: `${baseUrl}/api/friend/friend_info`
-  })
-}
-
-/**
- * @description: 搜索好友
- */
-export const getSearchFriendApi = (data: ISearchUser) => {
-  return request<IResSearchUserInfo>({
-    method: 'GET',
-    data: data,
-    url: `${baseUrl}/api/friend/search`
-  })
-}
-
-/**
- * @description: 申请添加好友
- */
-export const applyAddFriendApi = (data: IAddFriendReq) => {
+export const addFriendApi = (data: IAddFriendReq) => {
   return request<IAddFriendRes>({
     data: data,
     method: 'POST',
@@ -48,10 +33,10 @@ export const applyAddFriendApi = (data: IAddFriendReq) => {
 }
 
 /**
- * @description: 校验好友通过
+ * @description: 好友校验状态
  */
-export const valiFrienddAPi = (data: any) => {
-  return request<{}>({
+export const userValidStatusApi = (data: IFriendValidStatusReq) => {
+  return request<IFriendValidStatusRes>({
     data: data,
     method: 'POST',
     url: `${baseUrl}/api/friend/valid`
@@ -61,26 +46,78 @@ export const valiFrienddAPi = (data: any) => {
 /**
  * @description: 删除好友
  */
-export const deleteFriendAPi = (data: any) => {
-  return request<{}>({
-    data: data,
-    method: 'DELETE',
-    url: `${baseUrl}/api/friend/delete`
-  })
-}
-
-export const updateRemarkNameApi = (data: any) => {
-  return request<{}>({
+export const friendDeleteApi = (data: IFriendDeleteReq) => {
+  return request<IFriendDeleteRes>({
     data: data,
     method: 'POST',
-    url: `${baseUrl}/api/friend/update_remark_name`
+    url: `${baseUrl}/api/friend/delete`
   })
 }
 
-export const deleteFriendApi = (data: any) => {
-  return request<{}>({
+/**
+ * @description: 好友列表
+ */
+export const friendListApi = (data: IFriendListReq) => {
+  return request<IFriendListRes>({
+    method: 'GET',
     data: data,
-    method: 'DELETE',
-    url: `${baseUrl}/api/friend/delete`
+    url: `${baseUrl}/api/friend/friend_list`
+  })
+}
+
+/**
+ * @description: 好友校验列表
+ */
+export const validListApi = (data: IValidListReq) => {
+  return request<IValidListRes>({
+    data: data,
+    method: 'POST',
+    url: `${baseUrl}/api/friend/valid_list`
+  })
+}
+
+/**
+ * @description: 获取好友信息
+ */
+export const friendInfoApi = (data: IFriendInfoReq) => {
+  return request<IFriendInfo>({
+    data: data,
+    method: 'GET',
+    url: `${baseUrl}/api/friend/friend_info`
+  })
+}
+
+/**
+ * @description: 修改好友备注
+ */
+export const noticeUpdateApi = (data: INoticeUpdateReq) => {
+  return request<INoticeUpdateRes>({
+    data: data,
+    method: 'POST',
+    url: `${baseUrl}/api/friend/update_notice`
+  })
+}
+
+
+
+/**
+ * @description: 搜索好友
+ */
+export const searchApi = (data: ISearchReq) => {
+  return request<ISearchRes>({
+    method: 'GET',
+    data: data,
+    url: `${baseUrl}/api/friend/search`
+  })
+}
+
+/**
+ * @description: 搜索校验好友信息
+ */
+export const searchValidInfoApi = (data: ISearchValidInfoReq) => {
+  return request<ISearchValidInfoRes>({
+    data: data,
+    method: 'POST',
+    url: `${baseUrl}/api/friend/searchValidInfo`
   })
 }

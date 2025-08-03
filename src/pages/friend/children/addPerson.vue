@@ -42,11 +42,11 @@
 </template>
 <script lang="ts">
 	import { defineComponent, ref } from "vue";
-	import { showMsg } from '@/utils/Toast';
+	// import { showMsg } from '@/utils/Toast';
 	import {
-		getFriendInfoApi,
+		friendListApi,
 		getAddFriendApi,
-		getSearchFriendApi,
+		searchApi,
 	} from "@/api/friend";
 	import type { IResSearchUserInfo } from "@/types/friend/friend";
 	import { APP_CONFIG } from '@/config/data';
@@ -57,7 +57,7 @@
 			const selectTab = ref(0)
 			const userInfo = ref<IResSearchUserInfo>();
 			const getFriendInfo = () => {
-				getSearchFriendApi({ phone: personNumber.value }).then((res) => {
+				searchApi({ phone: personNumber.value }).then((res) => {
 					if (res.code === 0) {
 						userInfo.value = res.result;
 					}
@@ -76,7 +76,7 @@
 			const confirmAddPerson = (userInfo)=>{
 				getAddFriendApi({friendId: userInfo.userId,verify:"userInfo"}).then(res=>{
 					if(res.code === 0){
-						showMsg('添加成功');
+						// showMsg('添加成功');
 					}
 				})
 			}

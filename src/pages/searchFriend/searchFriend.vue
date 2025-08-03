@@ -3,7 +3,6 @@
     <BeaverLayout
       title="添加好友"
       :show-background="false"
-      header-mode="fixed"
       @back="handleClickGoBack"
     >
       <!-- 主内容区域 -->
@@ -44,73 +43,72 @@
         <!-- 搜索结果状态 -->
         <view class="state-result" :class="{ 'active': showResult }">
           <view class="search-result show fade-in">
-            <view class="result-card">
+            <view class="result-card" @click="goToDetail">
               <view class="user-profile">
                 <view class="user-avatar">
-                  <image :src="searchResult.avatar" mode="aspectFill" />
+                  <BeaverImage :fileName="searchResult.fileName" mode="aspectFill" />
                 </view>
                 <view class="user-info">
                   <text class="user-name">{{ searchResult.nickname }}</text>
                   <text class="user-id">ID: {{ searchResult.userId }}</text>
                 </view>
               </view>
-            </view>
-            <view class="result-actions">
-              <input type="text" class="verification-input" v-model="verificationMessage" placeholder="请输入验证消息..." />
-              <button class="btn btn-primary" @click="sendFriendRequest">添加好友</button>
+              <view class="view-detail-hint">
+                <text>点击查看详情</text>
+                <image src="@/static/img/searchFriend/arrow-right-icon.svg" mode="aspectFit" class="arrow-icon" />
+              </view>
             </view>
           </view>
         </view>
       </view>
     </BeaverLayout>
 
-    <!-- 提示框 -->
-    <view class="toast" :class="{ 'show': showToast }">{{ toastMessage }}</view>
+
   </view>
 </template>
 
 <script lang="ts">
-import { ref } from 'vue';
-import { BeaverLayout } from '@/component';
-import { getSearchFriendApi, applyAddFriendApi } from '@/api/friend';
-import { previewOnlineFileApi } from '@/api/file';
+import { ref, computed } from 'vue';
+import BeaverLayout from '@/component/layout/layout.vue';
+import BeaverImage from '@/component/image/image.vue';
+import { addFriendApi, searchApi } from '@/api/friend';
+import Logger from '@/logger/logger';
+import { showToast } from '@/component/toast';
+import type { ISearchRes } from '@/types/ajax/friend';
 
 interface SearchUserInfo {
   userId: string;
   nickname: string;
-  avatar: string;
+  fileName: string;
   phone: string;
 }
 
 export default {
   name: 'SearchFriend',
   components: {
-    BeaverLayout
+    BeaverLayout,
+    BeaverImage
   },
   setup() {
+    const logger = new Logger('搜索好友页面');
     const searchQuery = ref('');
     const searchResults = ref<SearchUserInfo[]>([]);
     const isLoading = ref(false);
     const showResult = ref(false);
     const verificationMessage = ref('我是你的好友');
-    const showToast = ref(false);
-    const toastMessage = ref('');
-
-    const searchResult = ref({
+    const searchResult = ref<ISearchRes>({
       userId: '',
       nickname: '',
-      avatar: '',
-      bio: '',
-      location: '',
+      fileName: '',
+      abstract: '',
+      notice: '',
+      isFriend: false,
+      conversationId: '',
+      email: ''
     });
 
     const displayToast = (message: string) => {
-      toastMessage.value = message;
-      showToast.value = true;
-      
-      setTimeout(() => {
-        showToast.value = false;
-      }, 3000);
+      showToast(message, 3000, 'none');
     };
 
     // 邮箱格式验证
@@ -128,21 +126,22 @@ export default {
         }
         isLoading.value = true;
         try {
-          const res = await getSearchFriendApi({ email: searchQuery.value });
-          if (res.code === 0 && res.result) {
-            searchResult.value = {
-              userId: res.result.userId || '',
-              nickname: res.result.nickname || '',
-              avatar: previewOnlineFileApi(res.result.avatar),
-              bio: res.result.Abstract || '',
-              location: '',
-            };
+          const res = await searchApi({ email: searchQuery.value });
+          if (res.code === 0) {
+            searchResult.value = res.result;
             showResult.value = true;
             displayToast('搜索成功');
           } else {
             displayToast('未找到相关用户');
           }
-                } catch (error) {
+        } catch (error) {
+          logger.error({
+            text: '搜索用户失败',
+            data: {
+              error: error instanceof Error ? error.message : String(error),
+              email: searchQuery.value
+            }
+          });
           console.error('Search failed:', error);
           displayToast('搜索失败，请稍后再试');
         } finally {
@@ -185,9 +184,10 @@ export default {
     };
 
     const sendFriendRequest = () => {
-      applyAddFriendApi({
+      addFriendApi({
         friendId: searchResult.value.userId,
-        verify: verificationMessage.value
+        verify: verificationMessage.value,
+        source: 'email'
       }).then((res) => {
         if (res.code === 0) {
           displayToast('好友请求发送成功');
@@ -197,8 +197,21 @@ export default {
           displayToast(res.msg || '发送失败');
         }
       }).catch((error) => {
+        logger.error({
+          text: '发送好友请求失败',
+          data: {
+            error: error instanceof Error ? error.message : String(error),
+            friendId: searchResult.value.userId
+          }
+        });
         console.error('发送好友请求失败:', error);
         displayToast('发送失败，请稍后再试');
+      });
+    };
+
+    const goToDetail = () => {
+      uni.navigateTo({
+        url: `/pages/detail/detail?id=${searchResult.value.userId}&source=email`
       });
     };
 
@@ -209,14 +222,13 @@ export default {
       showResult,
       verificationMessage,
       searchResult,
-      showToast,
-      toastMessage,
       performSearch,
       handleClickGoBack,
       handleClickUser,
       scanCode,
       navigateToContacts,
-      sendFriendRequest
+      sendFriendRequest,
+      goToDetail
     };
   }
 };
@@ -463,6 +475,22 @@ export default {
   border-top: 1rpx solid #EBEEF5;
 }
 
+.view-detail-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx 0;
+  color: #FF7D45;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.arrow-icon {
+  width: 24rpx;
+  height: 24rpx;
+  margin-left: 8rpx;
+}
+
 .verification-input {
   width: 100%;
   height: 80rpx;
@@ -544,23 +572,5 @@ export default {
   height: 100%;
 }
 
-/* 提示框 */
-.toast {
-  position: fixed;
-  bottom: 140rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 24rpx 40rpx;
-  background-color: rgba(0, 0, 0, 0.8);
-  color: white;
-  border-radius: 40rpx;
-  font-size: 28rpx;
-  opacity: 0;
-  transition: opacity 0.3s;
-  z-index: 1000;
-}
 
-.toast.show {
-  opacity: 1;
-}
 </style>

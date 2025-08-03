@@ -5,7 +5,6 @@
       :show-background="true"
       background-type="gradient"
       :background-height="120"
-      header-mode="fixed"
       @back="goBack"
     >
       <view class="content">
@@ -13,6 +12,14 @@
         <view class="settings-card">
           <view class="setting-item" @click="handleClickItem(1)">
             <text class="setting-title">账号与安全</text>
+            <image src="@/static/img/setting/arrow-right.svg" class="arrow-icon" mode="aspectFit" />
+          </view>
+        </view>
+
+        <!-- 主题设置 -->
+        <view class="settings-card">
+          <view class="setting-item" @click="handleClickItem(5)">
+            <text class="setting-title">主题设置</text>
             <image src="@/static/img/setting/arrow-right.svg" class="arrow-icon" mode="aspectFit" />
           </view>
         </view>
@@ -55,34 +62,24 @@
       @cancel="handleCancel"
     />
 
-    <!-- Toast组件 -->
-    <BeaverToast
-      v-model="showToast"
-      :message="toastMessage"
-      :type="toastType"
-      position="center"
-      :duration="2000"
-    />
+
   </view>
 </template>
 
 <script lang="ts">
 import { ref } from 'vue';
-import { BeaverLayout, BeaverDialog, BeaverToast } from '@/component';
+import { BeaverLayout, BeaverDialog } from '@/component';
+import { showToast } from '@/component/toast';
 import { APP_CONFIG } from '@/config/data';
 
 export default {
   name: 'Setting',
   components: {
     BeaverLayout,
-    BeaverDialog,
-    BeaverToast
+    BeaverDialog
   },
   setup() {
     const showDialog = ref(false);
-    const showToast = ref(false);
-    const toastMessage = ref('');
-    const toastType = ref<'default' | 'success' | 'warning' | 'error'>('default');
 
     const goBack = () => {
       uni.navigateBack();
@@ -102,6 +99,9 @@ export default {
         case 4:
           uni.navigateTo({ url: '/pages/update/update' });
           break;
+        case 5:
+          uni.navigateTo({ url: '/pages/theme/theme' });
+          break;
       }
     };
 
@@ -116,9 +116,7 @@ export default {
       // WsManager.disconnect();
       
       // 显示成功提示
-      toastMessage.value = '已退出登录';
-      toastType.value = 'success';
-      showToast.value = true;
+      showToast('已退出登录', 2000, 'success');
       
       // 延迟跳转，检查当前页面路径避免重复导航
       setTimeout(() => {
@@ -138,9 +136,6 @@ export default {
 
     return {
       showDialog,
-      showToast,
-      toastMessage,
-      toastType,
       goBack,
       handleClickItem,
       showExitDialog,

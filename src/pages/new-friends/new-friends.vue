@@ -38,12 +38,15 @@
         :style="{ animationDelay: index * 0.05 + 's' }"
       >
         <view class="request-avatar">
-          <image :src="getAvatarUrl(item.avatar)" mode="aspectFill"></image>
+          <BeaverImage :fileName="item.fileName" mode="aspectFill" />
         </view>
         <view class="request-content">
-          <view class="request-name">{{ item.nickname }}</view>
-          <view class="request-message">{{ item.message || '请求加为好友' }}</view>
-          <view class="request-meta">{{ item.createTime }}</view>
+          <view class="request-header">
+            <view class="request-name" :title="item.nickname">{{ item.nickname }}</view>
+            <view class="request-source" v-if="item.source">{{ getSourceText(item.source) }}</view>
+          </view>
+          <view class="request-message" :title="item.message || '请求加为好友'">{{ item.message || '请求加为好友' }}</view>
+          <view class="request-meta">{{ item.createdAt }}</view>
         </view>
         <view class="request-actions">
           <template v-if="item.flag === 'receive'">
@@ -96,28 +99,29 @@
     </view>
 
     <!-- 提示框 -->
-    <uv-toast ref="uToast" />
   </BeaverLayout>
 </template>
 
 <script lang="ts">
 import { ref, computed } from 'vue';
 import { getFriendValidListApi } from '@/api/apply';
-import { valiFrienddAPi } from '@/api/friend';
+import { userValidStatusApi } from '@/api/friend';
 import { previewOnlineFileApi } from '@/api/file';
 import type { IValidInfo } from '@/types/ajax/friend';
 import BeaverLayout from '@/component/layout/layout.vue';
+import BeaverImage from '@/component/image/image.vue';
+import { showToast } from '@/component/toast';
 
 export default {
   components: {
-    BeaverLayout
+    BeaverLayout,
+    BeaverImage
   },
   setup() {
     // 响应式数据
     const allRequests = ref<IValidInfo[]>([]);
     const searchKeyword = ref('');
     const activeTab = ref('received');
-    const uToast = ref();
 
     // 计算属性
     const filteredRequests = computed(() => {
@@ -155,8 +159,8 @@ export default {
       activeTab.value = tab;
     };
 
-    const getAvatarUrl = (avatar: string) => {
-      return previewOnlineFileApi(avatar);
+    const getAvatarUrl = (fileName: string) => {
+      return previewOnlineFileApi(fileName);
     };
 
     const getStatusIcon = (status: number) => {
@@ -171,7 +175,7 @@ export default {
     };
 
     const acceptRequest = (id: number) => {
-      valiFrienddAPi({
+      userValidStatusApi({
         verifyId: id,
         status: 1
       }).then((res) => {
@@ -192,7 +196,7 @@ export default {
     };
 
     const rejectRequest = (id: number) => {
-      valiFrienddAPi({
+      userValidStatusApi({
         verifyId: id,
         status: 2
       }).then((res) => {
@@ -216,13 +220,22 @@ export default {
       uni.navigateBack();
     };
 
-    const showToast = (message: string) => {
-      uToast.value?.show({
-        title: message,
-        type: 'success',
-        duration: 2000
-      });
+    // 格式化来源文本
+    const getSourceText = (source: string) => {
+      const sourceMap: Record<string, string> = {
+        'search': '搜索',
+        'qrcode': '二维码',
+        'group': '群聊',
+        'card': '名片',
+        'link': '链接',
+        'other': '其他'
+      };
+      return sourceMap[source] || source;
     };
+
+
+
+
 
     // 页面加载时获取数据
     getFriendValidListApi({
@@ -232,7 +245,7 @@ export default {
       if (res.code === 0) {
         allRequests.value = res.result.list.map(item => ({
           ...item,
-          createTime: Date.now() - Math.floor(Math.random() * 1000000000)
+          createTime: item.createTime || Date.now() - Math.floor(Math.random() * 1000000000)
         }));
       }
     });
@@ -249,7 +262,7 @@ export default {
       acceptRequest,
       rejectRequest,
       goBack,
-      uToast
+      getSourceText
     };
   }
 };
@@ -295,36 +308,36 @@ export default {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 40px;
-  height: 3px;
+  width: 80rpx;
+  height: 6rpx;
   background: linear-gradient(90deg, #FF7D45, #E86835);
-  border-radius: 2px;
+  border-radius: 4rpx;
 }
 
 .tab-badge {
-  margin-left: 8px;
+  margin-left: 16rpx;
   background: linear-gradient(135deg, #FF5252, #E53935);
   color: white;
-  font-size: 12px;
+  font-size: 24rpx;
   font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 10px;
-  min-width: 20px;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+  min-width: 40rpx;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(255, 82, 82, 0.3);
+  box-shadow: 0 4rpx 16rpx rgba(255, 82, 82, 0.3);
 }
 
 /* 好友申请列表 */
 .requests-list {
   background: #FFFFFF;
-  margin: 0 16px 12px;
-  border-radius: 16px;
+  margin: 0 16rpx 16rpx;
+  border-radius: 24rpx;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
 }
 
 .request-item {
-  padding: 16px;
+  padding: 16rpx 24rpx;
   display: flex;
   align-items: center;
   position: relative;
@@ -336,10 +349,10 @@ export default {
 .request-item:not(:last-child)::after {
   content: '';
   position: absolute;
-  left: 80px;
-  right: 16px;
+  left: 96rpx;
+  right: 32rpx;
   bottom: 0;
-  height: 0.5px;
+  height: 1rpx;
   background-color: #F0F2F5;
 }
 
@@ -349,21 +362,13 @@ export default {
 }
 
 .request-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 24rpx;
   overflow: hidden;
-  margin-right: 16px;
-  background: linear-gradient(135deg, #FF7D45 0%, #E86835 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 18px;
+  margin-right: 24rpx;
   position: relative;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(255, 125, 69, 0.2);
 }
 
 .request-avatar image {
@@ -382,73 +387,94 @@ export default {
   min-width: 0;
 }
 
+.request-header {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 8rpx;
+}
+
 .request-name {
-  font-size: 15px;
+  font-size: 28rpx;
   font-weight: 600;
   color: #2D3436;
-  margin-bottom: 4px;
   line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 240rpx;
+}
+
+.request-source {
+  font-size: 22rpx;
+  color: #FF7D45;
+  background: rgba(255, 125, 69, 0.1);
+  padding: 4rpx 12rpx;
+  border-radius: 16rpx;
+  white-space: nowrap;
 }
 
 .request-message {
-  font-size: 13px;
+  font-size: 24rpx;
   color: #636E72;
-  margin-bottom: 4px;
+  margin-bottom: 6rpx;
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 400rpx;
 }
 
 .request-meta {
-  font-size: 11px;
+  font-size: 22rpx;
   color: #B2BEC3;
 }
 
 .request-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-left: 16px;
+  gap: 12rpx;
+  margin-left: 24rpx;
+  flex-shrink: 0;
 }
 
 .btn {
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 8rpx 16rpx;
+  border-radius: 24rpx;
+  font-size: 22rpx;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
   border: none;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 60px;
+  min-width: 72rpx;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 .btn-accept {
-  background: linear-gradient(135deg, #4CAF50, #45a049);
+  background: linear-gradient(135deg, #FF7D45, #E86835);
   color: #FFF;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 125, 69, 0.25);
 }
 
 .btn-accept:active {
   transform: scale(0.95);
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 1px 4px rgba(255, 125, 69, 0.25);
   opacity: 0.8;
 }
 
 .btn-reject {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.8);
   color: #636E72;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .btn-reject:active {
-  background: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.9);
   transform: scale(0.95);
   opacity: 0.8;
 }
@@ -460,17 +486,17 @@ export default {
 .status-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 12px;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 24rpx;
+  font-size: 22rpx;
   font-weight: 500;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
 
 .status-badge.success {
-  background: rgba(76, 175, 80, 0.1);
-  color: #4CAF50;
+  background: rgba(255, 125, 69, 0.1);
+  color: #FF7D45;
 }
 
 .status-badge.rejected {
@@ -484,8 +510,8 @@ export default {
 }
 
 .status-badge image {
-  width: 18px;
-  height: 18px;
+  width: 28rpx;
+  height: 28rpx;
 }
 
 .status-text {
@@ -494,30 +520,30 @@ export default {
 
 /* 空状态 */
 .empty-state {
-  padding: 80px 32px;
+  padding: 160rpx 64rpx;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
+  min-height: 800rpx;
 }
 
 .empty-illustration {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 32px;
+  width: 240rpx;
+  height: 240rpx;
+  margin-bottom: 64rpx;
   background: rgba(255, 255, 255, 0.8);
-  border-radius: 60px;
+  border-radius: 120rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 16rpx 60rpx rgba(0, 0, 0, 0.1);
 }
 
 .empty-illustration image {
-  width: 60px;
-  height: 60px;
+  width: 120rpx;
+  height: 120rpx;
 }
 
 .empty-content {
@@ -526,15 +552,15 @@ export default {
 
 .empty-title {
   display: block;
-  font-size: 16px;
+  font-size: 32rpx;
   font-weight: 600;
   color: #2D3436;
-  margin-bottom: 8px;
+  margin-bottom: 16rpx;
 }
 
 .empty-subtitle {
   display: block;
-  font-size: 13px;
+  font-size: 26rpx;
   color: #636E72;
   line-height: 1.5;
 }
@@ -543,7 +569,7 @@ export default {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10rpx);
   }
   to {
     opacity: 1;
@@ -552,6 +578,6 @@ export default {
 }
 
 .fade-in {
-  animation: fadeIn 0.6s ease forwards;
+  animation: fadeIn 0.4s ease forwards;
 }
 </style>
