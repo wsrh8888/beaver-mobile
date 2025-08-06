@@ -111,11 +111,12 @@ npm run build_test
 | **beaver-mobile** | [GitHub](https://github.com/wsrh8888/beaver-mobile) / [Gitee](https://gitee.com/dawwdadfrf/beaver-mobile) | 移动端应用 |
 | **beaver-desktop** | [GitHub](https://github.com/wsrh8888/beaver-desktop) / [Gitee](https://gitee.com/dawwdadfrf/beaver-desktop) | 桌面端应用 |
 
-## 📚 文档与资源
+## 📚 文档与帮助
 
 - 📖 **详细文档**: [Beaver IM 文档](https://wsrh8888.github.io/beaver-docs/)
 - 🎥 **视频教程**: [B站教程](https://www.bilibili.com/video/BV1HrrKYeEB4/)
 - 📱 **体验包下载**: [海狸IM Android体验包](https://github.com/wsrh8888/beaver-docs/releases/download/lastest/latest.apk)
+- 💬 **QQ群**: [1013328597](https://qm.qq.com/q/82rbf7QBzO)
 
 ## 🤝 贡献指南
 
@@ -126,20 +127,6 @@ npm run build_test
 3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 开启 Pull Request
-
-## 🆘 获取帮助
-
-- 💬 QQ群：[1013328597](https://qm.qq.com/q/82rbf7QBzO)
-- 📚 文档：[Beaver IM 文档](https://wsrh8888.github.io/beaver-docs/)
-- 🎥 教程：[B站视频教程](https://www.bilibili.com/video/BV1HrrKYeEB4/)
-
-## 📄 开源协议
-
-本项目基于 [MIT](LICENSE) 协议开源。
-
-## ⭐ Star历史
-
-[![Star History Chart](https://api.star-history.com/svg?repos=wsrh8888/beaver-mobile&type=Date)](https://star-history.com/#wsrh8888/beaver-mobile&Date)
 
 ## ⭐ 支持项目
 
@@ -154,8 +141,15 @@ npm run build_test
   <img src="./static/sponsor/zhifubao.jpg" width="200" alt="支付宝赞助码"/>
 </div>
 
----
+## 📄 开源协议
 
+本项目基于 [MIT](LICENSE) 协议开源。
+
+## ⭐ Star历史
+
+[![Star History Chart](https://api.star-history.com/svg?repos=wsrh8888/beaver-mobile&type=Date)](https://star-history.com/#wsrh8888/beaver-mobile&Date)
+
+---
 
 <div align="center">
   <strong>Made with ❤️ by Beaver IM Team</strong><br>

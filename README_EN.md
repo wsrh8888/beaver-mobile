@@ -111,11 +111,12 @@ npm run build_test
 | **beaver-mobile** | [GitHub](https://github.com/wsrh8888/beaver-mobile) / [Gitee](https://gitee.com/dawwdadfrf/beaver-mobile) | Mobile App |
 | **beaver-desktop** | [GitHub](https://github.com/wsrh8888/beaver-desktop) / [Gitee](https://gitee.com/dawwdadfrf/beaver-desktop) | Desktop App |
 
-## 📚 Documentation & Resources
+## 📚 Documentation & Help
 
 - 📖 **Detailed Documentation**: [Beaver IM Docs](https://wsrh8888.github.io/beaver-docs/)
 - 🎥 **Video Tutorial**: [Bilibili Tutorial](https://www.bilibili.com/video/BV1HrrKYeEB4/)
 - 📱 **Experience Package Download**: [Beaver IM Android Experience Package](https://github.com/wsrh8888/beaver-docs/releases/download/lastest/latest.apk)
+- 💬 **QQ Group**: [1013328597](https://qm.qq.com/q/82rbf7QBzO)
 
 ## 🤝 Contributing
 
@@ -126,20 +127,6 @@ We welcome all forms of contributions!
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-## 🆘 Get Help
-
-- 💬 QQ Group: [1013328597](https://qm.qq.com/q/82rbf7QBzO)
-- 📚 Documentation: [Beaver IM Docs](https://wsrh8888.github.io/beaver-docs/)
-- 🎥 Tutorial: [Bilibili Video Tutorial](https://www.bilibili.com/video/BV1HrrKYeEB4/)
-
-## 📄 License
-
-This project is licensed under the [MIT](LICENSE) License.
-
-## ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=wsrh8888/beaver-mobile&type=Date)](https://star-history.com/#wsrh8888/beaver-mobile&Date)
 
 ## ⭐ Support Project
 
@@ -153,6 +140,14 @@ If this project helps you, welcome to buy me a coffee ☕
   <img src="./static/sponsor/wechat.jpg" width="200" alt="WeChat Sponsor Code"/>
   <img src="./static/sponsor/zhifubao.jpg" width="200" alt="Alipay Sponsor Code"/>
 </div>
+
+## 📄 License
+
+This project is licensed under the [MIT](LICENSE) License.
+
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=wsrh8888/beaver-mobile&type=Date)](https://star-history.com/#wsrh8888/beaver-mobile&Date)
 
 ---
 
