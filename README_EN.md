@@ -137,6 +137,10 @@ We welcome all forms of contributions!
 
 This project is licensed under the [MIT](LICENSE) License.
 
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=wsrh8888/beaver-mobile&type=Date)](https://star-history.com/#wsrh8888/beaver-mobile&Date)
+
 ## ⭐ Support Project
 
 If this project helps you, please give us a ⭐ Star!
@@ -153,5 +157,6 @@ If this project helps you, welcome to buy me a coffee ☕
 ---
 
 <div align="center">
-  <strong>Made with ❤️ by Beaver IM Team</strong>
+  <strong>Made with ❤️ by Beaver IM Team</strong><br>
+  <em>Enterprise Instant Messaging Platform</em>
 </div> 

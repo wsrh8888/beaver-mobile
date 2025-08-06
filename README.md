@@ -137,6 +137,10 @@ npm run build_test
 
 本项目基于 [MIT](LICENSE) 协议开源。
 
+## ⭐ Star历史
+
+[![Star History Chart](https://api.star-history.com/svg?repos=wsrh8888/beaver-mobile&type=Date)](https://star-history.com/#wsrh8888/beaver-mobile&Date)
+
 ## ⭐ 支持项目
 
 如果这个项目对你有帮助，请给我们一个 ⭐ Star！
@@ -154,7 +158,8 @@ npm run build_test
 
 
 <div align="center">
-  <strong>Made with ❤️ by Beaver IM Team</strong>
+  <strong>Made with ❤️ by Beaver IM Team</strong><br>
+  <em>企业级即时通讯平台</em>
 </div>
 
 
