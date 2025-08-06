@@ -115,7 +115,7 @@ npm run build_test
 
 - 📖 **详细文档**: [Beaver IM 文档](https://wsrh8888.github.io/beaver-docs/)
 - 🎥 **视频教程**: [B站教程](https://www.bilibili.com/video/BV1HrrKYeEB4/)
-- 📱 **演示包下载**: [v1.0.0 APK](https://github.com/wsrh8888/beaver-docs/releases/download/v1.0.0/1.0.0.apk)
+- 📱 **体验包下载**: [海狸IM Android体验包](https://github.com/wsrh8888/beaver-docs/releases/download/lastest/latest.apk)
 
 ## 🤝 贡献指南
 
@@ -141,7 +141,17 @@ npm run build_test
 
 如果这个项目对你有帮助，请给我们一个 ⭐ Star！
 
+## ☕ 请作者喝杯茶
+
+如果这个项目对你有帮助，欢迎请作者喝杯茶 ☕
+
+<div align="center">
+  <img src="./static/sponsor/wechat.jpg" width="200" alt="微信赞助码"/>
+  <img src="./static/sponsor/zhifubao.jpg" width="200" alt="支付宝赞助码"/>
+</div>
+
 ---
+
 
 <div align="center">
   <strong>Made with ❤️ by Beaver IM Team</strong>
