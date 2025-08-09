@@ -31,8 +31,9 @@ export const request = <T>  (config: IRequestConfig): Promise<IResponseSuccessDa
     
     // 记录请求开始
     const requestConfig = {
-      ...config,
       requestId,
+      ...config?.header || {},
+      'content-type': 'application/json;charset=UTF-8', 
       ...getCommonHeader()
     };
 
@@ -70,13 +71,14 @@ export const request = <T>  (config: IRequestConfig): Promise<IResponseSuccessDa
       },
       fail: (err: UniApp.GeneralCallbackResult) => {
         // 记录请求失败日志
+        console.error(err, '2222222222222')
         logger.error({
           text: "[ajax]接口异常",
           data: {
             uuid: requestId,
             url: config.url,
             config: config,
-            response: err
+            response: err.errMsg
           }
         });
 

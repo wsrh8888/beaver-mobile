@@ -35,9 +35,9 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import type { PropType } from 'vue';
 import { MessageType } from '../types/store/message';
 import { messageManager } from '@/message-manager';
-import { uploadQiniuApi } from '@/api/chat';
 import Logger from '@/logger/logger';
 import { showToast } from '@/component/toast';
+import { uploadFileApi } from '@/api/file';
 
 export default {
   name: 'VoiceRecorder',
@@ -116,7 +116,7 @@ export default {
     // 上传语音文件
     const uploadVoiceFile = async (tempFilePath: string, duration: number): Promise<string> => {
       try {
-        const result = await uploadQiniuApi(tempFilePath, `voice_${Date.now()}.mp3`);
+        const result = await uploadFileApi(tempFilePath,  `voice_${Date.now()}.mp3`);
         return result.fileName;
       } catch (error) {
         logger.error({

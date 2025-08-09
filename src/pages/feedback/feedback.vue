@@ -91,7 +91,6 @@ import { ref, computed } from 'vue';
 import BeaverLayout from '@/component/layout/layout.vue';
 import Logger from '@/logger/logger';
 import { showToast } from '@/component/toast';
-import { submitFeedbackApi } from '@/api/feedback';
 
 interface UploadedImage {
   fileName: string;
@@ -175,14 +174,14 @@ export default {
       try {
         const fileNames = uploadedImages.value.map(image => image.fileName);
         // 这里应该调用实际的提交API
-       const submit = await submitFeedbackApi({
-         content: content.value,
-         type: selectedType.value,
-         fileNames
-       });
-       if (submit.code === 0) {
-         goBack()
-        }
+        // const submit = await submitFeedbackApi({
+        //   content: content.value,
+        //   type: selectedType.value,
+        //   fileNames
+        // });
+        // if (submit.code === 0) {
+        //   goBack()
+        // }
         
         showToast('提交成功！', 2000, 'success');
         setTimeout(() => {

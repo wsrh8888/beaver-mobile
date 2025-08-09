@@ -1,5 +1,5 @@
 
-import { getuploadQiniuApi } from '@/api/chat';
+import { uploadFileApi } from '@/api/file';
 import Logger from '@/logger/logger';
 
 // 压缩模式
@@ -180,7 +180,7 @@ export function openAlbum(
             // }
             
             console.log('压缩后路径:', finalFilePath);
-            const result = await getuploadQiniuApi(finalFilePath);
+            const result = await uploadFileApi(finalFilePath);
             resolve(result);
           } else {
             // 多张图片上传
@@ -193,7 +193,7 @@ export function openAlbum(
               //   finalFilePath = await compressImageToSize(filePath, maxSize);
               // }
               
-              const result = await getuploadQiniuApi(finalFilePath);
+              const result = await uploadFileApi(finalFilePath);
               results.push(result);
             }
             resolve(results);

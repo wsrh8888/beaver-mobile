@@ -70,7 +70,6 @@ export default {
 
 
 <style>
-@import '@/styles/theme.scss';
 
 page {
 	height: 100vh;
