@@ -21,6 +21,7 @@ import type {
   IForwardMessageRes
 } from '@/types/ajax/chat'
 import { getLocal } from '@/utils/local';
+import { uploadToLocalApi } from './file';
 
 /**
  * @description: 发送消息
@@ -121,59 +122,9 @@ export const forwardMessageApi = (data: IForwardMessageReq) => {
   })
 }
 
-/**
- * @description: 上传文件到七牛云
- */
-export const uploadQiniuApi = (filePath: string, fileName?: string): Promise<{
-  fileName: string, 
-  originalName: string,
-  fileInfo?: {
-    type: string,
-    imageFile?: {
-      width: number,
-      height: number
-    },
-    videoFile?: {
-      width: number,
-      height: number,
-      duration: number
-    },
-    audioFile?: {
-      duration: number
-    }
-  }
-}> => {
-  return new Promise((resolve, reject) => {
-    // 构建URL，如果有文件名则作为查询参数传递
-    let uploadUrl = `${baseUrl}/api/file/uploadQiniu`;
-    if (fileName) {
-      uploadUrl += `?fileName=${encodeURIComponent(fileName)}`;
-    }
-    
-    uni.uploadFile({
-      url: uploadUrl, 
-      filePath: filePath, 
-      name: 'file',
-      header: {
-        token: getLocal('token')
-      },
-      success: (res) => {
-        const data = JSON.parse(res.data);
-        if (data.code === 0) {
-          resolve(data.result); 
-        }
-      },
-      fail: (err) => {
-        console.error('上传失败', err);
-        reject(err);
-      }
-    });
-  });
-};
 
 // 保留旧的接口名称以兼容现有代码
 export const getRecentChatListApi = recentChatListApi
 export const getcreateConversationApi = conversationInfoApi
 export const getRecentChatInfoApi = conversationInfoApi
 export const getChatHistoryApi = chatHistoryApi
-export const getuploadQiniuApi = uploadQiniuApi

@@ -6,7 +6,7 @@ import { useConversationStore } from '../conversation/conversation';
 import { useMessageStore } from '../message/message';
 import { useUserStore } from '../user/user';
 import { useGroupStore } from '../group/group';
-import { getAuthenticationApi } from '@/api/auth';
+import { authenticationApi } from '@/api/auth';
 
 /**
  * @description: 应用初始化和生命周期管理
@@ -58,7 +58,7 @@ export const useInitStore = defineStore('useInitStore', {
      * @return {Promise<void>}
      */
     async getAuthentication() {
-      await getAuthenticationApi();
+      await authenticationApi();
       
     },
 

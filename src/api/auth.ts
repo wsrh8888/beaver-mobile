@@ -99,7 +99,23 @@ export const authenticationApi = () => {
         resolve(data);
       },
       fail: (err: UniApp.GeneralCallbackResult) => {
-        resolve({})
+         // 网络错误也当作token失效处理
+         console.error('Network error during authentication:', err);
+         const initStore = useInitStore();
+         removeLocal('token');
+         initStore.resetApp();
+         
+         // 检查当前页面路径，避免重复导航
+         const pages = getCurrentPages();
+         const currentPage = pages[pages.length - 1];
+         const currentPath = currentPage?.route;
+         
+         if (currentPath !== 'pages/login/login') {
+           uni.reLaunch({
+             url: '/pages/login/login'
+           });
+         }
+         reject(new Error('Network error'));
       }
     });
   });
@@ -203,6 +219,3 @@ export const emailLoginApi = (data: IEmailLoginReq) => {
     url: `${baseUrl}/api/auth/email_login`
   })
 }
-
-// 保留旧的接口名称以兼容现有代码
-export const getAuthenticationApi = authenticationApi
