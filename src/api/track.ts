@@ -12,6 +12,7 @@ import { getLocal } from '@/utils/local'
  */
 export const reportEventsApi = (data: IReportEventsReq) => {
   return new Promise<IReportEventsRes>((resolve, reject) => {
+    return resolve("" as any)
 
     uni.request({
       method: 'POST',
@@ -33,6 +34,7 @@ export const reportEventsApi = (data: IReportEventsReq) => {
 export const loggerApi = (data: ILogEventsReq) => {
 
   return new Promise<ILogEventsRes>((resolve, reject) => {
+    return resolve("" as any)
 
     uni.request({
       method: 'POST',

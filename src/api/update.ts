@@ -1,4 +1,4 @@
-import { request } from '@/utils/request/request'
+import { mockRequest, request } from '@/utils/request/request'
 import { baseUrl } from '@/env.json'
 import type { 
   IReportVersionReq, 
@@ -26,7 +26,7 @@ export const reportVersionApi = () => {
     version: getAppVersion()
   };
 
-  return request<IReportVersionRes>({
+  return mockRequest<IReportVersionRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/update/report`
@@ -45,7 +45,7 @@ export const getLatestVersionApi = () => {
     version: getAppVersion()
   };
 
-  return request<IGetLatestVersionRes>({
+  return mockRequest<IGetLatestVersionRes>({
     method: 'POST',
     data,
     url: `${baseUrl}/api/update/latest`

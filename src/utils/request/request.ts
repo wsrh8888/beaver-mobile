@@ -91,3 +91,14 @@ export const request = <T>  (config: IRequestConfig): Promise<IResponseSuccessDa
     });
   });
 };
+
+// 模拟接口函数
+export const mockRequest = <T>(_config: IRequestConfig): Promise<IResponseSuccessData<T>> => {
+  return new Promise((resolve) => {
+    resolve({
+      code: 0,
+      msg: "success",
+      result: {} as T
+    });
+  });
+};

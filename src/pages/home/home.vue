@@ -285,7 +285,6 @@ export default {
 
     // 获取聊天名称
     const getChatName = (chat: any) => {
-      console.error(chat, '1111111111111')
       const friendId = getFriendIdFromConversation(chat.conversationId);
       const friendInfo = friendStore.getFriendByUserId(friendId);
       return friendInfo?.notice || friendInfo?.nickname || chat.nickname;
